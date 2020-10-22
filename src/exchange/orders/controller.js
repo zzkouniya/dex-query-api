@@ -25,11 +25,11 @@ class Controller {
       const formattedOrderCells = orderCells.map(orderCell => {
         const parsedOrderData = parseOrderData(orderCell.data);
         return {
-          sUDTAmount: parsedOrderData.sUDTAmount.toString(),
-          orderAmount: parsedOrderData.orderAmount.toString(),
+          sudt_amount: parsedOrderData.sUDTAmount.toString(),
+          order_amount: parsedOrderData.orderAmount.toString(),
           price: parsedOrderData.price.toString(),
-          isBid: parsedOrderData.isBid,
-          rawData: orderCell
+          is_bid: parsedOrderData.isBid,
+          raw_data: orderCell
         }
       });
       res.status(200).json(formattedOrderCells);
