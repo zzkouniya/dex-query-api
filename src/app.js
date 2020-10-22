@@ -4,8 +4,8 @@ const helmet = require('helmet');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const boolParser = require('express-query-boolean');
-const config = require('./config');
-const ordersRouter = require('./exchange/orders/router');
+const ordersRouter = require('./orders/router');
+const cellsRouter = require('./cells/router');
 const swagger = require('./swagger/middleware');
 
 app.use(helmet());
@@ -16,6 +16,7 @@ app.use(boolParser());
 app.use('/api-docs', swagger.middleware);
 app.use(
   ordersRouter,
+  cellsRouter,
 );
 
 module.exports = app;

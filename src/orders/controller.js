@@ -1,7 +1,8 @@
-const config = require('../../config')
-const indexer = require('../../indexer')
+const config = require('../config')
+const indexer = require('../indexer')
 
 class Controller {
+
   async getOrders(req, res) {
     const {
       type_code_hash,

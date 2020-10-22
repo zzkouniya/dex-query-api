@@ -3,9 +3,6 @@ const controller = require('./controller');
 
 const router = new Router();
 
-// router.route('/suggestion-prices')
-//   .get(controller.getOrders)
-
 router.route('/orders')
   .get(controller.getOrders)
 
