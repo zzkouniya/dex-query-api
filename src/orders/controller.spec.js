@@ -137,7 +137,7 @@ describe('Orders controller', () => {
       collectCells: sinon.stub().returnsPromise(),
     };
     controller = proxyquire('./controller', {
-      '../../indexer': indexer,
+      '../indexer': indexer,
     });
     req = mockReq();
     res = mockRes();
