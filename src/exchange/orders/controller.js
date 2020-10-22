@@ -1,6 +1,6 @@
+const config = require('../../config')
 const indexer = require('../../indexer')
 
-const orderLockCodeHash = '0xeef5d7b6f61dc21be89763907e6966f8b776f33e0bf718c2c718dea90f577dbf'
 class Controller {
   async getOrders(req, res) {
     const {
@@ -17,8 +17,8 @@ class Controller {
           args: type_args,
         },
         lock: {
-          code_hash: orderLockCodeHash,
-          hash_type: 'data',
+          code_hash: config.contracts.orderLock.codeHash,
+          hash_type: config.contracts.orderLock.hashType,
           args: public_key_hash,
         }
       })
@@ -54,8 +54,8 @@ class Controller {
         args: type_args,
       },
       lock: {
-        code_hash: orderLockCodeHash,
-        hash_type: 'data',
+        code_hash: config.contracts.orderLock.codeHash,
+        hash_type: config.contracts.orderLock.hashType,
         args: '0x',
       },
       argsLen: 'any',
