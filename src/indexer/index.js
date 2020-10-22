@@ -1,14 +1,15 @@
 const { Indexer, CellCollector, TransactionCollector } = require('@ckb-lumos/indexer');
+const config = require('../config')
 
 class IndexerWrapper {
     constructor() {
-        this.indexer = new Indexer('http://127.0.0.1:8554', './indexer_data');
+        this.indexer = new Indexer(config.indexer.nodeUrl, config.indexer.dataPath);
         this.indexer.startForever();
 
         setInterval(async () => {
             const {block_number} = await this.indexer.tip();
-            console.log('tipped', parseInt(block_number, 16));
-        }, 1000);
+            console.log('indexer tip block', parseInt(block_number, 16));
+        }, 5000);
     }
 
     async collectCells(queryOptons) {
