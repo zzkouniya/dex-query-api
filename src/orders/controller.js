@@ -131,7 +131,7 @@ class Controller {
       const ordersHistory = []
       for (const txWithStatus of txsWithStatus) {
         const {transaction} = txWithStatus
-        const {hash, outputs, outputsData} = transaction
+        const {hash, outputs, outputs_data} = transaction
 
         for (let i = 0; i < outputs.length; i++) {
           const inputOutPoint = formatInputOutPoint(hash, i)
@@ -145,17 +145,13 @@ class Controller {
             continue
           }
 
-          const data = outputsData[i]
+          const data = outputs_data[i]
           output.data = data
           output.outpoint = {
             txHash: hash,
             index: i,
           }
           const lastOrderCell = getLastOrderCell(hash, i, output, txsByInputOutPoint, usedInputOutPoints, orderLock, sudtType)
-          // lastOrderCell.outpoint = {
-          //   txHash: hash,
-          //   index: i,
-          // }
           ordersHistory.push({
             firstOrderCell: output,
             lastOrderCell,
@@ -249,7 +245,7 @@ const getLastOrderCell = (hash, index, orderCell, txsByInputOutPoint, usedInputO
     return orderCell
   }
 
-  nextOutput.data = transaction.outputsData[index]
+  nextOutput.data = transaction.outputs_data[index]
 
   const {lock, type} = nextOutput
   if (

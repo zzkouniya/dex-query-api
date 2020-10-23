@@ -251,7 +251,7 @@ describe('Orders controller', () => {
                   type: typeScript,
                 },
               ],
-              outputsData: [
+              outputs_data: [
                 formatOrderData(1n, 1n, price, true),
               ],
             }
@@ -277,7 +277,7 @@ describe('Orders controller', () => {
                   type: typeScript,
                 },
               ],
-              outputsData: [
+              outputs_data: [
                 formatOrderData(2n, 0n, price, true),
               ],
             }
@@ -362,7 +362,7 @@ describe('Orders controller', () => {
                   type: typeScript,
                 },
               ],
-              outputsData: [
+              outputs_data: [
                 formatOrderData(1n, 1n, price, true),
               ],
             }
