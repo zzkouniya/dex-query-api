@@ -131,26 +131,27 @@ class Controller {
         const { transaction } = txWithStatus;
         const { hash, outputs, outputs_data } = transaction;
 
-        // const groupedOrderCells = groupOrderCells(outputs);
-        for (let i = 0; i < outputs.length; i++) {
-          const inputOutPoint = formatInputOutPoint(hash, i);
-          const output = outputs[i];
+        const groupedOrderCells = groupOrderCells(outputs, orderLock, sudtType);
+        for (let groupedIndex = 0; groupedIndex < groupedOrderCells.length; groupedIndex++) {
+          const groupedOrderCell = groupedOrderCells[groupedIndex];
+          const [originalIndex, output] = groupedOrderCell;
 
           if (!isOrderCell(output, orderLock, sudtType)) {
             continue;
           }
 
+          const inputOutPoint = formatInputOutPoint(hash, originalIndex);
           if (usedInputOutPoints.has(inputOutPoint)) {
             continue;
           }
 
-          const data = outputs_data[i];
+          const data = outputs_data[originalIndex];
           output.data = data;
           output.outpoint = {
             txHash: hash,
-            index: i,
+            index: originalIndex,
           };
-          const lastOrderCell = getLastOrderCell(hash, i, output, txsByInputOutPoint, usedInputOutPoints, orderLock, sudtType);
+          const lastOrderCell = getLastOrderCell(hash, originalIndex, groupedOrderCell, txsByInputOutPoint, usedInputOutPoints, orderLock, sudtType);
           ordersHistory.push({
             firstOrderCell: output,
             lastOrderCell,
@@ -164,7 +165,7 @@ class Controller {
         const lastOrderCellData = parseOrderData(lastOrderCell.data);
 
         const tradedAmount = firstOrderCellData.orderAmount - lastOrderCellData.orderAmount;
-        const turnoverRate = tradedAmount / firstOrderCellData.orderAmount;
+        const turnoverRate = Number((tradedAmount * 100n) / firstOrderCellData.orderAmount) / 100;
 
         orderHistory.tradedAmount = tradedAmount;
         orderHistory.turnoverRate = turnoverRate;
@@ -176,7 +177,7 @@ class Controller {
         const inputOutPoint = formatInputOutPoint(outpoint.txHash, outpoint.index);
         const nextOutput = txsByInputOutPoint.get(inputOutPoint);
 
-        const status = orderHistory.turnoverRate === 1n ? 'completed' : 'open';
+        const status = orderHistory.turnoverRate === 1 ? 'completed' : 'open';
         const claimable = !nextOutput && status === 'completed';
         const formattedOrderHistory = {
           order_amount: orderHistory.orderAmount.toString(),
@@ -207,6 +208,7 @@ const groupOrderCells = (cells, orderLock, sudtType) => {
       groupedCells.push([i, cell]);
     }
   }
+  return groupedCells;
 };
 
 const isOrderCell = (cell, orderLock, sudtType) => {
@@ -232,41 +234,47 @@ const equalsScript = (script1, script2) => {
   return true;
 };
 
-const getLastOrderCell = (hash, index, orderCell, txsByInputOutPoint, usedInputOutPoints, orderLock, sudtType) => {
+const getLastOrderCell = (hash, index, groupedOrderCell, txsByInputOutPoint, usedInputOutPoints, orderLock, sudtType) => {
   const inputOutPoint = formatInputOutPoint(hash, index);
-  const transaction = txsByInputOutPoint.get(inputOutPoint);
+  const nextTransaction = txsByInputOutPoint.get(inputOutPoint);
 
   if (!usedInputOutPoints.has(inputOutPoint)) {
     usedInputOutPoints.add(inputOutPoint);
   }
 
-  if (!transaction) {
-    return orderCell;
+  const [groupedIndex, currentOutput] = groupedOrderCell;
+
+  if (!nextTransaction) {
+    return currentOutput;
   }
 
-  const nextTxHash = transaction.hash;
-  const nextOutput = transaction.outputs[index];
+  const nextGroupedOrderCells = groupOrderCells(nextTransaction.outputs, orderLock, sudtType);
 
-  if (!nextOutput) {
-    return orderCell;
+  const nextTxHash = nextTransaction.hash;
+  // const nextOutput = nextTransaction.outputs[index];
+  const nextGroupedOrderCell = nextGroupedOrderCells[groupedIndex];
+
+  if (!nextGroupedOrderCell) {
+    return currentOutput;
   }
 
-  nextOutput.data = transaction.outputs_data[index];
-
+  const [nextOriginalIndex, nextOutput] = nextGroupedOrderCell;
   const { lock, type } = nextOutput;
   if (
     !equalsScript(lock, orderLock)
     || !equalsScript(type, sudtType)
   ) {
-    return orderCell;
+    return currentOutput;
   }
+
+  nextOutput.data = nextTransaction.outputs_data[nextOriginalIndex];
 
   nextOutput.outpoint = {
     txHash: nextTxHash,
-    index,
+    index: nextOriginalIndex,
   };
 
-  return getLastOrderCell(nextTxHash, index, nextOutput, txsByInputOutPoint, usedInputOutPoints, orderLock, sudtType);
+  return getLastOrderCell(nextTxHash, nextOriginalIndex, nextGroupedOrderCell, txsByInputOutPoint, usedInputOutPoints, orderLock, sudtType);
 };
 
 const formatInputOutPoint = (txHash, index) => (`${txHash}0x${index.toString(16)}`);
