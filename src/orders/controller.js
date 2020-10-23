@@ -1,15 +1,14 @@
-const config = require('../config')
-const indexer = require('../indexer')
+const config = require('../config');
+const indexer = require('../indexer');
 
 class Controller {
-
   async getOrders(req, res) {
     const {
       type_code_hash,
       type_hash_type,
-      type_args, 
+      type_args,
       public_key_hash,
-    } = req.query
+    } = req.query;
     try {
       const orderCells = await indexer.collectCells({
         type: {
@@ -21,17 +20,17 @@ class Controller {
           code_hash: config.contracts.orderLock.codeHash,
           hash_type: config.contracts.orderLock.hashType,
           args: public_key_hash,
-        }
-      })
-      const formattedOrderCells = orderCells.map(orderCell => {
+        },
+      });
+      const formattedOrderCells = orderCells.map((orderCell) => {
         const parsedOrderData = parseOrderData(orderCell.data);
         return {
           sudt_amount: parsedOrderData.sUDTAmount.toString(),
           order_amount: parsedOrderData.orderAmount.toString(),
           price: parsedOrderData.price.toString(),
           is_bid: parsedOrderData.isBid,
-          raw_data: orderCell
-        }
+          raw_data: orderCell,
+        };
       });
       res.status(200).json(formattedOrderCells);
     } catch (err) {
@@ -44,9 +43,9 @@ class Controller {
     const {
       type_code_hash,
       type_hash_type,
-      type_args, 
+      type_args,
       is_bid,
-    } = req.query
+    } = req.query;
 
     const orderCells = await indexer.collectCells({
       type: {
@@ -60,29 +59,28 @@ class Controller {
         args: '0x',
       },
       argsLen: 'any',
-    })
+    });
 
     if (!orderCells.length) {
-      return res.status(404).send()
+      return res.status(404).send();
     }
 
     try {
       const formattedOrderCells = formatOrderCells(orderCells);
-  
-      const cell = formattedOrderCells
-        .filter(cell => is_bid !== cell.isBid)
+
+      const orderCell = formattedOrderCells
+        .filter((cell) => is_bid !== cell.isBid)
         .sort((a, b) => {
           if (is_bid) {
-            return a.price - b.price
+            return a.price - b.price;
           }
-          else {
-            return b.price - a.price
-          }
-        })[0]
-  
-      res.status(200).json({price: cell.price})
+
+          return b.price - a.price;
+        })[0];
+
+      res.status(200).json({ price: orderCell.price });
     } catch (error) {
-      res.status(500).send()
+      res.status(500).send();
     }
   }
 
@@ -90,97 +88,96 @@ class Controller {
     const {
       type_code_hash,
       type_hash_type,
-      type_args, 
+      type_args,
       public_key_hash,
-    } = req.query
+    } = req.query;
 
     const sudtType = {
       code_hash: type_code_hash,
       hash_type: type_hash_type,
       args: type_args,
-    }
+    };
 
     const orderLock = {
       code_hash: config.contracts.orderLock.codeHash,
       hash_type: config.contracts.orderLock.hashType,
       args: public_key_hash,
-    }
-    
-    const txsByInputOutPoint = new Map()
-    const usedInputOutPoints = new Set()
+    };
+
+    const txsByInputOutPoint = new Map();
+    const usedInputOutPoints = new Set();
 
     try {
       const txsWithStatus = await indexer.collectTransactions({
         type: sudtType,
-        lock: orderLock
-      })
+        lock: orderLock,
+      });
 
       for (const txWithStatus of txsWithStatus) {
-        const {transaction} = txWithStatus
-        const {inputs} = transaction
+        const { transaction } = txWithStatus;
+        const { inputs } = transaction;
 
         for (const input of inputs) {
-          const {tx_hash, index} = input.previous_output
-          const inputOutPoint = formatInputOutPoint(tx_hash, parseInt(index, 16))
+          const { tx_hash, index } = input.previous_output;
+          const inputOutPoint = formatInputOutPoint(tx_hash, parseInt(index, 16));
           if (!txsByInputOutPoint.has(inputOutPoint)) {
-            txsByInputOutPoint.set(inputOutPoint, transaction)
+            txsByInputOutPoint.set(inputOutPoint, transaction);
           }
         }
       }
 
-      const ordersHistory = []
+      const ordersHistory = [];
       for (const txWithStatus of txsWithStatus) {
-        const {transaction} = txWithStatus
-        const {hash, outputs, outputs_data} = transaction
+        const { transaction } = txWithStatus;
+        const { hash, outputs, outputs_data } = transaction;
 
+        // const groupedOrderCells = groupOrderCells(outputs);
         for (let i = 0; i < outputs.length; i++) {
-          const inputOutPoint = formatInputOutPoint(hash, i)
-          const output = outputs[i]
+          const inputOutPoint = formatInputOutPoint(hash, i);
+          const output = outputs[i];
 
           if (!isOrderCell(output, orderLock, sudtType)) {
-            continue
+            continue;
           }
 
           if (usedInputOutPoints.has(inputOutPoint)) {
-            continue
+            continue;
           }
 
-          const data = outputs_data[i]
-          output.data = data
+          const data = outputs_data[i];
+          output.data = data;
           output.outpoint = {
             txHash: hash,
             index: i,
-          }
-          const lastOrderCell = getLastOrderCell(hash, i, output, txsByInputOutPoint, usedInputOutPoints, orderLock, sudtType)
+          };
+          const lastOrderCell = getLastOrderCell(hash, i, output, txsByInputOutPoint, usedInputOutPoints, orderLock, sudtType);
           ordersHistory.push({
             firstOrderCell: output,
             lastOrderCell,
-          })
+          });
         }
       }
 
-
       for (const orderHistory of ordersHistory) {
-        const {firstOrderCell, lastOrderCell} = orderHistory
-        const firstOrderCellData = parseOrderData(firstOrderCell.data)
-        const lastOrderCellData = parseOrderData(lastOrderCell.data)
+        const { firstOrderCell, lastOrderCell } = orderHistory;
+        const firstOrderCellData = parseOrderData(firstOrderCell.data);
+        const lastOrderCellData = parseOrderData(lastOrderCell.data);
 
-        const tradedAmount = firstOrderCellData.orderAmount - lastOrderCellData.orderAmount
-        const turnoverRate = tradedAmount / firstOrderCellData.orderAmount
+        const tradedAmount = firstOrderCellData.orderAmount - lastOrderCellData.orderAmount;
+        const turnoverRate = tradedAmount / firstOrderCellData.orderAmount;
 
-        orderHistory.tradedAmount = tradedAmount
-        orderHistory.turnoverRate = turnoverRate
-        orderHistory.orderAmount = firstOrderCellData.orderAmount
+        orderHistory.tradedAmount = tradedAmount;
+        orderHistory.turnoverRate = turnoverRate;
+        orderHistory.orderAmount = firstOrderCellData.orderAmount;
       }
 
-      const formattedOrdersHistory = ordersHistory.map(orderHistory => {
+      const formattedOrdersHistory = ordersHistory.map((orderHistory) => {
+        const outpoint = orderHistory.lastOrderCell.outpoint;
+        const inputOutPoint = formatInputOutPoint(outpoint.txHash, outpoint.index);
+        const nextOutput = txsByInputOutPoint.get(inputOutPoint);
 
-        const outpoint = orderHistory.lastOrderCell.outpoint
-        const inputOutPoint = formatInputOutPoint(outpoint.txHash, outpoint.index)
-        const nextOutput = txsByInputOutPoint.get(inputOutPoint)
-
-        const status = orderHistory.turnoverRate === 1n ? 'completed' : 'open'
-        const claimable = !nextOutput && status === 'completed'
+        const status = orderHistory.turnoverRate === 1n ? 'completed' : 'open';
+        const claimable = !nextOutput && status === 'completed';
         const formattedOrderHistory = {
           order_amount: orderHistory.orderAmount.toString(),
           traded_amount: orderHistory.tradedAmount.toString(),
@@ -190,94 +187,103 @@ class Controller {
           last_order_cell_outpoint: {
             tx_hash: outpoint.txHash,
             index: `0x${outpoint.index.toString(16)}`,
-          }
-        }
-        return formattedOrderHistory
-      })
+          },
+        };
+        return formattedOrderHistory;
+      });
       res.status(200).json(formattedOrdersHistory);
     } catch (error) {
-      console.error(error)
-      res.status(500).send()
+      console.error(error);
+      res.status(500).send();
     }
   }
 }
 
+const groupOrderCells = (cells, orderLock, sudtType) => {
+  const groupedCells = [];
+  for (let i = 0; i < cells.length; i++) {
+    const cell = cells[i];
+    if (isOrderCell(cell, orderLock, sudtType)) {
+      groupedCells.push([i, cell]);
+    }
+  }
+};
+
 const isOrderCell = (cell, orderLock, sudtType) => {
-  const {lock, type} = cell
+  const { lock, type } = cell;
 
   if (
-    !equalsScript(lock, orderLock) ||
-    !equalsScript(type, sudtType)
+    !equalsScript(lock, orderLock)
+    || !equalsScript(type, sudtType)
   ) {
-    return false
+    return false;
   }
-  return true
-}
+  return true;
+};
 
 const equalsScript = (script1, script2) => {
   if (
-    script1.args !== script2.args || 
-    script1.code_hash !== script2.code_hash || 
-    script1.hash_type !== script2.hash_type
-  )
-  {
-    return false
+    script1.args !== script2.args
+    || script1.code_hash !== script2.code_hash
+    || script1.hash_type !== script2.hash_type
+  ) {
+    return false;
   }
-  return true
-}
+  return true;
+};
 
 const getLastOrderCell = (hash, index, orderCell, txsByInputOutPoint, usedInputOutPoints, orderLock, sudtType) => {
-  const inputOutPoint = formatInputOutPoint(hash, index)
-  const transaction = txsByInputOutPoint.get(inputOutPoint)
+  const inputOutPoint = formatInputOutPoint(hash, index);
+  const transaction = txsByInputOutPoint.get(inputOutPoint);
 
   if (!usedInputOutPoints.has(inputOutPoint)) {
-    usedInputOutPoints.add(inputOutPoint)
-  }
-  
-  if (!transaction) {
-    return orderCell
+    usedInputOutPoints.add(inputOutPoint);
   }
 
-  const nextTxHash = transaction.hash
-  const nextOutput = transaction.outputs[index]
+  if (!transaction) {
+    return orderCell;
+  }
+
+  const nextTxHash = transaction.hash;
+  const nextOutput = transaction.outputs[index];
 
   if (!nextOutput) {
-    return orderCell
+    return orderCell;
   }
 
-  nextOutput.data = transaction.outputs_data[index]
+  nextOutput.data = transaction.outputs_data[index];
 
-  const {lock, type} = nextOutput
+  const { lock, type } = nextOutput;
   if (
-    !equalsScript(lock, orderLock) ||
-    !equalsScript(type, sudtType)
+    !equalsScript(lock, orderLock)
+    || !equalsScript(type, sudtType)
   ) {
-    return orderCell
+    return orderCell;
   }
 
   nextOutput.outpoint = {
     txHash: nextTxHash,
     index,
-  }
+  };
 
-  return getLastOrderCell(nextTxHash, index, nextOutput, txsByInputOutPoint, usedInputOutPoints, orderLock, sudtType)
-}
+  return getLastOrderCell(nextTxHash, index, nextOutput, txsByInputOutPoint, usedInputOutPoints, orderLock, sudtType);
+};
 
-const formatInputOutPoint = (txHash, index) => (txHash + `0x${index.toString(16)}`)
+const formatInputOutPoint = (txHash, index) => (`${txHash}0x${index.toString(16)}`);
 
 const formatOrderCells = (orderCells) => {
-  const formattedOrderCells = orderCells.map(orderCell => {
+  const formattedOrderCells = orderCells.map((orderCell) => {
     const parsedOrderData = parseOrderData(orderCell.data);
     return {
       sUDTAmount: parsedOrderData.sUDTAmount.toString(),
       orderAmount: parsedOrderData.orderAmount.toString(),
       price: parsedOrderData.price.toString(),
       isBid: parsedOrderData.isBid,
-      rawData: orderCell
-    }
+      rawData: orderCell,
+    };
   });
-  return formattedOrderCells
-}
+  return formattedOrderCells;
+};
 
 const parseOrderData = (hex) => {
   const sUDTAmount = parseAmountFromLeHex(hex.slice(0, 34));
@@ -285,33 +291,33 @@ const parseOrderData = (hex) => {
 
   let price;
   try {
-      const priceBuf = Buffer.from(hex.slice(66, 82), 'hex');
-      price = priceBuf.readBigInt64LE();
+    const priceBuf = Buffer.from(hex.slice(66, 82), 'hex');
+    price = priceBuf.readBigInt64LE();
   } catch (error) {
-      price = null;
+    price = null;
   }
 
   const isBid = hex.slice(82, 84) === '00';
 
   return {
-      sUDTAmount,
-      orderAmount,
-      price,
-      isBid,
+    sUDTAmount,
+    orderAmount,
+    price,
+    isBid,
   };
 };
 
 const parseAmountFromLeHex = (leHex) => {
   try {
-      return readBigUInt128LE(leHex.startsWith('0x') ? leHex.slice(0, 34) : `0x${leHex.slice(0, 32)}`);
+    return readBigUInt128LE(leHex.startsWith('0x') ? leHex.slice(0, 34) : `0x${leHex.slice(0, 32)}`);
   } catch (error) {
-      return BigInt(0);
+    return BigInt(0);
   }
 };
 
 const readBigUInt128LE = (leHex) => {
   if (leHex.length !== 34 || !leHex.startsWith('0x')) {
-      throw new Error('leHex format error');
+    throw new Error('leHex format error');
   }
   const buf = Buffer.from(leHex.slice(2), 'hex');
   return (buf.readBigUInt64LE(8) << BigInt(64)) + buf.readBigUInt64LE(0);
