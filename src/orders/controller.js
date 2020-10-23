@@ -179,13 +179,13 @@ class Controller {
 
         let status;
         let claimable = false;
-        if (!nextTx) {
-          if (orderHistory.turnoverRate === 1) {
-            status = 'completed';
-          } else {
-            status = 'open';
-          }
+        if (orderHistory.turnoverRate === 1) {
+          status = 'completed';
+        } else {
+          status = 'open';
+        }
 
+        if (!nextTx) {
           if (status === 'completed') {
             claimable = true;
           }
