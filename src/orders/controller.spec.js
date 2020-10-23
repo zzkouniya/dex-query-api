@@ -7,6 +7,7 @@ const sinonStubPromise = require('sinon-stub-promise');
 sinonStubPromise(sinon);
 const proxyquire = require('proxyquire').noPreserveCache().noCallThru();
 const {mockReq, mockRes} = require('sinon-express-mock');
+const config = require('../config')
 
 describe('Orders controller', () => {
   
@@ -135,6 +136,7 @@ describe('Orders controller', () => {
     ]
     indexer = {
       collectCells: sinon.stub().returnsPromise(),
+      collectTransactions: sinon.stub().returnsPromise(),
     };
     controller = proxyquire('./controller', {
       '../indexer': indexer,
@@ -144,7 +146,7 @@ describe('Orders controller', () => {
     next = sinon.spy();
   });
 
-  describe.only('#getBestPrice()', () => {
+  describe('#getBestPrice()', () => {
     describe('query best ask price', () => {
       beforeEach(async () => {
         indexer.collectCells.resolves(orders);
@@ -173,6 +175,225 @@ describe('Orders controller', () => {
         res.json.should.have.been.calledWith({price: '50000000000'});
       });
     });
+  });
 
+  describe('#getOrdersHistory()', () => {
+    const typeScript = {
+      "args": "type args",
+      "code_hash": "type code hash",
+      "hash_type": "type"
+    }
+    const orderLockScript = {
+      "args": null,
+      "code_hash": config.contracts.orderLock.codeHash,
+      "hash_type": config.contracts.orderLock.hashType,
+    }
+
+    const U128_MAX = BigInt(2) ** BigInt(128) - BigInt(1);
+    const U128_MIN = BigInt(0);
+
+    const writeBigUInt128LE = (u128) => {
+        if (u128 < U128_MIN) {
+            throw new Error(`u128 ${u128} too small`);
+        }
+        if (u128 > U128_MAX) {
+            throw new Error(`u128 ${u128} too large`);
+        }
+        const buf = Buffer.alloc(16);
+        buf.writeBigUInt64LE(u128 & BigInt('0xFFFFFFFFFFFFFFFF'), 0);
+        buf.writeBigUInt64LE(u128 >> BigInt(64), 8);
+        return `0x${buf.toString('hex')}`;
+    };
+
+    const formatOrderData = (currentAmount, orderAmount, price, isBid) => {
+      const udtAmountHex = writeBigUInt128LE(currentAmount);
+      if (isBid === undefined) {
+          return udtAmountHex;
+      }
+
+      const orderAmountHex = writeBigUInt128LE(orderAmount).replace('0x', '');
+
+      const priceBuf = Buffer.alloc(8);
+      priceBuf.writeBigUInt64LE(price);
+      const priceHex = `${priceBuf.toString('hex')}`;
+
+      const bidOrAskBuf = Buffer.alloc(1);
+      bidOrAskBuf.writeInt8(isBid ? 0 : 1);
+      const isBidHex = `${bidOrAskBuf.toString('hex')}`;
+
+      const dataHex = udtAmountHex + orderAmountHex + priceHex + isBidHex;
+      return dataHex;
+    };
+
+    describe('completed order', () => {
+      beforeEach(async () => {
+        const price = 1n;
+        const publicKeyHash = 'publickeyhash'
+        const transactions = [
+          {
+            transaction: {
+              hash: 'hash1',
+              inputs: [
+                {
+                  previous_output: {
+                    index: '0x0',
+                    tx_hash: 'hash0'
+                  }
+                },
+              ],
+              outputs: [
+                {
+                  capacity: '0x0',
+                  lock: {
+                    ...orderLockScript,
+                    args: publicKeyHash,
+                  },
+                  type: typeScript,
+                },
+              ],
+              outputsData: [
+                formatOrderData(1n, 1n, price, true),
+              ],
+            }
+          },
+          {
+            transaction: {
+              hash: 'hash2',
+              inputs: [
+                {
+                  previous_output: {
+                    index: '0x0',
+                    tx_hash: 'hash1'
+                  }
+                },
+              ],
+              outputs: [
+                {
+                  capacity: '0x0',
+                  lock: {
+                    ...orderLockScript,
+                    args: publicKeyHash,
+                  },
+                  type: typeScript,
+                },
+              ],
+              outputsData: [
+                formatOrderData(2n, 0n, price, true),
+              ],
+            }
+          },
+        ];
+  
+        req.query.type_code_hash = typeScript.code_hash
+        req.query.type_hash_type = typeScript.hash_type
+        req.query.type_args = typeScript.args
+        req.query.public_key_hash = publicKeyHash
+        indexer.collectTransactions.resolves(transactions);
+
+        await controller.getOrderHistory(req, res, next);
+      });
+      it('returns order history', () => {
+        res.status.should.have.been.calledWith(200);
+        res.json.should.have.been.called;
+        res.json.should.have.been.calledWith(
+          [
+            {
+              traded_amount: '1',
+              order_amount: '1',
+              turnover_rate: '1', //100%
+              status: 'completed',
+              claimable: true,
+              last_order_cell_outpoint: {
+                tx_hash: 'hash2',
+                index: '0x0',
+              }
+            },
+          ]
+        );
+  
+        //check completed order cell 
+          //if the order amount is 0
+            //then it is completed
+            //if it is live cell(end of history)
+              //then claimable
+          //link through the previous inputs
+            //find the initial order cell
+              //get the order amount, which is the total traded amount
+  
+        //check aborted order cell
+          //if the order amount is non-zero 
+          //and the lock of the next output is not the same as the current one(end of history)
+            //then it is aborted
+          //link through the previous inputs
+            //find the initial order cell
+              //get the order amount and subtract it by the order amount of the current order cell
+  
+        //check open order cell
+          //if the order lock cell is live and the order amount is not 0
+            //then the order is still incompleted
+          //link through the previous inputs
+            //find the initial order cell
+              //get the order amount and subtract it by the order amount of the current order cell
+      });
+    });
+    describe('incompleted order', () => {
+      beforeEach(async () => {
+        const price = 1n;
+        const publicKeyHash = 'publickeyhash'
+        const transactions = [
+          {
+            transaction: {
+              hash: 'hash1',
+              inputs: [
+                {
+                  previous_output: {
+                    index: '0x0',
+                    tx_hash: 'hash0'
+                  }
+                },
+              ],
+              outputs: [
+                {
+                  capacity: '0x0',
+                  lock: {
+                    ...orderLockScript,
+                    args: publicKeyHash,
+                  },
+                  type: typeScript,
+                },
+              ],
+              outputsData: [
+                formatOrderData(1n, 1n, price, true),
+              ],
+            }
+          },
+        ];
+  
+        req.query.type_code_hash = typeScript.code_hash
+        req.query.type_hash_type = typeScript.hash_type
+        req.query.type_args = typeScript.args
+        req.query.public_key_hash = publicKeyHash
+        indexer.collectTransactions.resolves(transactions);
+
+        await controller.getOrderHistory(req, res, next);
+      });
+      it('returns order history', () => {
+        res.status.should.have.been.calledWith(200);
+        res.json.should.have.been.called;
+        res.json.should.have.been.calledWith([
+          {
+            traded_amount: '0',
+            order_amount: '1',
+            turnover_rate: '0', //0%
+            status: 'open',
+            claimable: false,
+            last_order_cell_outpoint: {
+              tx_hash: 'hash1',
+              index: '0x0',
+            }
+          },
+        ]);
+      });
+    });
   });
 });

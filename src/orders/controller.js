@@ -66,22 +66,208 @@ class Controller {
       return res.status(404).send()
     }
 
-    const formattedOrderCells = formatOrderCells(orderCells);
+    try {
+      const formattedOrderCells = formatOrderCells(orderCells);
+  
+      const cell = formattedOrderCells
+        .filter(cell => is_bid !== cell.isBid)
+        .sort((a, b) => {
+          if (is_bid) {
+            return a.price - b.price
+          }
+          else {
+            return b.price - a.price
+          }
+        })[0]
+  
+      res.status(200).json({price: cell.price})
+    } catch (error) {
+      res.status(500).send()
+    }
+  }
 
-    const cell = formattedOrderCells
-      .filter(cell => is_bid !== cell.isBid)
-      .sort((a, b) => {
-        if (is_bid) {
-          return a.price - b.price
-        }
-        else {
-          return b.price - a.price
-        }
-      })[0]
+  async getOrderHistory(req, res) {
+    const {
+      type_code_hash,
+      type_hash_type,
+      type_args, 
+      public_key_hash,
+    } = req.query
 
-    res.status(200).json({price: cell.price})
+    const sudtType = {
+      code_hash: type_code_hash,
+      hash_type: type_hash_type,
+      args: type_args,
+    }
+
+    const orderLock = {
+      code_hash: config.contracts.orderLock.codeHash,
+      hash_type: config.contracts.orderLock.hashType,
+      args: public_key_hash,
+    }
+    
+    const txsByInputOutPoint = new Map()
+    const usedInputOutPoints = new Set()
+
+    try {
+      const txsWithStatus = await indexer.collectTransactions({
+        type: sudtType,
+        lock: orderLock
+      })
+
+      for (const txWithStatus of txsWithStatus) {
+        const {transaction} = txWithStatus
+        const {inputs} = transaction
+
+        for (const input of inputs) {
+          const {tx_hash, index} = input.previous_output
+          const inputOutPoint = formatInputOutPoint(tx_hash, parseInt(index, 16))
+          if (!txsByInputOutPoint.has(inputOutPoint)) {
+            txsByInputOutPoint.set(inputOutPoint, transaction)
+          }
+        }
+      }
+
+      const ordersHistory = []
+      for (const txWithStatus of txsWithStatus) {
+        const {transaction} = txWithStatus
+        const {hash, outputs, outputsData} = transaction
+
+        for (let i = 0; i < outputs.length; i++) {
+          const inputOutPoint = formatInputOutPoint(hash, i)
+          const output = outputs[i]
+
+          if (!isOrderCell(output, orderLock, sudtType)) {
+            continue
+          }
+
+          if (usedInputOutPoints.has(inputOutPoint)) {
+            continue
+          }
+
+          const data = outputsData[i]
+          output.data = data
+          output.outpoint = {
+            txHash: hash,
+            index: i,
+          }
+          const lastOrderCell = getLastOrderCell(hash, i, output, txsByInputOutPoint, usedInputOutPoints, orderLock, sudtType)
+          // lastOrderCell.outpoint = {
+          //   txHash: hash,
+          //   index: i,
+          // }
+          ordersHistory.push({
+            firstOrderCell: output,
+            lastOrderCell,
+          })
+        }
+      }
+
+
+      for (const orderHistory of ordersHistory) {
+        const {firstOrderCell, lastOrderCell} = orderHistory
+        const firstOrderCellData = parseOrderData(firstOrderCell.data)
+        const lastOrderCellData = parseOrderData(lastOrderCell.data)
+
+        const tradedAmount = firstOrderCellData.orderAmount - lastOrderCellData.orderAmount
+        const turnoverRate = tradedAmount / firstOrderCellData.orderAmount
+
+        orderHistory.tradedAmount = tradedAmount
+        orderHistory.turnoverRate = turnoverRate
+        orderHistory.orderAmount = firstOrderCellData.orderAmount
+      }
+
+      const formattedOrdersHistory = ordersHistory.map(orderHistory => {
+
+        const outpoint = orderHistory.lastOrderCell.outpoint
+        const inputOutPoint = formatInputOutPoint(outpoint.txHash, outpoint.index)
+        const nextOutput = txsByInputOutPoint.get(inputOutPoint)
+
+        const status = orderHistory.turnoverRate === 1n ? 'completed' : 'open'
+        const claimable = !nextOutput && status === 'completed'
+        const formattedOrderHistory = {
+          order_amount: orderHistory.orderAmount.toString(),
+          traded_amount: orderHistory.tradedAmount.toString(),
+          turnover_rate: orderHistory.turnoverRate.toString(),
+          claimable,
+          status,
+          last_order_cell_outpoint: {
+            tx_hash: outpoint.txHash,
+            index: `0x${outpoint.index.toString(16)}`,
+          }
+        }
+        return formattedOrderHistory
+      })
+      res.status(200).json(formattedOrdersHistory);
+    } catch (error) {
+      console.error(error)
+      res.status(500).send()
+    }
   }
 }
+
+const isOrderCell = (cell, orderLock, sudtType) => {
+  const {lock, type} = cell
+
+  if (
+    !equalsScript(lock, orderLock) ||
+    !equalsScript(type, sudtType)
+  ) {
+    return false
+  }
+  return true
+}
+
+const equalsScript = (script1, script2) => {
+  if (
+    script1.args !== script2.args || 
+    script1.code_hash !== script2.code_hash || 
+    script1.hash_type !== script2.hash_type
+  )
+  {
+    return false
+  }
+  return true
+}
+
+const getLastOrderCell = (hash, index, orderCell, txsByInputOutPoint, usedInputOutPoints, orderLock, sudtType) => {
+  const inputOutPoint = formatInputOutPoint(hash, index)
+  const transaction = txsByInputOutPoint.get(inputOutPoint)
+
+  if (!usedInputOutPoints.has(inputOutPoint)) {
+    usedInputOutPoints.add(inputOutPoint)
+  }
+  
+  if (!transaction) {
+    return orderCell
+  }
+
+  const nextTxHash = transaction.hash
+  const nextOutput = transaction.outputs[index]
+
+  if (!nextOutput) {
+    return orderCell
+  }
+
+  nextOutput.data = transaction.outputsData[index]
+
+  const {lock, type} = nextOutput
+  if (
+    !equalsScript(lock, orderLock) ||
+    !equalsScript(type, sudtType)
+  ) {
+    return orderCell
+  }
+
+  nextOutput.outpoint = {
+    txHash: nextTxHash,
+    index,
+  }
+
+  return getLastOrderCell(nextTxHash, index, nextOutput, txsByInputOutPoint, usedInputOutPoints, orderLock, sudtType)
+}
+
+const formatInputOutPoint = (txHash, index) => (txHash + `0x${index.toString(16)}`)
 
 const formatOrderCells = (orderCells) => {
   const formattedOrderCells = orderCells.map(orderCell => {

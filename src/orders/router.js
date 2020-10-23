@@ -9,7 +9,7 @@ router.route('/orders')
 router.route('/best-price')
   .get(controller.getBestPrice)
 
-// router.route('/orders-history')
-//   .get(controller.getOrders)
+router.route('/order-history')
+  .get(controller.getOrderHistory)
 
 module.exports = router;
