@@ -175,10 +175,24 @@ class Controller {
       const formattedOrdersHistory = ordersHistory.map((orderHistory) => {
         const outpoint = orderHistory.lastOrderCell.outpoint;
         const inputOutPoint = formatInputOutPoint(outpoint.txHash, outpoint.index);
-        const nextOutput = txsByInputOutPoint.get(inputOutPoint);
+        const nextTx = txsByInputOutPoint.get(inputOutPoint);
 
-        const status = orderHistory.turnoverRate === 1 ? 'completed' : 'open';
-        const claimable = !nextOutput && status === 'completed';
+        let status;
+        let claimable = false;
+        if (!nextTx) {
+          if (orderHistory.turnoverRate === 1) {
+            status = 'completed';
+          } else {
+            status = 'open';
+          }
+
+          if (status === 'completed') {
+            claimable = true;
+          }
+        } else if (orderHistory.turnoverRate < 1) {
+          status = 'aborted';
+        }
+
         const formattedOrderHistory = {
           order_amount: orderHistory.orderAmount.toString(),
           traded_amount: orderHistory.tradedAmount.toString(),
@@ -224,6 +238,14 @@ const isOrderCell = (cell, orderLock, sudtType) => {
 };
 
 const equalsScript = (script1, script2) => {
+  if (!script1 && script2) {
+    return false;
+  }
+
+  if (script1 && !script2) {
+    return false;
+  }
+
   if (
     script1.args !== script2.args
     || script1.code_hash !== script2.code_hash

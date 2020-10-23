@@ -17,18 +17,9 @@ describe('Orders controller', () => {
   let next;
   let controller;
   let orders;
-
-  const blockNumber = 12314234;
+  let indexer;
 
   beforeEach(() => {
-    order = {
-      amount: '1.001',
-      rate: '0.000001',
-      residuals: {
-        current: '0.0001',
-        previous: '0.0002',
-      },
-    };
     orders = [
       {
         // sUDTAmount: '5000000000',
@@ -158,7 +149,6 @@ describe('Orders controller', () => {
 
       it('returns highest bid price', () => {
         res.status.should.have.been.calledWith(200);
-        res.json.should.have.been.called;
         res.json.should.have.been.calledWith({ price: '70000000000' });
       });
     });
@@ -172,7 +162,6 @@ describe('Orders controller', () => {
 
       it('returns lowest ask price', () => {
         res.status.should.have.been.calledWith(200);
-        res.json.should.have.been.called;
         res.json.should.have.been.calledWith({ price: '50000000000' });
       });
     });
@@ -295,7 +284,6 @@ describe('Orders controller', () => {
       });
       it('returns order history', () => {
         res.status.should.have.been.calledWith(200);
-        res.json.should.have.been.called;
         res.json.should.have.been.calledWith(
           [
             {
@@ -335,6 +323,87 @@ describe('Orders controller', () => {
         // link through the previous inputs
         // find the initial order cell
         // get the order amount and subtract it by the order amount of the current order cell
+      });
+    });
+    describe('aborted order', () => {
+      beforeEach(async () => {
+        const price = 1n;
+        const publicKeyHash = 'publickeyhash';
+        const transactions = [
+          {
+            transaction: {
+              hash: 'hash1',
+              inputs: [
+                {
+                  previous_output: {
+                    index: '0x0',
+                    tx_hash: 'hash0',
+                  },
+                },
+              ],
+              outputs: [
+                {
+                  capacity: '0x0',
+                  lock: {
+                    ...orderLockScript,
+                    args: publicKeyHash,
+                  },
+                  type: typeScript,
+                },
+              ],
+              outputs_data: [
+                formatOrderData(1n, 1n, price, true),
+              ],
+            },
+          },
+          {
+            transaction: {
+              hash: 'hash2',
+              inputs: [
+                {
+                  previous_output: {
+                    index: '0x0',
+                    tx_hash: 'hash1',
+                  },
+                },
+              ],
+              outputs: [
+                {
+                  capacity: '0x0',
+                  lock: {
+                    ...orderLockScript,
+                    args: publicKeyHash,
+                  },
+                },
+              ],
+              outputs_data: ['0x'],
+            },
+          },
+        ];
+
+        req.query.type_code_hash = typeScript.code_hash;
+        req.query.type_hash_type = typeScript.hash_type;
+        req.query.type_args = typeScript.args;
+        req.query.public_key_hash = publicKeyHash;
+        indexer.collectTransactions.resolves(transactions);
+
+        await controller.getOrderHistory(req, res, next);
+      });
+      it('returns order history', () => {
+        res.status.should.have.been.calledWith(200);
+        res.json.should.have.been.calledWith([
+          {
+            traded_amount: '0',
+            order_amount: '1',
+            turnover_rate: '0', // 0%
+            status: 'aborted',
+            claimable: false,
+            last_order_cell_outpoint: {
+              tx_hash: 'hash1',
+              index: '0x0',
+            },
+          },
+        ]);
       });
     });
     describe('incompleted order', () => {
@@ -380,7 +449,6 @@ describe('Orders controller', () => {
       });
       it('returns order history', () => {
         res.status.should.have.been.calledWith(200);
-        res.json.should.have.been.called;
         res.json.should.have.been.calledWith([
           {
             traded_amount: '0',
