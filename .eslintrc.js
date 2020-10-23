@@ -22,7 +22,7 @@ module.exports = {
     'max-len': 'off',
     'prefer-destructuring': 'off',
     'class-methods-use-this': 'off',
-    'camelcase': 'off',
+    camelcase: 'off',
     'consistent-return': 'off',
     'no-use-before-define': 'off',
     'no-plusplus': 'off',
