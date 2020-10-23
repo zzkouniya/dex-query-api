@@ -175,22 +175,20 @@ class Controller {
       const formattedOrdersHistory = ordersHistory.map((orderHistory) => {
         const outpoint = orderHistory.lastOrderCell.outpoint;
         const inputOutPoint = formatInputOutPoint(outpoint.txHash, outpoint.index);
-        const nextTx = txsByInputOutPoint.get(inputOutPoint);
+        const isLive = !!txsByInputOutPoint.get(inputOutPoint);
 
         let status;
         let claimable = false;
         if (orderHistory.turnoverRate === 1) {
           status = 'completed';
-        } else {
-          status = 'open';
-        }
-
-        if (!nextTx) {
-          if (status === 'completed') {
+          if (!isLive) {
             claimable = true;
           }
-        } else if (orderHistory.turnoverRate < 1) {
-          status = 'aborted';
+        } else {
+          status = 'open';
+          if (isLive) {
+            status = 'aborted';
+          }
         }
 
         const formattedOrderHistory = {
