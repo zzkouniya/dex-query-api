@@ -216,113 +216,275 @@ describe('Orders controller', () => {
     };
 
     describe('completed order', () => {
-      beforeEach(async () => {
-        const price = 1n;
-        const publicKeyHash = 'publickeyhash';
-        const transactions = [
-          {
-            transaction: {
-              hash: 'hash1',
-              inputs: [
-                {
-                  previous_output: {
-                    index: '0x0',
-                    tx_hash: 'hash0',
-                  },
-                },
-              ],
-              outputs: [
-                {
-                  capacity: '0x0',
-                  lock: {
-                    ...orderLockScript,
-                    args: publicKeyHash,
-                  },
-                  type: typeScript,
-                },
-              ],
-              outputs_data: [
-                formatOrderData(1n, 1n, price, true),
-              ],
-            },
-          },
-          {
-            transaction: {
-              hash: 'hash2',
-              inputs: [
-                {
-                  previous_output: {
-                    index: '0x0',
-                    tx_hash: 'hash1',
-                  },
-                },
-              ],
-              outputs: [
-                {
-                  capacity: '0x0',
-                  lock: {
-                    ...orderLockScript,
-                    args: publicKeyHash,
-                  },
-                  type: typeScript,
-                },
-              ],
-              outputs_data: [
-                formatOrderData(2n, 0n, price, true),
-              ],
-            },
-          },
-        ];
+      const price = 1n;
+      const publicKeyHash = 'publickeyhash';
+      let transactions;
 
-        req.query.type_code_hash = typeScript.code_hash;
-        req.query.type_hash_type = typeScript.hash_type;
-        req.query.type_args = typeScript.args;
-        req.query.public_key_hash = publicKeyHash;
-        indexer.collectTransactions.resolves(transactions);
-
-        await controller.getOrderHistory(req, res, next);
-      });
-      it('returns order history', () => {
-        res.status.should.have.been.calledWith(200);
-        res.json.should.have.been.calledWith(
-          [
+      describe('with single order history', () => {
+        beforeEach(async () => {
+          transactions = [
             {
-              traded_amount: '1',
-              order_amount: '1',
-              turnover_rate: '1', // 100%
-              status: 'completed',
-              claimable: true,
-              last_order_cell_outpoint: {
-                tx_hash: 'hash2',
-                index: '0x0',
+              transaction: {
+                hash: 'hash1',
+                inputs: [
+                  {
+                    previous_output: {
+                      index: '0x0',
+                      tx_hash: 'hash0',
+                    },
+                  },
+                ],
+                outputs: [
+                  {
+                    capacity: '0x0',
+                    lock: {
+                      ...orderLockScript,
+                      args: publicKeyHash,
+                    },
+                    type: typeScript,
+                  },
+                ],
+                outputs_data: [
+                  formatOrderData(1n, 1n, price, true),
+                ],
               },
             },
-          ],
-        );
+            {
+              transaction: {
+                hash: 'hash2',
+                inputs: [
+                  {
+                    previous_output: {
+                      index: '0x0',
+                      tx_hash: 'hash1',
+                    },
+                  },
+                ],
+                outputs: [
+                  {
+                    capacity: '0x0',
+                    lock: {
+                      ...orderLockScript,
+                      args: publicKeyHash,
+                    },
+                    type: typeScript,
+                  },
+                ],
+                outputs_data: [
+                  formatOrderData(2n, 0n, price, true),
+                ],
+              },
+            },
+          ];
 
-        // check completed order cell
-        // if the order amount is 0
-        // then it is completed
-        // if it is live cell(end of history)
-        // then claimable
-        // link through the previous inputs
-        // find the initial order cell
-        // get the order amount, which is the total traded amount
+          req.query.type_code_hash = typeScript.code_hash;
+          req.query.type_hash_type = typeScript.hash_type;
+          req.query.type_args = typeScript.args;
+          req.query.public_key_hash = publicKeyHash;
+        });
+        describe('when order cell is live', () => {
+          beforeEach(async () => {
+            indexer.collectTransactions.resolves(transactions);
+            await controller.getOrderHistory(req, res, next);
+          });
+          it('returns order history', () => {
+            res.status.should.have.been.calledWith(200);
+            res.json.should.have.been.calledWith(
+              [
+                {
+                  traded_amount: '1',
+                  order_amount: '1',
+                  turnover_rate: '1', // 100%
+                  status: 'completed',
+                  claimable: true,
+                  last_order_cell_outpoint: {
+                    tx_hash: 'hash2',
+                    index: '0x0',
+                  },
+                },
+              ],
+            );
+          });
+        });
+        describe('when order cell is not live', () => {
+          describe('with order lock or type mismatched', () => {
+            beforeEach(async () => {
+              transactions.push({
+                transaction: {
+                  hash: 'hash3',
+                  inputs: [
+                    {
+                      previous_output: {
+                        index: '0x0',
+                        tx_hash: 'hash2',
+                      },
+                    },
+                  ],
+                  outputs: [
+                    {
+                      capacity: '0x0',
+                      lock: {
+                        ...orderLockScript,
+                        args: publicKeyHash,
+                      },
+                    },
+                  ],
+                  outputs_data: ['0x'],
+                },
+              });
+              indexer.collectTransactions.resolves(transactions);
+              await controller.getOrderHistory(req, res, next);
+            });
+            it('returns order history', () => {
+              res.status.should.have.been.calledWith(200);
+              res.json.should.have.been.calledWith(
+                [
+                  {
+                    traded_amount: '1',
+                    order_amount: '1',
+                    turnover_rate: '1',
+                    status: 'completed',
+                    claimable: false,
+                    last_order_cell_outpoint: {
+                      tx_hash: 'hash2',
+                      index: '0x0',
+                    },
+                  },
+                ],
+              );
+            });
+          });
+        });
+      });
+      describe('with multiple order history', () => {
+        beforeEach(async () => {
+          transactions = [
+            {
+              transaction: {
+                hash: 'hash1',
+                inputs: [
+                  {
+                    previous_output: {
+                      index: '0x0',
+                      tx_hash: 'hash0',
+                    },
+                  },
+                ],
+                outputs: [
+                  {
+                    capacity: '0x0',
+                    lock: {
+                      ...orderLockScript,
+                      args: publicKeyHash,
+                    },
+                    type: typeScript,
+                  },
+                  {
+                    capacity: '0x0',
+                    lock: {
+                      ...orderLockScript,
+                      args: publicKeyHash,
+                    },
+                    type: typeScript,
+                  },
+                ],
+                outputs_data: [
+                  formatOrderData(1n, 1n, price, true),
+                  formatOrderData(10n, 10n, price, true),
+                ],
+              },
+            },
+            {
+              transaction: {
+                hash: 'hash2',
+                inputs: [
+                  {
+                    previous_output: {
+                      index: '0x0',
+                      tx_hash: 'hash1',
+                    },
+                  },
+                  {
+                    previous_output: {
+                      index: '0x1',
+                      tx_hash: 'hash1',
+                    },
+                  },
+                ],
+                outputs: [
+                  {
+                    capacity: '0x0',
+                    lock: {
+                      ...orderLockScript,
+                      args: publicKeyHash,
+                    },
+                  },
+                  {
+                    capacity: '0x0',
+                    lock: {
+                      ...orderLockScript,
+                      args: publicKeyHash,
+                    },
+                    type: typeScript,
+                  },
+                  {
+                    capacity: '0x0',
+                    lock: {
+                      ...orderLockScript,
+                      args: publicKeyHash,
+                    },
+                    type: typeScript,
+                  },
+                ],
+                outputs_data: [
+                  '0x',
+                  formatOrderData(2n, 0n, price, true),
+                  formatOrderData(20n, 0n, price, true),
+                ],
+              },
+            },
+          ];
 
-        // check aborted order cell
-        // if the order amount is non-zero
-        // and the lock of the next output is not the same as the current one(end of history)
-        // then it is aborted
-        // link through the previous inputs
-        // find the initial order cell
-        // get the order amount and subtract it by the order amount of the current order cell
-
-        // check open order cell
-        // if the order lock cell is live and the order amount is not 0
-        // then the order is still incompleted
-        // link through the previous inputs
-        // find the initial order cell
-        // get the order amount and subtract it by the order amount of the current order cell
+          req.query.type_code_hash = typeScript.code_hash;
+          req.query.type_hash_type = typeScript.hash_type;
+          req.query.type_args = typeScript.args;
+          req.query.public_key_hash = publicKeyHash;
+        });
+        describe('when order cell is live', () => {
+          beforeEach(async () => {
+            indexer.collectTransactions.resolves(transactions);
+            await controller.getOrderHistory(req, res, next);
+          });
+          it('returns order history', () => {
+            res.status.should.have.been.calledWith(200);
+            res.json.should.have.been.calledWith(
+              [
+                {
+                  traded_amount: '1',
+                  order_amount: '1',
+                  turnover_rate: '1',
+                  status: 'completed',
+                  claimable: true,
+                  last_order_cell_outpoint: {
+                    tx_hash: 'hash2',
+                    index: '0x1',
+                  },
+                },
+                {
+                  traded_amount: '10',
+                  order_amount: '10',
+                  turnover_rate: '1',
+                  status: 'completed',
+                  claimable: true,
+                  last_order_cell_outpoint: {
+                    tx_hash: 'hash2',
+                    index: '0x2',
+                  },
+                },
+              ],
+            );
+          });
+        });
       });
     });
     describe('aborted order', () => {
