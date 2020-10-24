@@ -292,6 +292,9 @@ describe('Orders controller', () => {
             res.json.should.have.been.calledWith(
               [
                 {
+                  // pay,
+                  // receive,
+                  price: '1',
                   traded_amount: '1',
                   order_amount: '1',
                   turnover_rate: '1', // 100%
@@ -344,6 +347,7 @@ describe('Orders controller', () => {
                     traded_amount: '1',
                     order_amount: '1',
                     turnover_rate: '1',
+                    price: '1',
                     status: 'completed',
                     claimable: false,
                     is_bid: true,
@@ -465,6 +469,7 @@ describe('Orders controller', () => {
                   traded_amount: '1',
                   order_amount: '1',
                   turnover_rate: '1',
+                  price: '1',
                   status: 'completed',
                   claimable: true,
                   is_bid: true,
@@ -477,6 +482,7 @@ describe('Orders controller', () => {
                   traded_amount: '10',
                   order_amount: '10',
                   turnover_rate: '1',
+                  price: '1',
                   status: 'completed',
                   claimable: true,
                   is_bid: true,
@@ -561,7 +567,8 @@ describe('Orders controller', () => {
           {
             traded_amount: '0',
             order_amount: '1',
-            turnover_rate: '0', // 0%
+            turnover_rate: '0',
+            price: '1',
             status: 'aborted',
             claimable: false,
             is_bid: true,
@@ -621,6 +628,7 @@ describe('Orders controller', () => {
             traded_amount: '0',
             order_amount: '1',
             turnover_rate: '0',
+            price: '1',
             status: 'open',
             claimable: false,
             is_bid: true,

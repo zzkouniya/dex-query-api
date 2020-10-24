@@ -171,6 +171,7 @@ class Controller {
         orderHistory.turnoverRate = turnoverRate;
         orderHistory.orderAmount = firstOrderCellData.orderAmount;
         orderHistory.isBid = firstOrderCellData.isBid;
+        orderHistory.price = firstOrderCellData.price;
       }
 
       const formattedOrdersHistory = ordersHistory.map((orderHistory) => {
@@ -197,6 +198,7 @@ class Controller {
           order_amount: orderHistory.orderAmount.toString(),
           traded_amount: orderHistory.tradedAmount.toString(),
           turnover_rate: orderHistory.turnoverRate.toString(),
+          price: orderHistory.price.toString(),
           claimable,
           status,
           last_order_cell_outpoint: {
