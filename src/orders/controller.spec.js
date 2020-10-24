@@ -130,7 +130,11 @@ describe('Orders controller', () => {
       collectCells: sinon.stub().returnsPromise(),
       collectTransactions: sinon.stub().returnsPromise(),
     };
+    const ordersHistory = proxyquire('./orders-history', {
+      '../indexer': indexer,
+    });
     controller = proxyquire('./controller', {
+      './orders-history': ordersHistory,
       '../indexer': indexer,
     });
     req = mockReq();

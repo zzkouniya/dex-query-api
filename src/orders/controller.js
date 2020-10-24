@@ -1,6 +1,8 @@
 const config = require('../config');
 const indexer = require('../indexer');
 
+const OrdersHistory = require('./orders-history');
+
 class Controller {
   async getOrders(req, res) {
     const {
@@ -104,119 +106,9 @@ class Controller {
       args: public_key_hash,
     };
 
-    const txsByInputOutPoint = new Map();
-    const usedInputOutPoints = new Set();
-
     try {
-      const txsWithStatus = await indexer.collectTransactions({
-        type: sudtType,
-        lock: orderLock,
-      });
-
-      for (const txWithStatus of txsWithStatus) {
-        const { transaction } = txWithStatus;
-        const { inputs } = transaction;
-
-        for (const input of inputs) {
-          const { tx_hash, index } = input.previous_output;
-          const inputOutPoint = formatInputOutPoint(tx_hash, parseInt(index, 16));
-          if (!txsByInputOutPoint.has(inputOutPoint)) {
-            txsByInputOutPoint.set(inputOutPoint, transaction);
-          }
-        }
-      }
-
-      const ordersHistory = [];
-      for (const txWithStatus of txsWithStatus) {
-        const { transaction } = txWithStatus;
-        const { hash, outputs, outputs_data } = transaction;
-
-        const groupedOrderCells = groupOrderCells(outputs, orderLock, sudtType);
-        for (let groupedIndex = 0; groupedIndex < groupedOrderCells.length; groupedIndex++) {
-          const groupedOrderCell = groupedOrderCells[groupedIndex];
-          const [originalIndex, output] = groupedOrderCell;
-
-          if (!isOrderCell(output, orderLock, sudtType)) {
-            continue;
-          }
-
-          const inputOutPoint = formatInputOutPoint(hash, originalIndex);
-          if (usedInputOutPoints.has(inputOutPoint)) {
-            continue;
-          }
-
-          const data = outputs_data[originalIndex];
-          output.data = data;
-          output.outpoint = {
-            txHash: hash,
-            index: originalIndex,
-          };
-          const lastOrderCell = getLastOrderCell(hash, originalIndex, groupedOrderCell, txsByInputOutPoint, usedInputOutPoints, orderLock, sudtType);
-          ordersHistory.push({
-            firstOrderCell: output,
-            lastOrderCell,
-          });
-        }
-      }
-
-      for (const orderHistory of ordersHistory) {
-        const { firstOrderCell, lastOrderCell } = orderHistory;
-        const firstOrderCellData = parseOrderData(firstOrderCell.data);
-        const lastOrderCellData = parseOrderData(lastOrderCell.data);
-
-        const tradedAmount = firstOrderCellData.orderAmount - lastOrderCellData.orderAmount;
-        const turnoverRate = Number((tradedAmount * 100n) / firstOrderCellData.orderAmount) / 100;
-
-        let paidAmount;
-        if (firstOrderCellData.isBid) {
-          paidAmount = BigInt(firstOrderCell.capacity) - BigInt(lastOrderCell.capacity);
-        } else {
-          paidAmount = firstOrderCellData.sUDTAmount - lastOrderCellData.sUDTAmount;
-        }
-
-        orderHistory.paidAmount = paidAmount;
-        orderHistory.tradedAmount = tradedAmount;
-        orderHistory.turnoverRate = turnoverRate;
-        orderHistory.orderAmount = firstOrderCellData.orderAmount;
-        orderHistory.isBid = firstOrderCellData.isBid;
-        orderHistory.price = firstOrderCellData.price;
-      }
-
-      const formattedOrdersHistory = ordersHistory.map((orderHistory) => {
-        const outpoint = orderHistory.lastOrderCell.outpoint;
-        const inputOutPoint = formatInputOutPoint(outpoint.txHash, outpoint.index);
-        const isLive = !!txsByInputOutPoint.get(inputOutPoint);
-
-        let status;
-        let claimable = false;
-        if (orderHistory.turnoverRate === 1) {
-          status = 'completed';
-          if (!isLive) {
-            claimable = true;
-          }
-        } else {
-          status = 'open';
-          if (isLive) {
-            status = 'aborted';
-          }
-        }
-
-        const formattedOrderHistory = {
-          is_bid: orderHistory.isBid,
-          order_amount: orderHistory.orderAmount.toString(),
-          traded_amount: orderHistory.tradedAmount.toString(),
-          turnover_rate: orderHistory.turnoverRate.toString(),
-          paid_amount: orderHistory.paidAmount.toString(),
-          price: orderHistory.price.toString(),
-          claimable,
-          status,
-          last_order_cell_outpoint: {
-            tx_hash: outpoint.txHash,
-            index: `0x${outpoint.index.toString(16)}`,
-          },
-        };
-        return formattedOrderHistory;
-      });
+      const ordersHistory = new OrdersHistory(orderLock, sudtType);
+      const formattedOrdersHistory = await ordersHistory.getOrderHistory();
       res.status(200).json(formattedOrdersHistory);
     } catch (error) {
       console.error(error);
@@ -224,93 +116,6 @@ class Controller {
     }
   }
 }
-
-const groupOrderCells = (cells, orderLock, sudtType) => {
-  const groupedCells = [];
-  for (let i = 0; i < cells.length; i++) {
-    const cell = cells[i];
-    if (isOrderCell(cell, orderLock, sudtType)) {
-      groupedCells.push([i, cell]);
-    }
-  }
-  return groupedCells;
-};
-
-const isOrderCell = (cell, orderLock, sudtType) => {
-  const { lock, type } = cell;
-
-  if (
-    !equalsScript(lock, orderLock)
-    || !equalsScript(type, sudtType)
-  ) {
-    return false;
-  }
-  return true;
-};
-
-const equalsScript = (script1, script2) => {
-  if (!script1 && script2) {
-    return false;
-  }
-
-  if (script1 && !script2) {
-    return false;
-  }
-
-  if (
-    script1.args !== script2.args
-    || script1.code_hash !== script2.code_hash
-    || script1.hash_type !== script2.hash_type
-  ) {
-    return false;
-  }
-  return true;
-};
-
-const getLastOrderCell = (hash, index, groupedOrderCell, txsByInputOutPoint, usedInputOutPoints, orderLock, sudtType) => {
-  const inputOutPoint = formatInputOutPoint(hash, index);
-  const nextTransaction = txsByInputOutPoint.get(inputOutPoint);
-
-  if (!usedInputOutPoints.has(inputOutPoint)) {
-    usedInputOutPoints.add(inputOutPoint);
-  }
-
-  const [groupedIndex, currentOutput] = groupedOrderCell;
-
-  if (!nextTransaction) {
-    return currentOutput;
-  }
-
-  const nextGroupedOrderCells = groupOrderCells(nextTransaction.outputs, orderLock, sudtType);
-
-  const nextTxHash = nextTransaction.hash;
-  // const nextOutput = nextTransaction.outputs[index];
-  const nextGroupedOrderCell = nextGroupedOrderCells[groupedIndex];
-
-  if (!nextGroupedOrderCell) {
-    return currentOutput;
-  }
-
-  const [nextOriginalIndex, nextOutput] = nextGroupedOrderCell;
-  const { lock, type } = nextOutput;
-  if (
-    !equalsScript(lock, orderLock)
-    || !equalsScript(type, sudtType)
-  ) {
-    return currentOutput;
-  }
-
-  nextOutput.data = nextTransaction.outputs_data[nextOriginalIndex];
-
-  nextOutput.outpoint = {
-    txHash: nextTxHash,
-    index: nextOriginalIndex,
-  };
-
-  return getLastOrderCell(nextTxHash, nextOriginalIndex, nextGroupedOrderCell, txsByInputOutPoint, usedInputOutPoints, orderLock, sudtType);
-};
-
-const formatInputOutPoint = (txHash, index) => (`${txHash}0x${index.toString(16)}`);
 
 const formatOrderCells = (orderCells) => {
   const formattedOrderCells = orderCells.map((orderCell) => {
