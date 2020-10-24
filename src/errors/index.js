@@ -3,26 +3,24 @@ const createError = (httpCode, message) => {
   error.message = message;
   error.code = httpCode;
   Error.captureStackTrace(error);
-  return error;  
+  return error;
 };
 
-const getError = ({httpCode, message}) => {
-  return createError(httpCode, message);
-};
+const getError = ({ httpCode, message }) => createError(httpCode, message);
 
 module.exports = {
   getError,
   createError,
   INVALID_PARAMETER: {
     httpCode: 422,
-    message: 'Invalid parameter.'
+    message: 'Invalid parameter.',
   },
   INVALID_ETHEREUM_ADDRESS: {
     httpCode: 422,
-    message: 'Invalid ethereum address.'
+    message: 'Invalid ethereum address.',
   },
   INVALID_SIGNATURE: {
     httpCode: 422,
-    message: 'Invalid signature.'
-  }
+    message: 'Invalid signature.',
+  },
 };
