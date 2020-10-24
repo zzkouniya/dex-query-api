@@ -236,7 +236,7 @@ describe('Orders controller', () => {
                 ],
                 outputs: [
                   {
-                    capacity: '0x0',
+                    capacity: '0x1',
                     lock: {
                       ...orderLockScript,
                       args: publicKeyHash,
@@ -292,12 +292,11 @@ describe('Orders controller', () => {
             res.json.should.have.been.calledWith(
               [
                 {
-                  // pay,
-                  // receive,
+                  paid_amount: '1',
                   price: '1',
                   traded_amount: '1',
                   order_amount: '1',
-                  turnover_rate: '1', // 100%
+                  turnover_rate: '1',
                   status: 'completed',
                   claimable: true,
                   is_bid: true,
@@ -326,7 +325,7 @@ describe('Orders controller', () => {
                   ],
                   outputs: [
                     {
-                      capacity: '0x0',
+                      capacity: '0x2',
                       lock: {
                         ...orderLockScript,
                         args: publicKeyHash,
@@ -344,6 +343,7 @@ describe('Orders controller', () => {
               res.json.should.have.been.calledWith(
                 [
                   {
+                    paid_amount: '1',
                     traded_amount: '1',
                     order_amount: '1',
                     turnover_rate: '1',
@@ -378,7 +378,7 @@ describe('Orders controller', () => {
                 ],
                 outputs: [
                   {
-                    capacity: '0x0',
+                    capacity: '0x3',
                     lock: {
                       ...orderLockScript,
                       args: publicKeyHash,
@@ -386,7 +386,7 @@ describe('Orders controller', () => {
                     type: typeScript,
                   },
                   {
-                    capacity: '0x0',
+                    capacity: '0x4',
                     lock: {
                       ...orderLockScript,
                       args: publicKeyHash,
@@ -426,7 +426,7 @@ describe('Orders controller', () => {
                     },
                   },
                   {
-                    capacity: '0x0',
+                    capacity: '0x1',
                     lock: {
                       ...orderLockScript,
                       args: publicKeyHash,
@@ -434,7 +434,7 @@ describe('Orders controller', () => {
                     type: typeScript,
                   },
                   {
-                    capacity: '0x0',
+                    capacity: '0x1',
                     lock: {
                       ...orderLockScript,
                       args: publicKeyHash,
@@ -466,6 +466,7 @@ describe('Orders controller', () => {
             res.json.should.have.been.calledWith(
               [
                 {
+                  paid_amount: '2',
                   traded_amount: '1',
                   order_amount: '1',
                   turnover_rate: '1',
@@ -479,6 +480,7 @@ describe('Orders controller', () => {
                   },
                 },
                 {
+                  paid_amount: '3',
                   traded_amount: '10',
                   order_amount: '10',
                   turnover_rate: '1',
@@ -515,7 +517,7 @@ describe('Orders controller', () => {
               ],
               outputs: [
                 {
-                  capacity: '0x0',
+                  capacity: '0x1',
                   lock: {
                     ...orderLockScript,
                     args: publicKeyHash,
@@ -541,7 +543,7 @@ describe('Orders controller', () => {
               ],
               outputs: [
                 {
-                  capacity: '0x0',
+                  capacity: '0x2',
                   lock: {
                     ...orderLockScript,
                     args: publicKeyHash,
@@ -565,6 +567,7 @@ describe('Orders controller', () => {
         res.status.should.have.been.calledWith(200);
         res.json.should.have.been.calledWith([
           {
+            paid_amount: '0',
             traded_amount: '0',
             order_amount: '1',
             turnover_rate: '0',
@@ -598,7 +601,7 @@ describe('Orders controller', () => {
               ],
               outputs: [
                 {
-                  capacity: '0x0',
+                  capacity: '0x1',
                   lock: {
                     ...orderLockScript,
                     args: publicKeyHash,
@@ -625,6 +628,7 @@ describe('Orders controller', () => {
         res.status.should.have.been.calledWith(200);
         res.json.should.have.been.calledWith([
           {
+            paid_amount: '0',
             traded_amount: '0',
             order_amount: '1',
             turnover_rate: '0',

@@ -167,6 +167,14 @@ class Controller {
         const tradedAmount = firstOrderCellData.orderAmount - lastOrderCellData.orderAmount;
         const turnoverRate = Number((tradedAmount * 100n) / firstOrderCellData.orderAmount) / 100;
 
+        let paidAmount;
+        if (firstOrderCellData.isBid) {
+          paidAmount = BigInt(firstOrderCell.capacity) - BigInt(lastOrderCell.capacity);
+        } else {
+          paidAmount = firstOrderCellData.sUDTAmount - lastOrderCellData.sUDTAmount;
+        }
+
+        orderHistory.paidAmount = paidAmount;
         orderHistory.tradedAmount = tradedAmount;
         orderHistory.turnoverRate = turnoverRate;
         orderHistory.orderAmount = firstOrderCellData.orderAmount;
@@ -198,6 +206,7 @@ class Controller {
           order_amount: orderHistory.orderAmount.toString(),
           traded_amount: orderHistory.tradedAmount.toString(),
           turnover_rate: orderHistory.turnoverRate.toString(),
+          paid_amount: orderHistory.paidAmount.toString(),
           price: orderHistory.price.toString(),
           claimable,
           status,
