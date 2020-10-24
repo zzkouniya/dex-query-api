@@ -1,7 +1,7 @@
 const config = require('../config');
 const indexer = require('../indexer');
 
-const OrdersHistory = require('./orders-history');
+const OrdersHistoryService = require('./orders-history');
 const formatter = require('../commons/formatter');
 
 class Controller {
@@ -108,8 +108,22 @@ class Controller {
     };
 
     try {
-      const ordersHistory = new OrdersHistory(orderLock, sudtType);
-      const formattedOrdersHistory = await ordersHistory.getOrderHistory();
+      const ordersHistoryService = new OrdersHistoryService(orderLock, sudtType);
+      const ordersHistory = await ordersHistoryService.calculateOrdersHistory();
+      const formattedOrdersHistory = ordersHistory.map((o) => ({
+        is_bid: o.isBid,
+        order_amount: o.orderAmount.toString(),
+        traded_amount: o.tradedAmount.toString(),
+        turnover_rate: o.turnoverRate.toString(),
+        paid_amount: o.paidAmount.toString(),
+        price: o.price.toString(),
+        claimable: o.claimable,
+        status: o.status,
+        last_order_cell_outpoint: {
+          tx_hash: o.lastOrderCell.outpoint.txHash,
+          index: `0x${o.lastOrderCell.outpoint.index.toString(16)}`,
+        },
+      }));
       res.status(200).json(formattedOrdersHistory);
     } catch (error) {
       console.error(error);

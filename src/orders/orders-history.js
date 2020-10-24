@@ -1,7 +1,7 @@
 const indexer = require('../indexer');
 const formatter = require('../commons/formatter');
 
-class OrdersHistory {
+class OrdersHistoryService {
   constructor(orderLock, sudtType) {
     this.orderLock = orderLock;
     this.sudtType = sudtType;
@@ -10,7 +10,7 @@ class OrdersHistory {
     this.usedInputOutPoints = new Set();
   }
 
-  async getOrderHistory() {
+  async calculateOrdersHistory() {
     const txsWithStatus = await indexer.collectTransactions({
       type: this.sudtType,
       lock: this.orderLock,
@@ -83,9 +83,7 @@ class OrdersHistory {
       orderHistory.orderAmount = firstOrderCellData.orderAmount;
       orderHistory.isBid = firstOrderCellData.isBid;
       orderHistory.price = firstOrderCellData.price;
-    }
 
-    const formattedOrdersHistory = ordersHistory.map((orderHistory) => {
       const outpoint = orderHistory.lastOrderCell.outpoint;
       const inputOutPoint = this.formatInputOutPoint(outpoint.txHash, outpoint.index);
       const isLive = !!this.txsByInputOutPoint.get(inputOutPoint);
@@ -104,23 +102,11 @@ class OrdersHistory {
         }
       }
 
-      const formattedOrderHistory = {
-        is_bid: orderHistory.isBid,
-        order_amount: orderHistory.orderAmount.toString(),
-        traded_amount: orderHistory.tradedAmount.toString(),
-        turnover_rate: orderHistory.turnoverRate.toString(),
-        paid_amount: orderHistory.paidAmount.toString(),
-        price: orderHistory.price.toString(),
-        claimable,
-        status,
-        last_order_cell_outpoint: {
-          tx_hash: outpoint.txHash,
-          index: `0x${outpoint.index.toString(16)}`,
-        },
-      };
-      return formattedOrderHistory;
-    });
-    return formattedOrdersHistory;
+      orderHistory.claimable = claimable;
+      orderHistory.status = status;
+    }
+
+    return ordersHistory;
   }
 
   groupOrderCells(cells, orderLock, sudtType) {
@@ -212,4 +198,4 @@ class OrdersHistory {
   }
 }
 
-module.exports = OrdersHistory;
+module.exports = OrdersHistoryService;
