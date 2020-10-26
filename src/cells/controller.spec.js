@@ -82,65 +82,129 @@ describe('Cells controller', () => {
   });
 
   describe('#getLiveCells()', () => {
-    describe('collect CKB cells', () => {
-      describe('without amount specified', () => {
+    describe('valid requests', () => {
+      describe('with only lock script', () => {
         beforeEach(async () => {
+          req.query = {
+            lock_code_hash: lock.code_hash,
+            lock_hash_type: lock.hash_type,
+            lock_args: lock.args,
+          };
           indexer.collectCells.resolves(clone(cellsWithLock));
           await controller.getLiveCells(req, res, next);
         });
         it('returns cells', () => {
           res.status.should.have.been.calledWith(200);
-          res.json.should.have.been.calledWith(clone(cellsWithLock));
+          res.json.should.have.been.calledWith(cellsWithLock);
         });
       });
-      describe('with amount specified', () => {
-        describe('with sufficient balance', () => {
-          beforeEach(async () => {
-            indexer.collectCells.resolves(clone(cellsWithLock));
-            req.query.amount = '22';
-            await controller.getLiveCells(req, res, next);
-          });
-          it('returns cells', () => {
-            res.status.should.have.been.calledWith(200);
-            res.json.should.have.been.calledWith([
-              cellsWithLock[1],
-              cellsWithLock[2],
-            ]);
-          });
-        });
-        describe('with insufficient balance', () => {
-          beforeEach(async () => {
-            indexer.collectCells.resolves(clone(cellsWithLock));
-            req.query.amount = '100';
-            await controller.getLiveCells(req, res, next);
-          });
-          it('returns cells', () => {
-            res.status.should.have.been.calledWith(404);
-            res.json.should.have.been.calledWith({ error: 'insufficient balance' });
-          });
-        });
-      });
-    });
-    describe('collect SUDT cells', () => {
-      beforeEach(() => {
-        req.query.type_code_hash = 'typecodehash';
-      });
-      describe('without amount specified', () => {
+      describe('with only type script', () => {
         beforeEach(async () => {
-          indexer.collectCells.resolves(clone(cellsWithBothLockType));
+          req.query = {
+            type_code_hash: type.code_hash,
+            type_hash_type: type.hash_type,
+            type_args: type.args,
+          };
+          indexer.collectCells.resolves(clone(cellsWithLock));
           await controller.getLiveCells(req, res, next);
         });
         it('returns cells', () => {
           res.status.should.have.been.calledWith(200);
-          res.json.should.have.been.calledWith(clone(cellsWithBothLockType));
+          res.json.should.have.been.calledWith(cellsWithLock);
         });
       });
-      describe('with amount specified', () => {
+      describe('with both lock and type scripts', () => {
+        beforeEach(async () => {
+          req.query = {
+            type_code_hash: type.code_hash,
+            type_hash_type: type.hash_type,
+            type_args: type.args,
+            lock_code_hash: lock.code_hash,
+            lock_hash_type: lock.hash_type,
+            lock_args: lock.args,
+          };
+          indexer.collectCells.resolves(clone(cellsWithLock));
+          await controller.getLiveCells(req, res, next);
+        });
+        it('returns cells', () => {
+          res.status.should.have.been.calledWith(200);
+          res.json.should.have.been.calledWith(cellsWithLock);
+        });
+      });
+    });
+    describe('invalid requests', () => {
+      describe('with neither lock nor type script', () => {
+        beforeEach(async () => {
+          req.query = {};
+          indexer.collectCells.resolves(clone(cellsWithLock));
+          await controller.getLiveCells(req, res, next);
+        });
+        it('returns cells', () => {
+          res.status.should.have.been.calledWith(400);
+          res.json.should.have.been.calledWith({ error: 'requires either lock or type script specified as parameters' });
+        });
+      });
+    });
+  });
+
+  describe('#getLiveCellsForAmount()', () => {
+    describe('with ckb_amount', () => {
+      beforeEach(() => {
+        req.query = {
+          lock_code_hash: lock.code_hash,
+          lock_hash_type: lock.hash_type,
+          lock_args: lock.args,
+        };
+      });
+      describe('with sufficient balance', () => {
+        beforeEach(async () => {
+          indexer.collectCells.resolves(clone(cellsWithLock));
+          req.query.ckb_amount = '22';
+          await controller.getLiveCellsForAmount(req, res, next);
+        });
+        it('type script indexer query option should be empty', () => {
+          indexer.collectCells.should.have.been.calledWith({
+            lock,
+            type: 'empty',
+          });
+        });
+        it('returns cells', () => {
+          res.status.should.have.been.calledWith(200);
+          res.json.should.have.been.calledWith([
+            cellsWithLock[1],
+            cellsWithLock[2],
+          ]);
+        });
+      });
+      describe('with could not find cells fulfilling the amount query', () => {
+        beforeEach(async () => {
+          indexer.collectCells.resolves(clone(cellsWithLock));
+          req.query.ckb_amount = '100';
+          await controller.getLiveCellsForAmount(req, res, next);
+        });
+        it('returns cells', () => {
+          res.status.should.have.been.calledWith(404);
+          res.json.should.have.been.calledWith({ error: 'could not find cells fulfilling the amount query' });
+        });
+      });
+    });
+    describe('with sudt_amount', () => {
+      describe('valid requests', () => {
+        beforeEach(() => {
+          req.query = {
+            lock_code_hash: lock.code_hash,
+            lock_hash_type: lock.hash_type,
+            lock_args: lock.args,
+            type_code_hash: type.code_hash,
+            type_hash_type: type.hash_type,
+            type_args: type.args,
+          };
+        });
         describe('with sufficient balance', () => {
           beforeEach(async () => {
             indexer.collectCells.resolves(clone(cellsWithBothLockType));
-            req.query.amount = '22';
-            await controller.getLiveCells(req, res, next);
+            req.query.sudt_amount = '22';
+            await controller.getLiveCellsForAmount(req, res, next);
           });
           it('returns cells', () => {
             res.status.should.have.been.calledWith(200);
@@ -150,16 +214,71 @@ describe('Cells controller', () => {
             ]);
           });
         });
-        describe('with insufficient balance', () => {
+        describe('with could not find cells fulfilling the amount query', () => {
           beforeEach(async () => {
             indexer.collectCells.resolves(clone(cellsWithBothLockType));
-            req.query.amount = '100';
-            await controller.getLiveCells(req, res, next);
+            req.query.sudt_amount = '100';
+            await controller.getLiveCellsForAmount(req, res, next);
           });
           it('returns cells', () => {
             res.status.should.have.been.calledWith(404);
-            res.json.should.have.been.calledWith({ error: 'insufficient balance' });
+            res.json.should.have.been.calledWith({ error: 'could not find cells fulfilling the amount query' });
           });
+        });
+      });
+      describe('invalid requests', () => {
+        describe('when missing lock script', () => {
+          beforeEach(async () => {
+            req.query = {
+              type_code_hash: type.code_hash,
+              type_hash_type: type.hash_type,
+              type_args: type.args,
+              sudt_amount: '22',
+            };
+            await controller.getLiveCellsForAmount(req, res, next);
+          });
+          it('throws error', () => {
+            res.status.should.have.been.calledWith(400);
+            res.json.should.have.been.calledWith({ error: 'invalid lock script or type script' });
+          });
+        });
+        describe('when missing lock script', () => {
+          beforeEach(async () => {
+            req.query = {
+              lock_code_hash: lock.code_hash,
+              lock_hash_type: lock.hash_type,
+              lock_args: lock.args,
+              sudt_amount: '22',
+            };
+            await controller.getLiveCellsForAmount(req, res, next);
+          });
+          it('throws error', () => {
+            res.status.should.have.been.calledWith(400);
+            res.json.should.have.been.calledWith({ error: 'invalid lock script or type script' });
+          });
+        });
+      });
+    });
+
+    describe('failure cases', () => {
+      describe('when both ckb_amount and sudt_amount query parameters are specified', () => {
+        beforeEach(async () => {
+          req.query.ckb_amount = '22';
+          req.query.sudt_amount = '22';
+          await controller.getLiveCellsForAmount(req, res, next);
+        });
+        it('throws error', async () => {
+          res.status.should.have.been.calledWith(400);
+          res.json.should.have.been.calledWith({ error: 'only support query either with ckb_amount or sudt_amount' });
+        });
+      });
+      describe('when neither ckb_amount nor sudt_amount is specified', () => {
+        beforeEach(async () => {
+          await controller.getLiveCellsForAmount(req, res, next);
+        });
+        it('throws error', async () => {
+          res.status.should.have.been.calledWith(400);
+          res.json.should.have.been.calledWith({ error: 'requires either ckb_amount or sudt_amount' });
         });
       });
     });
