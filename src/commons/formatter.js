@@ -66,10 +66,13 @@ const formatBigUInt128LE = (u128) => {
   return `0x${buf.toString('hex')}`;
 };
 
+const isValidScript = (codeHash, hashType, args) => (codeHash && hashType && args);
+
 module.exports = {
   parseOrderData,
   parseAmountFromLeHex,
   readBigUInt128LE,
   formatOrderCells,
   formatBigUInt128LE,
+  isValidScript,
 };
