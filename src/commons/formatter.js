@@ -50,9 +50,26 @@ const formatOrderCells = (orderCells) => {
   return formattedOrderCells;
 };
 
+const formatBigUInt128LE = (u128) => {
+  const U128_MAX = BigInt(2) ** BigInt(128) - BigInt(1);
+  const U128_MIN = BigInt(0);
+
+  if (u128 < U128_MIN) {
+    throw new Error(`u128 ${u128} too small`);
+  }
+  if (u128 > U128_MAX) {
+    throw new Error(`u128 ${u128} too large`);
+  }
+  const buf = Buffer.alloc(16);
+  buf.writeBigUInt64LE(u128 & BigInt('0xFFFFFFFFFFFFFFFF'), 0);
+  buf.writeBigUInt64LE(u128 >> BigInt(64), 8);
+  return `0x${buf.toString('hex')}`;
+};
+
 module.exports = {
   parseOrderData,
   parseAmountFromLeHex,
   readBigUInt128LE,
   formatOrderCells,
+  formatBigUInt128LE,
 };
