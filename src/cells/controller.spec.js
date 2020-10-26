@@ -21,7 +21,7 @@ describe('Cells controller', () => {
   const generateCell = (capacity, data, lock, type, txHash = '0x1') => {
     const cell = {
       cell_output: {
-        capacity: capacity.toString('hex'),
+        capacity: `0x${capacity.toString(16)}`,
         lock: lock || {
           code_hash: '0x04878826e4bf143a93eb33cb298a46f96e4014533d98865983e048712da65160',
           hash_type: 'data',
@@ -56,9 +56,9 @@ describe('Cells controller', () => {
   };
 
   const cellsWithLock = [
-    generateCell('30', null, lock),
-    generateCell('10', null, lock),
-    generateCell('20', null, lock),
+    generateCell(30, null, lock),
+    generateCell(10, null, lock),
+    generateCell(20, null, lock),
   ];
 
   const cellsWithBothLockType = [
@@ -94,17 +94,30 @@ describe('Cells controller', () => {
         });
       });
       describe('with amount specified', () => {
-        beforeEach(async () => {
-          indexer.collectCells.resolves(clone(cellsWithLock));
-          req.query.amount = '22';
-          await controller.getLiveCells(req, res, next);
+        describe('with sufficient balance', () => {
+          beforeEach(async () => {
+            indexer.collectCells.resolves(clone(cellsWithLock));
+            req.query.amount = '22';
+            await controller.getLiveCells(req, res, next);
+          });
+          it('returns cells', () => {
+            res.status.should.have.been.calledWith(200);
+            res.json.should.have.been.calledWith([
+              cellsWithLock[1],
+              cellsWithLock[2],
+            ]);
+          });
         });
-        it('returns cells', () => {
-          res.status.should.have.been.calledWith(200);
-          res.json.should.have.been.calledWith([
-            cellsWithLock[1],
-            cellsWithLock[2],
-          ]);
+        describe('with insufficient balance', () => {
+          beforeEach(async () => {
+            indexer.collectCells.resolves(clone(cellsWithLock));
+            req.query.amount = '100';
+            await controller.getLiveCells(req, res, next);
+          });
+          it('returns cells', () => {
+            res.status.should.have.been.calledWith(404);
+            res.json.should.have.been.calledWith({ error: 'insufficient balance' });
+          });
         });
       });
     });
@@ -123,17 +136,30 @@ describe('Cells controller', () => {
         });
       });
       describe('with amount specified', () => {
-        beforeEach(async () => {
-          indexer.collectCells.resolves(clone(cellsWithBothLockType));
-          req.query.amount = '22';
-          await controller.getLiveCells(req, res, next);
+        describe('with sufficient balance', () => {
+          beforeEach(async () => {
+            indexer.collectCells.resolves(clone(cellsWithBothLockType));
+            req.query.amount = '22';
+            await controller.getLiveCells(req, res, next);
+          });
+          it('returns cells', () => {
+            res.status.should.have.been.calledWith(200);
+            res.json.should.have.been.calledWith([
+              cellsWithBothLockType[1],
+              cellsWithBothLockType[2],
+            ]);
+          });
         });
-        it('returns cells', () => {
-          res.status.should.have.been.calledWith(200);
-          res.json.should.have.been.calledWith([
-            cellsWithBothLockType[1],
-            cellsWithBothLockType[2],
-          ]);
+        describe('with insufficient balance', () => {
+          beforeEach(async () => {
+            indexer.collectCells.resolves(clone(cellsWithBothLockType));
+            req.query.amount = '100';
+            await controller.getLiveCells(req, res, next);
+          });
+          it('returns cells', () => {
+            res.status.should.have.been.calledWith(404);
+            res.json.should.have.been.calledWith({ error: 'insufficient balance' });
+          });
         });
       });
     });

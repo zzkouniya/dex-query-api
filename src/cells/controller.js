@@ -39,6 +39,10 @@ class Controller {
           cells = collectCellsByCKBAmount(cells, amount);
         }
       }
+
+      if (!cells.length) {
+        return res.status(404).json({ error: 'insufficient balance' });
+      }
       res.status(200).json(cells);
     } catch (err) {
       console.error(err);
@@ -48,7 +52,7 @@ class Controller {
 }
 
 const collectCellsBySudtAmount = (cells, amount) => {
-  const sortedCellsByAmount = cells.sort((a, b) => {
+  cells.sort((a, b) => {
     const aSudtAmount = formatter.readBigUInt128LE(a.data);
     const bSudtAmount = formatter.readBigUInt128LE(b.data);
 
@@ -58,7 +62,7 @@ const collectCellsBySudtAmount = (cells, amount) => {
 
   const collectedCells = [];
   let summedAmount = BigInt(0);
-  for (const cell of sortedCellsByAmount) {
+  for (const cell of cells) {
     summedAmount += formatter.readBigUInt128LE(cell.data);
     collectedCells.push(cell);
 
@@ -67,29 +71,37 @@ const collectCellsBySudtAmount = (cells, amount) => {
     }
   }
 
+  if (summedAmount < amount) {
+    return [];
+  }
+
   return collectedCells;
 };
 
 const collectCellsByCKBAmount = (cells, amount) => {
-  const sortedCellsByAmount = cells
-    .filter((cell) => cell.data === '0x')
-    .sort((a, b) => {
-      const aAmount = BigInt(a.cell_output.capacity);
-      const bAmount = BigInt(b.cell_output.capacity);
+  const filtered = cells.filter((cell) => cell.data === '0x');
 
-      // eslint-disable-next-line no-nested-ternary
-      return (aAmount < bAmount) ? -1 : ((aAmount > bAmount) ? 1 : 0);
-    });
+  filtered.sort((a, b) => {
+    const aAmount = BigInt(a.cell_output.capacity);
+    const bAmount = BigInt(b.cell_output.capacity);
+
+    // eslint-disable-next-line no-nested-ternary
+    return (aAmount < bAmount) ? -1 : ((aAmount > bAmount) ? 1 : 0);
+  });
 
   const collectedCells = [];
   let summedAmount = BigInt(0);
-  for (const cell of sortedCellsByAmount) {
+  for (const cell of filtered) {
     summedAmount += BigInt(cell.cell_output.capacity);
     collectedCells.push(cell);
 
     if (summedAmount > BigInt(amount)) {
       break;
     }
+  }
+
+  if (summedAmount < amount) {
+    return [];
   }
 
   return collectedCells;
