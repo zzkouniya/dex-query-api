@@ -176,6 +176,25 @@ describe('Cells controller', () => {
           ]);
         });
       });
+      describe('with data having value', () => {
+        const cells = [
+          generateCell(30, null, lock),
+          generateCell(10, '0x1', lock),
+          generateCell(20, null, lock),
+        ];
+        beforeEach(async () => {
+          indexer.collectCells.resolves(clone(cells));
+          req.query.ckb_amount = '22';
+          await controller.getLiveCellsForAmount(req, res, next);
+        });
+        it('returns cells', () => {
+          res.status.should.have.been.calledWith(200);
+          res.json.should.have.been.calledWith([
+            cellsWithLock[2],
+            cellsWithLock[0],
+          ]);
+        });
+      });
       describe('with could not find cells fulfilling the amount query', () => {
         beforeEach(async () => {
           indexer.collectCells.resolves(clone(cellsWithLock));
