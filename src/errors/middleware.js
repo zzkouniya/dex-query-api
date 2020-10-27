@@ -9,7 +9,7 @@ const onError = (err, req, res, next) => {
   res.status(err.code >= 100 && err.code < 600 ? err.code : 500);
   res.json({
     message: err.message,
-    stack: config.env !== 'production' ? err.stack : undefined
+    stack: config.env !== 'production' ? err.stack : undefined,
   });
   next();
 };
@@ -17,6 +17,6 @@ const onError = (err, req, res, next) => {
 module.exports = {
   middleware: [
     defaultRoute,
-    onError
-  ]
+    onError,
+  ],
 };

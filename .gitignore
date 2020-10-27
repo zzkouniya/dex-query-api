@@ -1,2 +1,3 @@
 node_modules
-indexer_data
+*indexer_data*
+.env

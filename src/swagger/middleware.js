@@ -6,7 +6,7 @@ const swaggerUi = require('swagger-ui-express');
 
 module.exports = {
   middleware: [
-    swaggerUi.serve, 
+    swaggerUi.serve,
     // swaggerUi.setup(swaggerFile)
-  ]
+  ],
 };
