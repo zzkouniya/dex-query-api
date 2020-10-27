@@ -6,10 +6,12 @@
   "main": "src/server.js",
   "scripts": {
     "start": "node src/server.js",
-    "test": "env NODE_ENV=test mocha 'src/**/*.spec.js' --exit"
+    "test": "env NODE_ENV=test mocha 'src/**/*.spec.js' --exit",
+    "test:watch": "env NODE_ENV=test mocha 'src/**/*.spec.js' --watch"
   },
   "dependencies": {
     "@ckb-lumos/indexer": "^0.13.1",
+    "@ckb-lumos/base": "^0.13.1",
     "bn.js": "^4.11.8",
     "body-parser": "^1.15.2",
     "cors": "^2.8.4",
