@@ -11,7 +11,7 @@ const contracts = {
 };
 
 const indexer = {
-  dataPath: process.env.INDEXER_FOLDER_PATH || 'http://127.0.0.1:8554',
+  dataPath: process.env.INDEXER_FOLDER_PATH || './indexer_data',
   nodeUrl: process.env.CKB_NODE_RPC_URL || 'http://localhost:8114',
 };
 
