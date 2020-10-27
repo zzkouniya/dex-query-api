@@ -10,7 +10,7 @@ class Controller {
       type_code_hash,
       type_hash_type,
       type_args,
-      public_key_hash,
+      order_lock_args,
     } = req.query;
     try {
       const orderCells = await indexer.collectCells({
@@ -22,7 +22,7 @@ class Controller {
         lock: {
           code_hash: config.contracts.orderLock.codeHash,
           hash_type: config.contracts.orderLock.hashType,
-          args: public_key_hash,
+          args: order_lock_args,
         },
       });
       const formattedOrderCells = orderCells.map((orderCell) => {
@@ -92,7 +92,7 @@ class Controller {
       type_code_hash,
       type_hash_type,
       type_args,
-      public_key_hash,
+      order_lock_args,
     } = req.query;
 
     const sudtType = {
@@ -104,7 +104,7 @@ class Controller {
     const orderLock = {
       code_hash: config.contracts.orderLock.codeHash,
       hash_type: config.contracts.orderLock.hashType,
-      args: public_key_hash,
+      args: order_lock_args,
     };
 
     try {

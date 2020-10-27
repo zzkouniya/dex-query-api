@@ -221,7 +221,7 @@ describe('Orders controller', () => {
 
     describe('completed order', () => {
       const price = 1n;
-      const publicKeyHash = 'publickeyhash';
+      const orderLockArgs = 'orderLockArgs';
       let transactions;
 
       describe('with single order history', () => {
@@ -243,7 +243,7 @@ describe('Orders controller', () => {
                     capacity: '0x1',
                     lock: {
                       ...orderLockScript,
-                      args: publicKeyHash,
+                      args: orderLockArgs,
                     },
                     type: typeScript,
                   },
@@ -269,7 +269,7 @@ describe('Orders controller', () => {
                     capacity: '0x0',
                     lock: {
                       ...orderLockScript,
-                      args: publicKeyHash,
+                      args: orderLockArgs,
                     },
                     type: typeScript,
                   },
@@ -284,7 +284,7 @@ describe('Orders controller', () => {
           req.query.type_code_hash = typeScript.code_hash;
           req.query.type_hash_type = typeScript.hash_type;
           req.query.type_args = typeScript.args;
-          req.query.public_key_hash = publicKeyHash;
+          req.query.order_lock_args = orderLockArgs;
         });
         describe('when order cell is live', () => {
           beforeEach(async () => {
@@ -332,7 +332,7 @@ describe('Orders controller', () => {
                       capacity: '0x2',
                       lock: {
                         ...orderLockScript,
-                        args: publicKeyHash,
+                        args: orderLockArgs,
                       },
                     },
                   ],
@@ -385,7 +385,7 @@ describe('Orders controller', () => {
                     capacity: '0x3',
                     lock: {
                       ...orderLockScript,
-                      args: publicKeyHash,
+                      args: orderLockArgs,
                     },
                     type: typeScript,
                   },
@@ -393,7 +393,7 @@ describe('Orders controller', () => {
                     capacity: '0x4',
                     lock: {
                       ...orderLockScript,
-                      args: publicKeyHash,
+                      args: orderLockArgs,
                     },
                     type: typeScript,
                   },
@@ -426,14 +426,14 @@ describe('Orders controller', () => {
                     capacity: '0x0',
                     lock: {
                       ...orderLockScript,
-                      args: publicKeyHash,
+                      args: orderLockArgs,
                     },
                   },
                   {
                     capacity: '0x1',
                     lock: {
                       ...orderLockScript,
-                      args: publicKeyHash,
+                      args: orderLockArgs,
                     },
                     type: typeScript,
                   },
@@ -441,7 +441,7 @@ describe('Orders controller', () => {
                     capacity: '0x1',
                     lock: {
                       ...orderLockScript,
-                      args: publicKeyHash,
+                      args: orderLockArgs,
                     },
                     type: typeScript,
                   },
@@ -458,7 +458,7 @@ describe('Orders controller', () => {
           req.query.type_code_hash = typeScript.code_hash;
           req.query.type_hash_type = typeScript.hash_type;
           req.query.type_args = typeScript.args;
-          req.query.public_key_hash = publicKeyHash;
+          req.query.order_lock_args = orderLockArgs;
         });
         describe('when order cell is live', () => {
           beforeEach(async () => {
@@ -506,7 +506,7 @@ describe('Orders controller', () => {
     describe('aborted order', () => {
       beforeEach(async () => {
         const price = 1n;
-        const publicKeyHash = 'publickeyhash';
+        const orderLockArgs = 'orderLockArgs';
         const transactions = [
           {
             transaction: {
@@ -524,7 +524,7 @@ describe('Orders controller', () => {
                   capacity: '0x1',
                   lock: {
                     ...orderLockScript,
-                    args: publicKeyHash,
+                    args: orderLockArgs,
                   },
                   type: typeScript,
                 },
@@ -550,7 +550,7 @@ describe('Orders controller', () => {
                   capacity: '0x2',
                   lock: {
                     ...orderLockScript,
-                    args: publicKeyHash,
+                    args: orderLockArgs,
                   },
                 },
               ],
@@ -562,7 +562,7 @@ describe('Orders controller', () => {
         req.query.type_code_hash = typeScript.code_hash;
         req.query.type_hash_type = typeScript.hash_type;
         req.query.type_args = typeScript.args;
-        req.query.public_key_hash = publicKeyHash;
+        req.query.order_lock_args = orderLockArgs;
         indexer.collectTransactions.resolves(transactions);
 
         await controller.getOrderHistory(req, res, next);
@@ -590,7 +590,7 @@ describe('Orders controller', () => {
     describe('incompleted order', () => {
       beforeEach(async () => {
         const price = 1n;
-        const publicKeyHash = 'publickeyhash';
+        const orderLockArgs = 'orderLockArgs';
         const transactions = [
           {
             transaction: {
@@ -608,7 +608,7 @@ describe('Orders controller', () => {
                   capacity: '0x1',
                   lock: {
                     ...orderLockScript,
-                    args: publicKeyHash,
+                    args: orderLockArgs,
                   },
                   type: typeScript,
                 },
@@ -623,7 +623,7 @@ describe('Orders controller', () => {
         req.query.type_code_hash = typeScript.code_hash;
         req.query.type_hash_type = typeScript.hash_type;
         req.query.type_args = typeScript.args;
-        req.query.public_key_hash = publicKeyHash;
+        req.query.order_lock_args = orderLockArgs;
         indexer.collectTransactions.resolves(transactions);
 
         await controller.getOrderHistory(req, res, next);
