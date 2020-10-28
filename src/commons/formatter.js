@@ -20,6 +20,26 @@ const parseOrderData = (hex) => {
   };
 };
 
+const formatOrderData = (currentAmount, orderAmount, price, isBid) => {
+  const udtAmountHex = formatBigUInt128LE(currentAmount);
+  if (isBid === undefined) {
+    return udtAmountHex;
+  }
+
+  const orderAmountHex = formatBigUInt128LE(orderAmount).replace('0x', '');
+
+  const priceBuf = Buffer.alloc(8);
+  priceBuf.writeBigUInt64LE(price);
+  const priceHex = `${priceBuf.toString('hex')}`;
+
+  const bidOrAskBuf = Buffer.alloc(1);
+  bidOrAskBuf.writeInt8(isBid ? 0 : 1);
+  const isBidHex = `${bidOrAskBuf.toString('hex')}`;
+
+  const dataHex = udtAmountHex + orderAmountHex + priceHex + isBidHex;
+  return dataHex;
+};
+
 const parseAmountFromLeHex = (leHex) => {
   try {
     return readBigUInt128LE(leHex.startsWith('0x') ? leHex.slice(0, 34) : `0x${leHex.slice(0, 32)}`);
@@ -70,6 +90,7 @@ const isValidScript = (codeHash, hashType, args) => (codeHash && hashType && arg
 
 module.exports = {
   parseOrderData,
+  formatOrderData,
   parseAmountFromLeHex,
   readBigUInt128LE,
   formatOrderCells,
