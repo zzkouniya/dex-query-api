@@ -1,7 +1,7 @@
 const { utils } = require('@ckb-lumos/base');
 const indexer = require('../indexer');
 const formatter = require('../commons/formatter');
-const { isValidScript } = require('../commons/formatter');
+const { isValidScript, parseOrderData } = require('../commons/formatter');
 const { contracts } = require('../config');
 
 class Controller {
@@ -25,10 +25,10 @@ class Controller {
       const cells = await indexer.collectCells({
         lock: queryLock,
       });
-      const normalCells = cells.filter((cell) => cell.data === '0x' && !cell.type);
+      const normalCells = cells.filter((cell) => cell.data === '0x' && !cell.cell_output.type);
       const balance = normalCells.reduce((total, cell) => total + BigInt(cell.cell_output.capacity), BigInt(0));
 
-      const occupiedCells = cells.filter((cell) => cell.data !== '0x' || cell.type);
+      const occupiedCells = cells.filter((cell) => cell.data !== '0x' || cell.cell_output.type);
       const occupiedBalance = occupiedCells.reduce((total, cell) => total + BigInt(cell.cell_output.capacity), BigInt(0));
 
       const queryLockHash = utils.computeScriptHash(queryLock);
@@ -71,23 +71,55 @@ class Controller {
       return res.status(400).json({ error: 'requires both lock and type scripts to be specified as parameters' });
     }
 
-    const queryOptions = {
-      lock: {
-        code_hash: lock_code_hash,
-        hash_type: lock_hash_type,
-        args: lock_args,
-      },
-      type: {
-        code_hash: type_code_hash,
-        hash_type: type_hash_type,
-        args: type_args,
-      },
-    };
-
     try {
+      const queryOptions = {
+        lock: {
+          code_hash: lock_code_hash,
+          hash_type: lock_hash_type,
+          args: lock_args,
+        },
+        type: {
+          code_hash: type_code_hash,
+          hash_type: type_hash_type,
+          args: type_args,
+        },
+      };
       const cells = await indexer.collectCells(queryOptions);
-      const balance = cells.reduce((total, cell) => total + formatter.readBigUInt128LE(cell.data), BigInt(0));
-      res.status(200).json({ balance: balance.toString() });
+      const balance = cells.reduce((total, cell) => {
+        try {
+          return total + formatter.readBigUInt128LE(cell.data);
+        } catch (error) {
+          console.error(error);
+          return total;
+        }
+      }, BigInt(0));
+
+      const queryLockHash = utils.computeScriptHash(queryOptions.lock);
+      const orderLock = {
+        code_hash: contracts.orderLock.codeHash,
+        hash_type: contracts.orderLock.hashType,
+        args: queryLockHash,
+      };
+      const orderCells = await indexer.collectCells({
+        lock: orderLock,
+        type: queryOptions.type,
+      });
+
+      const lockedOrderBalance = orderCells.reduce(
+        (total, cell) => {
+          try {
+            return total + parseOrderData(cell.data).sUDTAmount;
+          } catch (error) {
+            console.error(error);
+            return total;
+          }
+        },
+        BigInt(0),
+      );
+      res.status(200).json({
+        free: balance.toString(),
+        locked_order: lockedOrderBalance.toString(),
+      });
     } catch (err) {
       console.error(err);
       res.status(500).send();

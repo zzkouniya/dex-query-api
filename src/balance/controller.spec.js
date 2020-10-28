@@ -83,13 +83,8 @@ describe('Balance controller', () => {
   const cellsWithOrderLock = [
     generateCell(30, null, orderLock),
     generateCell(40, '0x1111', orderLock),
-    generateCell(1, formatter.formatBigUInt128LE(BigInt(30)), orderLock, sudtType),
-  ];
-
-  const cellsWithBothLockType = [
-    generateCell(1, formatter.formatBigUInt128LE(BigInt(30)), lock, sudtType),
-    generateCell(1, formatter.formatBigUInt128LE(BigInt(10)), lock, sudtType),
-    generateCell(1, formatter.formatBigUInt128LE(BigInt(20)), lock, sudtType),
+    generateCell(1, formatter.formatOrderData(BigInt(20), BigInt(1), BigInt(1), true), orderLock, sudtType),
+    generateCell(1, '0x121', orderLock, sudtType),
   ];
 
   const clone = (obj) => JSON.parse(JSON.stringify(obj));
@@ -109,13 +104,15 @@ describe('Balance controller', () => {
 
   describe('#getCKBBalance()', () => {
     describe('valid requests', () => {
-      describe('with only lock script', () => {
+      beforeEach(() => {
+        req.query = {
+          lock_code_hash: lock.code_hash,
+          lock_hash_type: lock.hash_type,
+          lock_args: lock.args,
+        };
+      });
+      describe('with mixed cells', () => {
         beforeEach(async () => {
-          req.query = {
-            lock_code_hash: lock.code_hash,
-            lock_hash_type: lock.hash_type,
-            lock_args: lock.args,
-          };
           indexer.collectCells
             .withArgs({ lock })
             .resolves(clone(cellsWithNormalLock));
@@ -129,7 +126,51 @@ describe('Balance controller', () => {
           res.json.should.have.been.calledWith({
             free: '60',
             occupied: '44',
-            locked_order: '71',
+            locked_order: '72',
+          });
+        });
+      });
+      describe('with cells having non-empty data', () => {
+        beforeEach(async () => {
+          indexer.collectCells
+            .withArgs({ lock })
+            .resolves(clone([
+              generateCell(10, null, lock),
+              generateCell(40, '0x1111', lock),
+            ]));
+          indexer.collectCells
+            .withArgs({ lock: orderLock })
+            .resolves([]);
+          await controller.getCKBBalance(req, res, next);
+        });
+        it('returns balance excluding the amounts of cells having data', () => {
+          res.status.should.have.been.calledWith(200);
+          res.json.should.have.been.calledWith({
+            free: '10',
+            occupied: '40',
+            locked_order: '0',
+          });
+        });
+      });
+      describe('with cells having type script', () => {
+        beforeEach(async () => {
+          indexer.collectCells
+            .withArgs({ lock })
+            .resolves(clone([
+              generateCell(10, null, lock),
+              generateCell(40, null, lock, sudtType),
+            ]));
+          indexer.collectCells
+            .withArgs({ lock: orderLock })
+            .resolves([]);
+          await controller.getCKBBalance(req, res, next);
+        });
+        it('returns balance excluding the amounts of cells having data', () => {
+          res.status.should.have.been.calledWith(200);
+          res.json.should.have.been.calledWith({
+            free: '10',
+            occupied: '40',
+            locked_order: '0',
           });
         });
       });
@@ -158,23 +199,34 @@ describe('Balance controller', () => {
           type_hash_type: sudtType.hash_type,
           type_args: sudtType.args,
         };
-        indexer.collectCells.resolves(clone(cellsWithBothLockType));
+        indexer.collectCells
+          .withArgs({
+            lock,
+            type: sudtType,
+          })
+          .resolves(clone(cellsWithNormalLock));
+
+        indexer.collectCells
+          .withArgs({
+            lock: orderLock,
+            type: sudtType,
+          })
+          .resolves(clone(cellsWithOrderLock));
         await controller.getSUDTBalance(req, res, next);
       });
       it('returns balance', () => {
         res.status.should.have.been.calledWith(200);
-        res.json.should.have.been.calledWith({ balance: '60' });
+        res.json.should.have.been.calledWith({ free: '80', locked_order: '20' });
       });
     });
     describe('invalid requests', () => {
-      describe('with no lock script', () => {
+      describe('with no type script', () => {
         beforeEach(async () => {
           req.query = {
             lock_code_hash: lock.code_hash,
             lock_hash_type: lock.hash_type,
             lock_args: lock.args,
           };
-          indexer.collectCells.resolves(clone(cellsWithBothLockType));
           await controller.getSUDTBalance(req, res, next);
         });
         it('returns 400', () => {
@@ -182,14 +234,13 @@ describe('Balance controller', () => {
           res.json.should.have.been.calledWith({ error: 'requires both lock and type scripts to be specified as parameters' });
         });
       });
-      describe('with no type script', () => {
+      describe('with no lock script', () => {
         beforeEach(async () => {
           req.query = {
             type_code_hash: sudtType.code_hash,
             type_hash_type: sudtType.hash_type,
             type_args: sudtType.args,
           };
-          indexer.collectCells.resolves(clone(cellsWithBothLockType));
           await controller.getSUDTBalance(req, res, next);
         });
         it('returns 400', () => {
