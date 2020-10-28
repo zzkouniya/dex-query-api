@@ -637,7 +637,7 @@ describe('Orders controller', () => {
             order_amount: '1',
             turnover_rate: '0',
             price: '1',
-            status: 'open',
+            status: 'opening',
             claimable: false,
             is_bid: true,
             last_order_cell_outpoint: {
