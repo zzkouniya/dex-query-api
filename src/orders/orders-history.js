@@ -96,7 +96,7 @@ class OrdersHistoryService {
           claimable = true;
         }
       } else {
-        status = 'open';
+        status = 'opening';
         if (isLive) {
           status = 'aborted';
         }
