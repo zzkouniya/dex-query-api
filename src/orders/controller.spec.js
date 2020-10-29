@@ -10,6 +10,7 @@ sinonStubPromise(sinon);
 const proxyquire = require('proxyquire').noPreserveCache().noCallThru();
 const { mockReq, mockRes } = require('sinon-express-mock');
 const config = require('../config');
+const formatter = require('../commons/formatter');
 
 describe('Orders controller', () => {
   let req;
@@ -167,6 +168,29 @@ describe('Orders controller', () => {
       it('returns lowest ask price', () => {
         res.status.should.have.been.calledWith(200);
         res.json.should.have.been.calledWith({ price: '50000000000' });
+      });
+    });
+    describe('with order live cells having zero order amount', () => {
+      const fakeOrders = [
+        {
+          data: formatter.formatOrderData(BigInt(1), BigInt(0), BigInt(20), true),
+        },
+        {
+          data: formatter.formatOrderData(BigInt(1), BigInt(1), BigInt(10), true),
+        },
+        {
+          data: formatter.formatOrderData(BigInt(1), BigInt(1), BigInt(15), false),
+        },
+      ];
+      beforeEach(async () => {
+        indexer.collectCells.resolves(fakeOrders);
+
+        req.query.is_bid = false;
+        await controller.getBestPrice(req, res, next);
+      });
+      it('returns the price from the order cell having non-zero order amount', () => {
+        res.status.should.have.been.calledWith(200);
+        res.json.should.have.been.calledWith({ price: '10' });
       });
     });
   });

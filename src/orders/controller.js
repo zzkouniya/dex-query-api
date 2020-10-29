@@ -71,15 +71,17 @@ class Controller {
     try {
       const formattedOrderCells = formatter.formatOrderCells(orderCells);
 
-      const orderCell = formattedOrderCells
-        .filter((cell) => is_bid !== cell.isBid)
+      const sortedCells = formattedOrderCells
+        .filter((cell) => is_bid !== cell.isBid && cell.orderAmount !== '0')
         .sort((a, b) => {
           if (is_bid) {
             return a.price - b.price;
           }
 
           return b.price - a.price;
-        })[0];
+        });
+
+      const orderCell = sortedCells[0];
 
       res.status(200).json({ price: orderCell.price });
     } catch (error) {
