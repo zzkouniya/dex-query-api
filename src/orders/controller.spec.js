@@ -589,13 +589,19 @@ describe('Orders controller', () => {
                     {
                       previous_output: {
                         index: '0x0',
-                        tx_hash: 'hash1',
+                        tx_hash: 'hash-1',
                       },
                     },
                     {
                       previous_output: {
                         index: '0x0',
                         tx_hash: 'hash2',
+                      },
+                    },
+                    {
+                      previous_output: {
+                        index: '0x0',
+                        tx_hash: 'hash1',
                       },
                     },
                   ],
@@ -626,8 +632,8 @@ describe('Orders controller', () => {
                   ],
                   outputs_data: [
                     '0x',
-                    formatOrderData(2n, 0n, price, true),
                     formatOrderData(20n, 0n, price, true),
+                    formatOrderData(2n, 0n, price, true),
                   ],
                 },
               },
@@ -656,7 +662,7 @@ describe('Orders controller', () => {
                   is_bid: true,
                   last_order_cell_outpoint: {
                     tx_hash: 'hash3',
-                    index: '0x1',
+                    index: '0x2',
                   },
                 },
                 {
@@ -670,7 +676,7 @@ describe('Orders controller', () => {
                   is_bid: true,
                   last_order_cell_outpoint: {
                     tx_hash: 'hash3',
-                    index: '0x2',
+                    index: '0x1',
                   },
                 },
               ],
