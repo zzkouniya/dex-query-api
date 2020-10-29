@@ -380,8 +380,8 @@ describe('Orders controller', () => {
                     claimable: false,
                     is_bid: true,
                     last_order_cell_outpoint: {
-                      tx_hash: 'hash2',
-                      index: '0x0',
+                      tx_hash: 'hash3',
+                      index: '0x1',
                     },
                   },
                 ],
@@ -762,8 +762,8 @@ describe('Orders controller', () => {
             claimable: false,
             is_bid: true,
             last_order_cell_outpoint: {
-              tx_hash: 'hash1',
-              index: '0x0',
+              tx_hash: 'hash2',
+              index: '0x1',
             },
           },
         ]);

@@ -190,16 +190,14 @@ class OrdersHistoryService {
     const nextGroupedOrderCell = nextGroupedOrderCells[nextGroupedOrderCellIndex];
     const nextTxHash = nextTransaction.hash;
 
+    currentOutput.nextTxHash = nextTxHash;
+
     if (!nextGroupedOrderCell) {
       return currentOutput;
     }
 
     const [nextOriginalIndex, nextOutput] = nextGroupedOrderCell;
-    const { lock, type } = nextOutput;
-    if (
-      !this.equalsScript(lock, this.orderLock)
-      || !this.equalsScript(type, this.sudtType)
-    ) {
+    if (!this.isOrderCell(nextOutput, this.orderLock, this.sudtType)) {
       return currentOutput;
     }
 
