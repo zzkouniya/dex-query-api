@@ -77,7 +77,13 @@ class OrdersHistoryService {
       const lastOrderCellData = formatter.parseOrderData(lastOrderCell.data);
 
       const tradedAmount = firstOrderCellData.orderAmount - lastOrderCellData.orderAmount;
-      const turnoverRate = Number((tradedAmount * 100n) / firstOrderCellData.orderAmount) / 100;
+      let turnoverRate;
+      try {
+        turnoverRate = Number((tradedAmount * 100n) / firstOrderCellData.orderAmount) / 100;
+      } catch (error) {
+        console.error('zero order amount for the  first order cell');
+        turnoverRate = 0;
+      }
 
       let paidAmount;
       if (firstOrderCellData.isBid) {
