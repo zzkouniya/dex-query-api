@@ -325,7 +325,7 @@ describe('Orders controller', () => {
                   traded_amount: '1',
                   order_amount: '1',
                   turnover_rate: '1',
-                  status: 'claimable',
+                  status: 'completed',
                   is_bid: true,
                   last_order_cell_outpoint: {
                     tx_hash: 'hash2',
@@ -375,7 +375,7 @@ describe('Orders controller', () => {
                     order_amount: '1',
                     turnover_rate: '1',
                     price: '1',
-                    status: 'completed',
+                    status: 'claimed',
                     is_bid: true,
                     last_order_cell_outpoint: {
                       tx_hash: 'hash3',
@@ -498,7 +498,7 @@ describe('Orders controller', () => {
                     order_amount: '1',
                     turnover_rate: '1',
                     price: '1',
-                    status: 'claimable',
+                    status: 'completed',
                     is_bid: true,
                     last_order_cell_outpoint: {
                       tx_hash: 'hash2',
@@ -511,7 +511,7 @@ describe('Orders controller', () => {
                     order_amount: '10',
                     turnover_rate: '1',
                     price: '1',
-                    status: 'claimable',
+                    status: 'completed',
                     is_bid: true,
                     last_order_cell_outpoint: {
                       tx_hash: 'hash2',
@@ -653,7 +653,7 @@ describe('Orders controller', () => {
                   order_amount: '1',
                   turnover_rate: '1',
                   price: '1',
-                  status: 'claimable',
+                  status: 'completed',
                   is_bid: true,
                   last_order_cell_outpoint: {
                     tx_hash: 'hash3',
@@ -666,7 +666,7 @@ describe('Orders controller', () => {
                   order_amount: '10',
                   turnover_rate: '1',
                   price: '1',
-                  status: 'claimable',
+                  status: 'completed',
                   is_bid: true,
                   last_order_cell_outpoint: {
                     tx_hash: 'hash3',

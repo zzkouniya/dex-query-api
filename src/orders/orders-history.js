@@ -95,17 +95,17 @@ class OrdersHistoryService {
 
       const outpoint = orderHistory.lastOrderCell.outpoint;
       const inputOutPoint = this.formatInputOutPoint(outpoint.txHash, outpoint.index);
-      const isLive = !!this.txsByInputOutPoint.get(inputOutPoint);
+      const isLive = !this.txsByInputOutPoint.get(inputOutPoint);
 
       let status;
       if (orderHistory.turnoverRate === 1) {
         status = 'completed';
         if (!isLive) {
-          status = 'claimable';
+          status = 'claimed';
         }
       } else {
         status = 'opening';
-        if (isLive) {
+        if (!isLive) {
           status = 'aborted';
         }
       }
