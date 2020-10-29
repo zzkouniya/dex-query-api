@@ -8,6 +8,7 @@ class OrdersHistoryService {
 
     this.txsByInputOutPoint = new Map();
     this.usedInputOutPoints = new Set();
+    this.orderCellsInputOutPoints = new Set();
   }
 
   async calculateOrdersHistory() {
@@ -16,15 +17,23 @@ class OrdersHistoryService {
       lock: this.orderLock,
     });
 
-    for (const txWithStatus of txsWithStatus) {
+    for (let i = 0; i < txsWithStatus.length; i++) {
+      const txWithStatus = txsWithStatus[i];
       const { transaction } = txWithStatus;
-      const { inputs } = transaction;
+      const { hash, inputs, outputs } = transaction;
 
       for (const input of inputs) {
         const { tx_hash, index } = input.previous_output;
         const inputOutPoint = this.formatInputOutPoint(tx_hash, parseInt(index, 16));
         if (!this.txsByInputOutPoint.has(inputOutPoint)) {
           this.txsByInputOutPoint.set(inputOutPoint, transaction);
+        }
+      }
+      for (let j = 0; j < outputs.length; j++) {
+        const output = outputs[j];
+        if (this.isOrderCell(output, this.orderLock, this.sudtType)) {
+          const inputOutPoint = this.formatInputOutPoint(hash, j);
+          this.orderCellsInputOutPoints.add(inputOutPoint);
         }
       }
     }
@@ -89,11 +98,10 @@ class OrdersHistoryService {
       const isLive = !!this.txsByInputOutPoint.get(inputOutPoint);
 
       let status;
-      let claimable = false;
       if (orderHistory.turnoverRate === 1) {
         status = 'completed';
         if (!isLive) {
-          claimable = true;
+          status = 'claimable';
         }
       } else {
         status = 'opening';
@@ -102,7 +110,6 @@ class OrdersHistoryService {
         }
       }
 
-      orderHistory.claimable = claimable;
       orderHistory.status = status;
     }
 
@@ -165,28 +172,30 @@ class OrdersHistoryService {
       return currentOutput;
     }
 
-    const nextGroupedOrderCells = this.groupOrderCells(nextTransaction.outputs, this.orderLock, this.sudtType);
-
-    const nextTxHash = nextTransaction.hash;
-    let nextGroupedOrderCell;
-    for (const [originalIndex, output] of nextGroupedOrderCells) {
-      const nextGroupedOrderCellInputOutPoint = this.formatInputOutPoint(nextTxHash, originalIndex);
-      if (!this.usedInputOutPoints.has(nextGroupedOrderCellInputOutPoint)) {
-        nextGroupedOrderCell = [originalIndex, output];
-        break;
+    const inputOutpointList = [];
+    for (let i = 0; i < nextTransaction.inputs.length; i++) {
+      const input = nextTransaction.inputs[i];
+      const { previous_output } = input;
+      const outpointStr = this.formatInputOutPoint(previous_output.tx_hash, BigInt(previous_output.index));
+      if (this.orderCellsInputOutPoints.has(outpointStr)) {
+        inputOutpointList.push(outpointStr);
       }
     }
+
+    const nextGroupedOrderCellIndex = inputOutpointList.indexOf(inputOutPoint);
+
+    const nextGroupedOrderCells = this.groupOrderCells(nextTransaction.outputs, this.orderLock, this.sudtType);
+    const nextGroupedOrderCell = nextGroupedOrderCells[nextGroupedOrderCellIndex];
+    const nextTxHash = nextTransaction.hash;
+
+    currentOutput.nextTxHash = nextTxHash;
 
     if (!nextGroupedOrderCell) {
       return currentOutput;
     }
 
     const [nextOriginalIndex, nextOutput] = nextGroupedOrderCell;
-    const { lock, type } = nextOutput;
-    if (
-      !this.equalsScript(lock, this.orderLock)
-      || !this.equalsScript(type, this.sudtType)
-    ) {
+    if (!this.isOrderCell(nextOutput, this.orderLock, this.sudtType)) {
       return currentOutput;
     }
 

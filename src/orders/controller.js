@@ -112,20 +112,29 @@ class Controller {
     try {
       const ordersHistoryService = new OrdersHistoryService(orderLock, sudtType);
       const ordersHistory = await ordersHistoryService.calculateOrdersHistory();
-      const formattedOrdersHistory = ordersHistory.map((o) => ({
-        is_bid: o.isBid,
-        order_amount: o.orderAmount.toString(),
-        traded_amount: o.tradedAmount.toString(),
-        turnover_rate: o.turnoverRate.toString(),
-        paid_amount: o.paidAmount.toString(),
-        price: o.price.toString(),
-        claimable: o.claimable,
-        status: o.status,
-        last_order_cell_outpoint: {
-          tx_hash: o.lastOrderCell.outpoint.txHash,
-          index: `0x${o.lastOrderCell.outpoint.index.toString(16)}`,
-        },
-      }));
+      const formattedOrdersHistory = ordersHistory.map((o) => {
+        const orderHistory = {
+          is_bid: o.isBid,
+          order_amount: o.orderAmount.toString(),
+          traded_amount: o.tradedAmount.toString(),
+          turnover_rate: o.turnoverRate.toString(),
+          paid_amount: o.paidAmount.toString(),
+          price: o.price.toString(),
+          status: o.status,
+          last_order_cell_outpoint: {
+            tx_hash: o.lastOrderCell.outpoint.txHash,
+            index: `0x${o.lastOrderCell.outpoint.index.toString(16)}`,
+          },
+        };
+        if (o.lastOrderCell.nextTxHash) {
+          orderHistory.last_order_cell_outpoint = {
+            tx_hash: o.lastOrderCell.nextTxHash,
+            index: '0x1',
+          };
+        }
+
+        return orderHistory;
+      });
       res.status(200).json(formattedOrdersHistory);
     } catch (error) {
       console.error(error);
