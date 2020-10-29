@@ -98,11 +98,10 @@ class OrdersHistoryService {
       const isLive = !!this.txsByInputOutPoint.get(inputOutPoint);
 
       let status;
-      let claimable = false;
       if (orderHistory.turnoverRate === 1) {
         status = 'completed';
         if (!isLive) {
-          claimable = true;
+          status = 'claimable';
         }
       } else {
         status = 'opening';
@@ -111,7 +110,6 @@ class OrdersHistoryService {
         }
       }
 
-      orderHistory.claimable = claimable;
       orderHistory.status = status;
     }
 

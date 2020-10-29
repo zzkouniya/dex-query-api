@@ -325,8 +325,7 @@ describe('Orders controller', () => {
                   traded_amount: '1',
                   order_amount: '1',
                   turnover_rate: '1',
-                  status: 'completed',
-                  claimable: true,
+                  status: 'claimable',
                   is_bid: true,
                   last_order_cell_outpoint: {
                     tx_hash: 'hash2',
@@ -377,7 +376,6 @@ describe('Orders controller', () => {
                     turnover_rate: '1',
                     price: '1',
                     status: 'completed',
-                    claimable: false,
                     is_bid: true,
                     last_order_cell_outpoint: {
                       tx_hash: 'hash3',
@@ -500,8 +498,7 @@ describe('Orders controller', () => {
                     order_amount: '1',
                     turnover_rate: '1',
                     price: '1',
-                    status: 'completed',
-                    claimable: true,
+                    status: 'claimable',
                     is_bid: true,
                     last_order_cell_outpoint: {
                       tx_hash: 'hash2',
@@ -514,8 +511,7 @@ describe('Orders controller', () => {
                     order_amount: '10',
                     turnover_rate: '1',
                     price: '1',
-                    status: 'completed',
-                    claimable: true,
+                    status: 'claimable',
                     is_bid: true,
                     last_order_cell_outpoint: {
                       tx_hash: 'hash2',
@@ -657,8 +653,7 @@ describe('Orders controller', () => {
                   order_amount: '1',
                   turnover_rate: '1',
                   price: '1',
-                  status: 'completed',
-                  claimable: true,
+                  status: 'claimable',
                   is_bid: true,
                   last_order_cell_outpoint: {
                     tx_hash: 'hash3',
@@ -671,8 +666,7 @@ describe('Orders controller', () => {
                   order_amount: '10',
                   turnover_rate: '1',
                   price: '1',
-                  status: 'completed',
-                  claimable: true,
+                  status: 'claimable',
                   is_bid: true,
                   last_order_cell_outpoint: {
                     tx_hash: 'hash3',
@@ -759,7 +753,6 @@ describe('Orders controller', () => {
             turnover_rate: '0',
             price: '1',
             status: 'aborted',
-            claimable: false,
             is_bid: true,
             last_order_cell_outpoint: {
               tx_hash: 'hash2',
@@ -820,7 +813,6 @@ describe('Orders controller', () => {
             turnover_rate: '0',
             price: '1',
             status: 'opening',
-            claimable: false,
             is_bid: true,
             last_order_cell_outpoint: {
               tx_hash: 'hash1',

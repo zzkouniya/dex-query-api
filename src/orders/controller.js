@@ -120,7 +120,6 @@ class Controller {
           turnover_rate: o.turnoverRate.toString(),
           paid_amount: o.paidAmount.toString(),
           price: o.price.toString(),
-          claimable: o.claimable,
           status: o.status,
           last_order_cell_outpoint: {
             tx_hash: o.lastOrderCell.outpoint.txHash,
