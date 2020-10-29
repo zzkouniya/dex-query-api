@@ -391,101 +391,253 @@ describe('Orders controller', () => {
         });
       });
       describe('with multiple order history', () => {
-        beforeEach(async () => {
-          transactions = [
-            {
-              transaction: {
-                hash: 'hash1',
-                inputs: [
-                  {
-                    previous_output: {
-                      index: '0x0',
-                      tx_hash: 'hash0',
-                    },
-                  },
-                ],
-                outputs: [
-                  {
-                    capacity: '0x3',
-                    lock: {
-                      ...orderLockScript,
-                      args: orderLockArgs,
-                    },
-                    type: typeScript,
-                  },
-                  {
-                    capacity: '0x4',
-                    lock: {
-                      ...orderLockScript,
-                      args: orderLockArgs,
-                    },
-                    type: typeScript,
-                  },
-                ],
-                outputs_data: [
-                  formatOrderData(1n, 1n, price, true),
-                  formatOrderData(10n, 10n, price, true),
-                ],
-              },
-            },
-            {
-              transaction: {
-                hash: 'hash2',
-                inputs: [
-                  {
-                    previous_output: {
-                      index: '0x0',
-                      tx_hash: 'hash1',
-                    },
-                  },
-                  {
-                    previous_output: {
-                      index: '0x1',
-                      tx_hash: 'hash1',
-                    },
-                  },
-                ],
-                outputs: [
-                  {
-                    capacity: '0x0',
-                    lock: {
-                      ...orderLockScript,
-                      args: orderLockArgs,
-                    },
-                  },
-                  {
-                    capacity: '0x1',
-                    lock: {
-                      ...orderLockScript,
-                      args: orderLockArgs,
-                    },
-                    type: typeScript,
-                  },
-                  {
-                    capacity: '0x1',
-                    lock: {
-                      ...orderLockScript,
-                      args: orderLockArgs,
-                    },
-                    type: typeScript,
-                  },
-                ],
-                outputs_data: [
-                  '0x',
-                  formatOrderData(2n, 0n, price, true),
-                  formatOrderData(20n, 0n, price, true),
-                ],
-              },
-            },
-          ];
-
-          req.query.type_code_hash = typeScript.code_hash;
-          req.query.type_hash_type = typeScript.hash_type;
-          req.query.type_args = typeScript.args;
-          req.query.order_lock_args = orderLockArgs;
-        });
-        describe('when order cell is live', () => {
+        describe('with one input transaction to one output transaction', () => {
           beforeEach(async () => {
+            transactions = [
+              {
+                transaction: {
+                  hash: 'hash1',
+                  inputs: [
+                    {
+                      previous_output: {
+                        index: '0x0',
+                        tx_hash: 'hash0',
+                      },
+                    },
+                  ],
+                  outputs: [
+                    {
+                      capacity: '0x3',
+                      lock: {
+                        ...orderLockScript,
+                        args: orderLockArgs,
+                      },
+                      type: typeScript,
+                    },
+                    {
+                      capacity: '0x4',
+                      lock: {
+                        ...orderLockScript,
+                        args: orderLockArgs,
+                      },
+                      type: typeScript,
+                    },
+                  ],
+                  outputs_data: [
+                    formatOrderData(1n, 1n, price, true),
+                    formatOrderData(10n, 10n, price, true),
+                  ],
+                },
+              },
+              {
+                transaction: {
+                  hash: 'hash2',
+                  inputs: [
+                    {
+                      previous_output: {
+                        index: '0x0',
+                        tx_hash: 'hash1',
+                      },
+                    },
+                    {
+                      previous_output: {
+                        index: '0x1',
+                        tx_hash: 'hash1',
+                      },
+                    },
+                  ],
+                  outputs: [
+                    {
+                      capacity: '0x0',
+                      lock: {
+                        ...orderLockScript,
+                        args: orderLockArgs,
+                      },
+                    },
+                    {
+                      capacity: '0x1',
+                      lock: {
+                        ...orderLockScript,
+                        args: orderLockArgs,
+                      },
+                      type: typeScript,
+                    },
+                    {
+                      capacity: '0x1',
+                      lock: {
+                        ...orderLockScript,
+                        args: orderLockArgs,
+                      },
+                      type: typeScript,
+                    },
+                  ],
+                  outputs_data: [
+                    '0x',
+                    formatOrderData(2n, 0n, price, true),
+                    formatOrderData(20n, 0n, price, true),
+                  ],
+                },
+              },
+            ];
+
+            req.query.type_code_hash = typeScript.code_hash;
+            req.query.type_hash_type = typeScript.hash_type;
+            req.query.type_args = typeScript.args;
+            req.query.order_lock_args = orderLockArgs;
+          });
+          describe('when order cell is live', () => {
+            beforeEach(async () => {
+              indexer.collectTransactions.resolves(transactions);
+              await controller.getOrderHistory(req, res, next);
+            });
+            it('returns order history', () => {
+              res.status.should.have.been.calledWith(200);
+              res.json.should.have.been.calledWith(
+                [
+                  {
+                    paid_amount: '2',
+                    traded_amount: '1',
+                    order_amount: '1',
+                    turnover_rate: '1',
+                    price: '1',
+                    status: 'completed',
+                    claimable: true,
+                    is_bid: true,
+                    last_order_cell_outpoint: {
+                      tx_hash: 'hash2',
+                      index: '0x1',
+                    },
+                  },
+                  {
+                    paid_amount: '3',
+                    traded_amount: '10',
+                    order_amount: '10',
+                    turnover_rate: '1',
+                    price: '1',
+                    status: 'completed',
+                    claimable: true,
+                    is_bid: true,
+                    last_order_cell_outpoint: {
+                      tx_hash: 'hash2',
+                      index: '0x2',
+                    },
+                  },
+                ],
+              );
+            });
+          });
+        });
+        describe('with two input transactions to one transaction', () => {
+          beforeEach(async () => {
+            transactions = [
+              {
+                transaction: {
+                  hash: 'hash1',
+                  inputs: [
+                    {
+                      previous_output: {
+                        index: '0x0',
+                        tx_hash: 'hash0',
+                      },
+                    },
+                  ],
+                  outputs: [
+                    {
+                      capacity: '0x3',
+                      lock: {
+                        ...orderLockScript,
+                        args: orderLockArgs,
+                      },
+                      type: typeScript,
+                    },
+                  ],
+                  outputs_data: [
+                    formatOrderData(1n, 1n, price, true),
+                  ],
+                },
+              },
+              {
+                transaction: {
+                  hash: 'hash2',
+                  inputs: [
+                    {
+                      previous_output: {
+                        index: '0x1',
+                        tx_hash: 'hash0',
+                      },
+                    },
+                  ],
+                  outputs: [
+                    {
+                      capacity: '0x4',
+                      lock: {
+                        ...orderLockScript,
+                        args: orderLockArgs,
+                      },
+                      type: typeScript,
+                    },
+                  ],
+                  outputs_data: [
+                    formatOrderData(10n, 10n, price, true),
+                  ],
+                },
+              },
+              {
+                transaction: {
+                  hash: 'hash3',
+                  inputs: [
+                    {
+                      previous_output: {
+                        index: '0x0',
+                        tx_hash: 'hash1',
+                      },
+                    },
+                    {
+                      previous_output: {
+                        index: '0x0',
+                        tx_hash: 'hash2',
+                      },
+                    },
+                  ],
+                  outputs: [
+                    {
+                      capacity: '0x0',
+                      lock: {
+                        ...orderLockScript,
+                        args: orderLockArgs,
+                      },
+                    },
+                    {
+                      capacity: '0x1',
+                      lock: {
+                        ...orderLockScript,
+                        args: orderLockArgs,
+                      },
+                      type: typeScript,
+                    },
+                    {
+                      capacity: '0x1',
+                      lock: {
+                        ...orderLockScript,
+                        args: orderLockArgs,
+                      },
+                      type: typeScript,
+                    },
+                  ],
+                  outputs_data: [
+                    '0x',
+                    formatOrderData(2n, 0n, price, true),
+                    formatOrderData(20n, 0n, price, true),
+                  ],
+                },
+              },
+            ];
+
+            req.query.type_code_hash = typeScript.code_hash;
+            req.query.type_hash_type = typeScript.hash_type;
+            req.query.type_args = typeScript.args;
+            req.query.order_lock_args = orderLockArgs;
+
             indexer.collectTransactions.resolves(transactions);
             await controller.getOrderHistory(req, res, next);
           });
@@ -503,7 +655,7 @@ describe('Orders controller', () => {
                   claimable: true,
                   is_bid: true,
                   last_order_cell_outpoint: {
-                    tx_hash: 'hash2',
+                    tx_hash: 'hash3',
                     index: '0x1',
                   },
                 },
@@ -517,7 +669,7 @@ describe('Orders controller', () => {
                   claimable: true,
                   is_bid: true,
                   last_order_cell_outpoint: {
-                    tx_hash: 'hash2',
+                    tx_hash: 'hash3',
                     index: '0x2',
                   },
                 },

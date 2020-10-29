@@ -159,7 +159,7 @@ class OrdersHistoryService {
       this.usedInputOutPoints.add(inputOutPoint);
     }
 
-    const [groupedIndex, currentOutput] = groupedOrderCell;
+    const [, currentOutput] = groupedOrderCell;
 
     if (!nextTransaction) {
       return currentOutput;
@@ -168,7 +168,14 @@ class OrdersHistoryService {
     const nextGroupedOrderCells = this.groupOrderCells(nextTransaction.outputs, this.orderLock, this.sudtType);
 
     const nextTxHash = nextTransaction.hash;
-    const nextGroupedOrderCell = nextGroupedOrderCells[groupedIndex];
+    let nextGroupedOrderCell;
+    for (const [originalIndex, output] of nextGroupedOrderCells) {
+      const nextGroupedOrderCellInputOutPoint = this.formatInputOutPoint(nextTxHash, originalIndex);
+      if (!this.usedInputOutPoints.has(nextGroupedOrderCellInputOutPoint)) {
+        nextGroupedOrderCell = [originalIndex, output];
+        break;
+      }
+    }
 
     if (!nextGroupedOrderCell) {
       return currentOutput;
