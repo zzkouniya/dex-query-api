@@ -185,7 +185,7 @@ describe('Orders controller', () => {
         },
         {
           cell_output: {
-            capacity: `0x${BigInt(17900000000n).toString(16)}`,
+            capacity: `0x${BigInt(17900000001n).toString(16)}`,
             lock: {
               code_hash: '0x04878826e4bf143a93eb33cb298a46f96e4014533d98865983e048712da65160',
               hash_type: 'data',
@@ -288,7 +288,7 @@ describe('Orders controller', () => {
               capacity: `0x${insufficientCapacity.toString(16)}`,
               lock: orderLock,
             },
-            data: formatter.formatOrderData(BigInt(0), orderAmount, BigInt(3 * 10 ** 10), true),
+            data: formatter.formatOrderData(BigInt(0), orderAmount, BigInt(2 * 10 ** 10), true),
           },
         ];
         beforeEach(async () => {

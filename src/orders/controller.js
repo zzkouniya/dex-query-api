@@ -1,5 +1,6 @@
 const config = require('../config');
 const indexer = require('../indexer');
+const BigNumber = require('bignumber.js');
 
 const OrdersHistoryService = require('./orders-history');
 const formatter = require('../commons/formatter');
@@ -79,7 +80,7 @@ class Controller {
             return a.price - b.price;
           }
           return b.price - a.price;
-        })
+        });
 
       const orderCell = sortedCells[0];
 
@@ -145,24 +146,29 @@ class Controller {
 }
 
 const isInvalidOrderCell = (cell) => {
-  const orderCellMinCapacity = BigInt(17900000000);
+  const orderCellMinCapacity = BigNumber(17900000000);
+  const capacityBN = BigNumber(cell.rawData.cell_output.capacity);
+  const sudtAmountBN = BigNumber(cell.sUDTAmount);
+  const orderAmountBN = BigNumber(cell.orderAmount);
+  const priceBN = BigNumber(cell.price).dividedBy(BigNumber(10 ** 10));
+  const feeRatioBN = BigNumber(0.003);
   try {
     if (cell.rawData.cell_output.lock.args.length !== 66) {
       return true;
     }
-    if (BigInt(cell.rawData.cell_output.capacity) < orderCellMinCapacity) {
+    if (capacityBN.lt(orderCellMinCapacity)) {
       return true;
     }
     if (cell.isBid) {
-      const exchangeCapacity = (BigInt(cell.orderAmount) * BigInt(cell.price)) / BigInt(10 ** 10);
-      const minimumCapacity = (exchangeCapacity * BigInt(1003)) / BigInt(1000) + orderCellMinCapacity;
-      const invalid = BigInt(cell.rawData.cell_output.capacity) < minimumCapacity;
+      const exchangeCapacity = orderAmountBN.multipliedBy(priceBN);
+      const minimumCapacity = (exchangeCapacity.plus(exchangeCapacity.multipliedBy(feeRatioBN))).plus(orderCellMinCapacity);
+      const invalid = capacityBN.lt(minimumCapacity);
       return invalid;
     }
 
-    const exchangeSudtAmount = (BigInt(cell.orderAmount) * BigInt(10 ** 10)) / BigInt(cell.price);
-    const minimumSudtAmount = (exchangeSudtAmount * BigInt(1003)) / BigInt(1000);
-    const invalid = BigInt(cell.sUDTAmount) < minimumSudtAmount;
+    const exchangeSudtAmountBN = orderAmountBN.dividedBy(priceBN);
+    const minimumSudtAmountBN = exchangeSudtAmountBN.multipliedBy(1.003);
+    const invalid = sudtAmountBN.lt(minimumSudtAmountBN);
     return invalid;
   } catch (error) {
     console.error(error);
