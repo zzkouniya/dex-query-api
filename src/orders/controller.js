@@ -77,14 +77,15 @@ class Controller {
           if (is_bid) {
             return a.price - b.price;
           }
-
           return b.price - a.price;
-        });
+        })
+        .filter((cell) => !isInvalidOrderCell(cell));
 
       const orderCell = sortedCells[0];
 
       res.status(200).json({ price: orderCell.price });
     } catch (error) {
+      console.error(error);
       res.status(500).send();
     }
   }
@@ -142,5 +143,30 @@ class Controller {
     }
   }
 }
+
+const isInvalidOrderCell = (cell) => {
+  const orderCellMinCapacity = BigInt(17900000000);
+  try {
+    if (cell.rawData.cell_output.lock.args.length !== 66) {
+      return true;
+    }
+    if (BigInt(cell.rawData.cell_output.capacity) < orderCellMinCapacity) {
+      return true;
+    }
+    if (cell.isBid) {
+      const exchangeCapacity = (BigInt(cell.orderAmount) * BigInt(cell.price)) / BigInt(10 ** 10);
+      const minimumCapacity = (exchangeCapacity * BigInt(1003)) / BigInt(1000) + orderCellMinCapacity;
+      const invalid = BigInt(cell.rawData.cell_output.capacity) < minimumCapacity;
+      return invalid;
+    }
+
+    const exchangeSudtAmount = (BigInt(cell.orderAmount) * BigInt(10 ** 10)) / BigInt(cell.price);
+    const minimumSudtAmount = (exchangeSudtAmount * BigInt(1003)) / BigInt(1000);
+    const invalid = BigInt(cell.sUDTAmount) < minimumSudtAmount;
+    return invalid;
+  } catch (error) {
+    console.error(error);
+  }
+};
 
 module.exports = new Controller();

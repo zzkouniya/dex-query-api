@@ -28,11 +28,11 @@ describe('Orders controller', () => {
         // price: '50000000000',
         // isBid: true,
         cell_output: {
-          capacity: '0x2e90edd000',
+          capacity: `0x${BigInt(200000000000).toString(16)}`,
           lock: {
             code_hash: '0x04878826e4bf143a93eb33cb298a46f96e4014533d98865983e048712da65160',
             hash_type: 'data',
-            args: '0x2946e43211d00ab3791ab1d8b598c99643c39649',
+            args: `0x${'0'.repeat(64)}`,
           },
           type: {
             code_hash: '0xc68fb287d8c04fd354f8332c3d81ca827deea2a92f12526e2f35be37968f6740',
@@ -46,7 +46,7 @@ describe('Orders controller', () => {
         },
         block_hash: '0xfda1e2e23f258cf92e3496a0c2c684db38e57d6f85467fdd2976f0e29cb8ef40',
         block_number: '0xf',
-        data: '0x00f2052a01000000000000000000000000d6117e03000000000000000000000000743ba40b00000000',
+        data: formatter.formatOrderData(5000000000n, 15000000000n, 50000000000n, true),
       },
       {
         // sUDTAmount: '5000000000',
@@ -54,11 +54,11 @@ describe('Orders controller', () => {
         // price: '70000000000',
         // isBid: true,
         cell_output: {
-          capacity: '0x2e90edd000',
+          capacity: `0x${BigInt(200000000000).toString(16)}`,
           lock: {
             code_hash: '0x04878826e4bf143a93eb33cb298a46f96e4014533d98865983e048712da65160',
             hash_type: 'data',
-            args: '0x2946e43211d00ab3791ab1d8b598c99643c39649',
+            args: `0x${'0'.repeat(64)}`,
           },
           type: {
             code_hash: '0xc68fb287d8c04fd354f8332c3d81ca827deea2a92f12526e2f35be37968f6740',
@@ -72,7 +72,7 @@ describe('Orders controller', () => {
         },
         block_hash: '0x2b17c782478f908110b1f653a1d3d322c39ac620d5f951d160977b02c2bcc9ce',
         block_number: '0x13',
-        data: '0x00f2052a01000000000000000000000000d6117e030000000000000000000000003c534c1000000000',
+        data: formatter.formatOrderData(5000000000n, 15000000000n, 70000000000n, true),
       },
       {
         // sUDTAmount: '50000000000',
@@ -80,11 +80,11 @@ describe('Orders controller', () => {
         // price: '50000000000',
         // isBid: false,
         cell_output: {
-          capacity: '0x12a05f2000',
+          capacity: `0x${BigInt(80000000000).toString(16)}`,
           lock: {
             code_hash: '0x04878826e4bf143a93eb33cb298a46f96e4014533d98865983e048712da65160',
             hash_type: 'data',
-            args: '0x688327ab52c054a99b30f2287de0f5ee67805ded',
+            args: `0x${'0'.repeat(64)}`,
           },
           type: {
             code_hash: '0xc68fb287d8c04fd354f8332c3d81ca827deea2a92f12526e2f35be37968f6740',
@@ -98,7 +98,7 @@ describe('Orders controller', () => {
         },
         block_hash: '0xcfeafc49705d16bcf0c85d71715f8e18fe2ab26f827cde5e4537d5a318b642cf',
         block_number: '0x17',
-        data: '0x00743ba40b000000000000000000000000e8764817000000000000000000000000743ba40b00000001',
+        data: formatter.formatOrderData(50000000000n, 100000000000n, 50000000000n, false),
       },
       {
         // sUDTAmount: '50000000000',
@@ -106,11 +106,11 @@ describe('Orders controller', () => {
         // price: '55000000000',
         // isBid: false,
         cell_output: {
-          capacity: '0x12a05f2000',
+          capacity: `0x${BigInt(80000000000).toString(16)}`,
           lock: {
             code_hash: '0x04878826e4bf143a93eb33cb298a46f96e4014533d98865983e048712da65160',
             hash_type: 'data',
-            args: '0x688327ab52c054a99b30f2287de0f5ee67805ded',
+            args: `0x${'0'.repeat(64)}`,
           },
           type: {
             code_hash: '0xc68fb287d8c04fd354f8332c3d81ca827deea2a92f12526e2f35be37968f6740',
@@ -124,7 +124,7 @@ describe('Orders controller', () => {
         },
         block_hash: '0x301326140a7ccf7735dc88deec20da679eb19a344321d849376b01a07a0c6a19',
         block_number: '0x1b',
-        data: '0x00743ba40b000000000000000000000000e87648170000000000000000000000006641ce0c00000001',
+        data: formatter.formatOrderData(50000000000n, 100000000000n, 55000000000n, false),
       },
     ];
     indexer = {
@@ -173,12 +173,36 @@ describe('Orders controller', () => {
     describe('with order live cells having zero order amount', () => {
       const fakeOrders = [
         {
+          cell_output: {
+            capacity: `0x${BigInt(17900000000n).toString(16)}`,
+            lock: {
+              code_hash: '0x04878826e4bf143a93eb33cb298a46f96e4014533d98865983e048712da65160',
+              hash_type: 'data',
+              args: `0x${'0'.repeat(64)}`,
+            },
+          },
           data: formatter.formatOrderData(BigInt(1), BigInt(0), BigInt(20), true),
         },
         {
+          cell_output: {
+            capacity: `0x${BigInt(17900000000n).toString(16)}`,
+            lock: {
+              code_hash: '0x04878826e4bf143a93eb33cb298a46f96e4014533d98865983e048712da65160',
+              hash_type: 'data',
+              args: `0x${'0'.repeat(64)}`,
+            },
+          },
           data: formatter.formatOrderData(BigInt(1), BigInt(1), BigInt(10), true),
         },
         {
+          cell_output: {
+            capacity: `0x${BigInt(17900000000n).toString(16)}`,
+            lock: {
+              code_hash: '0x04878826e4bf143a93eb33cb298a46f96e4014533d98865983e048712da65160',
+              hash_type: 'data',
+              args: `0x${'0'.repeat(64)}`,
+            },
+          },
           data: formatter.formatOrderData(BigInt(1), BigInt(1), BigInt(15), false),
         },
       ];
@@ -191,6 +215,92 @@ describe('Orders controller', () => {
       it('returns the price from the order cell having non-zero order amount', () => {
         res.status.should.have.been.calledWith(200);
         res.json.should.have.been.calledWith({ price: '10' });
+      });
+    });
+    describe('with insufficient sudt amount or capacity', () => {
+      const orderLock = {
+        code_hash: '0x04878826e4bf143a93eb33cb298a46f96e4014533d98865983e048712da65160',
+        hash_type: 'data',
+        args: `0x${'0'.repeat(64)}`,
+      };
+
+      describe('when query for best price for bid order', () => {
+        const insufficientCapacity = BigInt(1790000000n);
+        const sufficientCapacity = BigInt(17900000000n);
+        const validOrderData = formatter.formatOrderData(BigInt(25075 * 10 ** 5), BigInt(5 * 10 ** 9), BigInt(2 * 10 ** 10), false);
+        const invalidOrderData = formatter.formatOrderData(BigInt(2 * 10 ** 10), BigInt(4 * 10 ** 9), BigInt(2 * 10 ** 9), false);
+        const fakeOrders = [
+          {
+            cell_output: {
+              capacity: `0x${insufficientCapacity.toString(16)}`,
+              lock: orderLock,
+            },
+            data: validOrderData,
+          },
+          {
+            cell_output: {
+              capacity: `0x${sufficientCapacity.toString(16)}`,
+              lock: orderLock,
+            },
+            data: validOrderData,
+          },
+          {
+            cell_output: {
+              capacity: `0x${sufficientCapacity.toString(16)}`,
+              lock: orderLock,
+            },
+            data: invalidOrderData,
+          },
+        ];
+        beforeEach(async () => {
+          indexer.collectCells.resolves(fakeOrders);
+
+          req.query.is_bid = true;
+          await controller.getBestPrice(req, res, next);
+        });
+        it('returns the price from the order cell having non-zero order amount', () => {
+          res.status.should.have.been.calledWith(200);
+          res.json.should.have.been.calledWith({ price: '20000000000' });
+        });
+      });
+      describe('when query for best price for ask order', () => {
+        const orderAmount = BigInt(5 * 10 ** 9);
+        const price = 2n;
+        const sufficientCapacity = (BigInt(orderAmount * price) * BigInt(1003)) / BigInt(1000) + 17900000000n;
+        const insufficientCapacity = sufficientCapacity - 2n;
+        const fakeOrders = [
+          {
+            cell_output: {
+              capacity: `0x${sufficientCapacity.toString(16)}`,
+              lock: orderLock,
+            },
+            data: formatter.formatOrderData(BigInt(0), orderAmount, BigInt(1 * 10 ** 10), true),
+          },
+          {
+            cell_output: {
+              capacity: `0x${sufficientCapacity.toString(16)}`,
+              lock: orderLock,
+            },
+            data: formatter.formatOrderData(BigInt(0), orderAmount, BigInt(2 * 10 ** 10), true),
+          },
+          {
+            cell_output: {
+              capacity: `0x${insufficientCapacity.toString(16)}`,
+              lock: orderLock,
+            },
+            data: formatter.formatOrderData(BigInt(0), orderAmount, BigInt(3 * 10 ** 10), true),
+          },
+        ];
+        beforeEach(async () => {
+          indexer.collectCells.resolves(fakeOrders);
+
+          req.query.is_bid = false;
+          await controller.getBestPrice(req, res, next);
+        });
+        it('returns the price from the order cell having non-zero order amount', () => {
+          res.status.should.have.been.calledWith(200);
+          res.json.should.have.been.calledWith({ price: '20000000000' });
+        });
       });
     });
   });
