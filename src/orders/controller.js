@@ -73,13 +73,13 @@ class Controller {
 
       const sortedCells = formattedOrderCells
         .filter((cell) => is_bid !== cell.isBid && cell.orderAmount !== '0')
+        .filter((cell) => !isInvalidOrderCell(cell))
         .sort((a, b) => {
           if (is_bid) {
             return a.price - b.price;
           }
           return b.price - a.price;
         })
-        .filter((cell) => !isInvalidOrderCell(cell));
 
       const orderCell = sortedCells[0];
 
@@ -166,6 +166,7 @@ const isInvalidOrderCell = (cell) => {
     return invalid;
   } catch (error) {
     console.error(error);
+    return true;
   }
 };
 
