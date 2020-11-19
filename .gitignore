@@ -1,3 +1,27 @@
-node_modules
-*indexer_data*
+### macOS ###
+# General
+.DS_Store
+.AppleDouble
+.LSOverride
+
+### Node ###
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+### Dependency directories ###
+node_modules/
+jspm_packages/
+
+### Compiled binary addons (https://nodejs.org/api/addons.html) ###
+build
+
+### ckb data ###
+indexer_data
+
+### env ###
 .env
