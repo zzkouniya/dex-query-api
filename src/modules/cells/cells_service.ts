@@ -4,12 +4,13 @@ import IndexerWrapper from "../indexer/indexer";
 import { modules } from "../../ioc";
 import { CkbUtils } from "../../component";
 import CellsAmountRequestModel from "./cells_amount_request_model";
+import { IndexerService } from '../indexer/indexer_service';
 
 @injectable()
 export default class CellsSerive {
   constructor(
     @inject(new LazyServiceIdentifer(() => modules[IndexerWrapper.name]))
-    private indexer: IndexerWrapper
+    private indexer: IndexerService
   ) {}
 
   async getLiveCells(reqParam: CellsAmountRequestModel): Promise<Array<Cell>> {
@@ -37,7 +38,7 @@ export default class CellsSerive {
     }
 
     if (!cells.length) {
-      throw { error: "could not find cells fulfilling the amount query" };
+      return [];
     }
 
     return cells;
@@ -146,4 +147,5 @@ export default class CellsSerive {
       outPoint.tx_hash === spentCell.tx_hash
     );
   }
+
 }

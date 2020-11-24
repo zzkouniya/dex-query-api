@@ -1,23 +1,23 @@
 import { Script } from "@ckb-lumos/base";
-import IndexerWrapper from "../indexer/indexer";
 
 import {
   CkbUtils,
 } from "../../component";
+import { IndexerService } from '../indexer/indexer_service';
 
 
 export default class OrdersHistoryCalculate {
 
   private orderLock;
   private sudtType;
-  private indexer: IndexerWrapper;
+  private indexer: IndexerService;
 
   private txsByInputOutPoint;
   private usedInputOutPoints;
   private orderCellsInputOutPoints;
 
   constructor(
-    indexer: IndexerWrapper,
+    indexer: IndexerService,
     orderLock: Script,
     sudtType: Script
   ) {
