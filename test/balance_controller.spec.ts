@@ -10,13 +10,13 @@ import sinonStubPromise from "sinon-stub-promise";
 sinonStubPromise(sinon);
 
 import { mockReq, mockRes } from "sinon-express-mock";
-import { CkbUtils } from "../../component/formatter";
+import { CkbUtils } from "../src/component/formatter";
 import { utils, Cell, QueryOptions, TransactionWithStatus, HashType } from '@ckb-lumos/base';
 
-import { IndexerService } from '../indexer/indexer_service';
-import BalanceService from './balance_service';
-import BalanceController from './balance_controller';
-import { contracts } from "../../config";
+import { IndexerService } from '../src/modules/indexer/indexer_service';
+import BalanceService from '../src/modules/balance/balance_service';
+import BalanceController from '../src/modules/balance/balance_controller';
+import { contracts } from "../src/config";
 
 describe('Balance controller', () => {
   let req;

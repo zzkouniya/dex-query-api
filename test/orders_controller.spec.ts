@@ -10,13 +10,13 @@ import sinonStubPromise from "sinon-stub-promise";
 sinonStubPromise(sinon);
 
 import { mockReq, mockRes } from "sinon-express-mock";
-import { CkbUtils } from "../../component/formatter";
-import OrdersService from './orders_service';
-import OrdersHistoryService from './orders_history_service';
-import OrderController from './orders_controller';
+import { CkbUtils } from "../src/component/formatter";
+import OrdersService from '../src/modules/orders/orders_service';
+import OrdersHistoryService from '../src/modules/orders/orders_history_service';
+import OrderController from '../src/modules/orders/orders_controller';
 
-import { contracts } from "../../config";
-import { IndexerService } from '../indexer/indexer_service';
+import { contracts } from "../src/config";
+import { IndexerService } from '../src/modules/indexer/indexer_service';
 import { QueryOptions, Cell, TransactionWithStatus } from '@ckb-lumos/base';
 
 
