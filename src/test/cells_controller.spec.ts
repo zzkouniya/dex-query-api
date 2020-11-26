@@ -10,12 +10,12 @@ import sinonStubPromise from "sinon-stub-promise";
 sinonStubPromise(sinon);
 
 import { mockReq, mockRes } from "sinon-express-mock";
-import { CkbUtils } from "../src/component/formatter";
+import { CkbUtils } from "../component/formatter";
 import { Cell, QueryOptions, TransactionWithStatus } from '@ckb-lumos/base';
 
-import { IndexerService } from '../src/modules/indexer/indexer_service';
-import CellsSerive from '../src/modules/cells/cells_service';
-import CellsController from '../src/modules/cells/cells_controller';
+import { IndexerService } from '../modules/indexer/indexer_service';
+import CellsSerive from '../modules/cells/cells_service';
+import CellsController from '../modules/cells/cells_controller';
 
 describe('Cells controller', () => {
   let req;
