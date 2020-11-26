@@ -4,9 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "env NODE_ENV=test mocha 'test/**/*.spec.ts' --exit",
-    "test:debug": "env NODE_ENV=test mocha –debug-brk 'test/**/*.spec.ts' --exit",
-    "test:watch": "env NODE_ENV=test mocha -p tsconfig.json 'src/modules/**/*.spec.ts' --watch",
+    "test": "env NODE_ENV=test mocha './src/test/**/*.spec.ts' --exit",
+    "test:debug": "env NODE_ENV=test mocha –debug-brk './src/test/**/*.spec.ts' --exit",
+    "test:watch": "env NODE_ENV=test mocha -p tsconfig.json './src/test/**/*.spec.ts' --watch",
     "dev:build": "tsc -w",
     "dev:start": "nodemon node ./build/app.js",
     "dev": "tsc && concurrently npm:dev:*"
