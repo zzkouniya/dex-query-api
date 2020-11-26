@@ -101,6 +101,7 @@ export default class OrdersHistoryCalculate {
         ordersHistory.push({
           firstOrderCell: output,
           lastOrderCell,
+          block_hash: txWithStatus.tx_status.block_hash
         });
       }
     }
@@ -157,6 +158,7 @@ export default class OrdersHistoryCalculate {
       }
 
       orderHistory.status = status;
+      
     }
 
     return ordersHistory;

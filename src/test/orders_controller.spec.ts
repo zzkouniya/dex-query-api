@@ -404,6 +404,10 @@ describe('Orders controller', () => {
                   formatOrderData(1n, 1n, price, true),
                 ],
               },
+              tx_status: {
+                block_hash: '0x50c20ecc2b3b56ed336e4d8b840cf99a29069ffa7b279433e1c7093a359657b9',
+                status: 'committed'
+              }
             },
             {
               transaction: {
@@ -430,6 +434,10 @@ describe('Orders controller', () => {
                   formatOrderData(2n, 0n, price, true),
                 ],
               },
+              tx_status: {
+                block_hash: '0x50c20ecc2b3b56ed336e4d8b840cf99a29069ffa7b279433e1c7093a359657b9',
+                status: 'committed'
+              }
             },
           ];
 
@@ -489,6 +497,10 @@ describe('Orders controller', () => {
                   ],
                   outputs_data: ['0x'],
                 },
+                tx_status: {
+                  block_hash: '0x50c20ecc2b3b56ed336e4d8b840cf99a29069ffa7b279433e1c7093a359657b9',
+                  status: 'committed'
+                }
               });
               mock_transaction.resolves(transactions);
               await controller.getOrderHistory(req, res, next);
@@ -554,6 +566,10 @@ describe('Orders controller', () => {
                     formatOrderData(10n, 10n, price, true),
                   ],
                 },
+                tx_status: {
+                  block_hash: '0x50c20ecc2b3b56ed336e4d8b840cf99a29069ffa7b279433e1c7093a359657b9',
+                  status: 'committed'
+                }
               },
               {
                 transaction: {
@@ -603,6 +619,10 @@ describe('Orders controller', () => {
                     formatOrderData(20n, 0n, price, true),
                   ],
                 },
+                tx_status: {
+                  block_hash: '0x50c20ecc2b3b56ed336e4d8b840cf99a29069ffa7b279433e1c7093a359657b9',
+                  status: 'committed'
+                }
               },
             ];
 
@@ -679,6 +699,10 @@ describe('Orders controller', () => {
                     formatOrderData(1n, 1n, price, true),
                   ],
                 },
+                tx_status: {
+                  block_hash: '0x50c20ecc2b3b56ed336e4d8b840cf99a29069ffa7b279433e1c7093a359657b9',
+                  status: 'committed'
+                }
               },
               {
                 transaction: {
@@ -705,6 +729,10 @@ describe('Orders controller', () => {
                     formatOrderData(10n, 10n, price, true),
                   ],
                 },
+                tx_status: {
+                  block_hash: '0x50c20ecc2b3b56ed336e4d8b840cf99a29069ffa7b279433e1c7093a359657b9',
+                  status: 'committed'
+                }
               },
               {
                 transaction: {
@@ -760,6 +788,10 @@ describe('Orders controller', () => {
                     formatOrderData(2n, 0n, price, true),
                   ],
                 },
+                tx_status: {
+                  block_hash: '0x50c20ecc2b3b56ed336e4d8b840cf99a29069ffa7b279433e1c7093a359657b9',
+                  status: 'committed'
+                }
               },
             ];
 
@@ -837,6 +869,10 @@ describe('Orders controller', () => {
                 formatOrderData(1n, 1n, price, true),
               ],
             },
+            tx_status: {
+              block_hash: '0x50c20ecc2b3b56ed336e4d8b840cf99a29069ffa7b279433e1c7093a359657b9',
+              status: 'committed'
+            }
           },
           {
             transaction: {
@@ -860,6 +896,10 @@ describe('Orders controller', () => {
               ],
               outputs_data: ['0x'],
             },
+            tx_status: {
+              block_hash: '0x50c20ecc2b3b56ed336e4d8b840cf99a29069ffa7b279433e1c7093a359657b9',
+              status: 'committed'
+            }
           },
         ];
 
@@ -920,6 +960,10 @@ describe('Orders controller', () => {
                 formatOrderData(1n, 1n, price, true),
               ],
             },
+            tx_status: {
+              block_hash: '0x50c20ecc2b3b56ed336e4d8b840cf99a29069ffa7b279433e1c7093a359657b9',
+              status: 'committed'
+            }
           },
         ];
 
