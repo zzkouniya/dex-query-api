@@ -1,0 +1,27 @@
+{
+  "compilerOptions": {
+    // "incremental": true,                  
+    "target": "es2020",
+    "module": "commonjs",               
+    "esModuleInterop": true,
+    "outDir": "./build", 
+    "rootDir": "./src",
+    "removeComments": true,  
+    "importHelpers": true,               
+    /* 
+    "downlevelIteration": true,
+    "isolatedModules": true,
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+     */
+    "moduleResolution": "node",
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "skipLibCheck": false,                    
+    "forceConsistentCasingInFileNames": true
+  },
+  "exclude": ["src/test/**/*.modules.ts" ]
+}

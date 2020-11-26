@@ -11,7 +11,7 @@ npm i
 ### Start server
 
 ```
-npm start
+npm run dev
 ```
 
 When the server starts, it will also start a lumos indexer listening to a CKB node.
