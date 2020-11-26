@@ -131,15 +131,14 @@ export default class OrdersHistoryCalculate {
           firstOrderCellData.sUDTAmount - lastOrderCellData.sUDTAmount;
       }
       
-      let average_price = BigInt(0)
-      if(tradedAmount !== average_price) {
+      let average_price = new BigNumber(0);
+      if(tradedAmount !== BigInt(0)) {
         const big_number_average_price = new BigNumber(tradedAmount.toString())
-          .div(new BigNumber(paidAmount.toString()))
-          .multipliedBy(new BigNumber(10000000000));
+          .div(new BigNumber(paidAmount.toString()));
 
-        average_price = BigInt(parseInt(big_number_average_price.toFixed(0)));
+        average_price = big_number_average_price;
       }   
-      orderHistory.average_price = average_price;
+      orderHistory.average_price = average_price;      
       orderHistory.paidAmount = paidAmount;
       orderHistory.tradedAmount = tradedAmount;
       orderHistory.turnoverRate = turnoverRate;
