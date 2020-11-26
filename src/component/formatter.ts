@@ -1,24 +1,24 @@
 import { Cell, HexString } from "@ckb-lumos/base";
 
 export interface DexOrderData {
-  sUDTAmount: bigint;
-  orderAmount: bigint;
+  sudt_amount: bigint;
+  order_amount: bigint;
   price: bigint;
-  isBid: boolean;
+  is_bid: boolean;
 }
 
 export interface DexOrderCellFormat {
-  sUDTAmount: string;
-  orderAmount: string;
+  sudt_amount: string;
+  order_amount: string;
   price: string;
-  isBid: boolean;
-  rawData: Cell;
+  is_bid: boolean;
+  raw_data: Cell;
 }
 
 export class CkbUtils {
   static parseOrderData(hex: HexString): DexOrderData {
-    const sUDTAmount = this.parseAmountFromLeHex(hex.slice(0, 34));
-    const orderAmount = this.parseAmountFromLeHex(hex.slice(34, 66));
+    const sudt_amount = this.parseAmountFromLeHex(hex.slice(0, 34));
+    const order_amount = this.parseAmountFromLeHex(hex.slice(34, 66));
 
     let price: bigint;
     try {
@@ -28,13 +28,13 @@ export class CkbUtils {
       price = null;
     }
 
-    const isBid = hex.slice(82, 84) === "00";
+    const is_bid = hex.slice(82, 84) === "00";
 
     const orderData: DexOrderData = {
-      sUDTAmount,
-      orderAmount,
+      sudt_amount,
+      order_amount,
       price,
-      isBid,
+      is_bid,
     };
 
     return orderData;
@@ -64,11 +64,11 @@ export class CkbUtils {
       const parsedOrderData = this.parseOrderData(orderCell.data);
 
       const result: DexOrderCellFormat = {
-        sUDTAmount: parsedOrderData.sUDTAmount.toString(),
-        orderAmount: parsedOrderData.orderAmount.toString(),
+        sudt_amount: parsedOrderData.sudt_amount.toString(),
+        order_amount: parsedOrderData.order_amount.toString(),
         price: parsedOrderData.price.toString(),
-        isBid: parsedOrderData.isBid,
-        rawData: orderCell,
+        is_bid: parsedOrderData.is_bid,
+        raw_data: orderCell,
       };
 
       return result;

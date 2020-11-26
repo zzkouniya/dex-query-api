@@ -10,10 +10,10 @@ import { CkbUtils } from "../../component";
 import CkbService from "../ckb/ckb_service";
 import CkbCellScriptModel from "../../model/ckb/ckb_cell_script";
 import TransactionDetailsModel from './transaction_details_model';
+import CkbTransactionWithStatusModelWrapper from '../../model/ckb/ckb_transaction_with_status';
 
 @injectable()
 export default class TxService {
-  private ckb: CKB;
 
   constructor(
     @inject(new LazyServiceIdentifer(() => modules[IndexerWrapper.name]))
@@ -47,11 +47,11 @@ export default class TxService {
           requests.push(["getTransaction", input.previous_output.tx_hash]);
         }
       }
-      const inputTxs = await this.ckb.rpc.createBatchRequest(requests).exec();
+      const inputTxs = await this.ckbService.getTransactions(requests);
       
-      const inputTxsMap = new Map();
+      const inputTxsMap: Map<string, CkbTransactionWithStatusModelWrapper> = new Map();
       for (const tx of inputTxs) {
-        inputTxsMap.set(tx.transaction.hash, tx);
+        inputTxsMap.set(tx.ckbTransactionWithStatus.transaction.hash, tx);
       }
 
       for (let i = 0; i < txsWithStatus.length; i++) {
@@ -71,13 +71,13 @@ export default class TxService {
           const inputIndex = parseInt(index, 16);
           const tx = inputTxsMap.get(tx_hash);
           if (tx) {
-            const cell = tx.transaction.outputs[inputIndex];
+            const cell = tx.ckbTransactionWithStatus.transaction.outputs[inputIndex];
             if (
               cell &&
               this.isSameTypeScript(cell.lock, queryOptions.lock) &&
               this.isSameTypeScript(cell.type, queryOptions.type)
             ) {
-              const data = tx.transaction.outputsData[inputIndex];
+              const data = tx.ckbTransactionWithStatus.transaction.outputsData[inputIndex];
               const amount = CkbUtils.parseAmountFromLeHex(data);
               inputSum += amount;
             }
@@ -98,7 +98,7 @@ export default class TxService {
         const income = outputSum - inputSum;        
 
         if (income.toString() !== "0") {
-          console.log(inputSum, outputSum);
+          // console.log(inputSum, outputSum);
           txs.push({
             hash,
             income: income.toString(),

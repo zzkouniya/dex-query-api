@@ -64,7 +64,7 @@ export default class OrdersService {
     const formattedOrderCells = CkbUtils.formatOrderCells(orderCells);
 
     const sortedCells = formattedOrderCells
-      .filter((cell) => is_bid !== cell.isBid && cell.orderAmount !== "0")
+      .filter((cell) => is_bid !== cell.is_bid && cell.order_amount !== "0")
       .filter((cell) => !this.isInvalidOrderCell(cell))
       .sort((a, b) => {
         if (is_bid) {
@@ -84,21 +84,21 @@ export default class OrdersService {
 
   isInvalidOrderCell(cell: DexOrderCellFormat): boolean {
     const orderCellMinCapacity = new BigNumber(17900000000);
-    const capacityBN = new BigNumber(cell.rawData.cell_output.capacity);
-    const sudtAmountBN = new BigNumber(cell.sUDTAmount);
-    const orderAmountBN = new BigNumber(cell.orderAmount);
+    const capacityBN = new BigNumber(cell.raw_data.cell_output.capacity);
+    const sudtAmountBN = new BigNumber(cell.sudt_amount);
+    const orderAmountBN = new BigNumber(cell.order_amount);
     const priceBN = new BigNumber(cell.price).dividedBy(
       new BigNumber(10 ** 10)
     );
     const feeRatioBN = new BigNumber(0.003);
     try {
-      if (cell.rawData.cell_output.lock.args.length !== 66) {
+      if (cell.raw_data.cell_output.lock.args.length !== 66) {
         return true;
       }
       if (capacityBN.lt(orderCellMinCapacity)) {
         return true;
       }
-      if (cell.isBid) {
+      if (cell.is_bid) {
         const exchangeCapacity = orderAmountBN.multipliedBy(priceBN);
         const minimumCapacity = exchangeCapacity
           .plus(exchangeCapacity.multipliedBy(feeRatioBN))

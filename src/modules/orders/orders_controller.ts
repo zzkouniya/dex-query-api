@@ -190,7 +190,7 @@ export default class OrderController {
     responses: {
       200: {
         description: "Success",
-        type: SwaggerDefinitionConstant.Response.Type.OBJECT,
+        type: SwaggerDefinitionConstant.Response.Type.ARRAY,
         // model: "BalanceCkbModel",
       },
       400: { description: "Parameters fail" },

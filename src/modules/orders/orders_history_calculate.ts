@@ -111,29 +111,29 @@ export default class OrdersHistoryCalculate {
       const lastOrderCellData = CkbUtils.parseOrderData(lastOrderCell.data);
 
       const tradedAmount =
-        firstOrderCellData.orderAmount - lastOrderCellData.orderAmount;
+        firstOrderCellData.order_amount - lastOrderCellData.order_amount;
       let turnoverRate;
       try {
-        turnoverRate = Number((tradedAmount * 100n) / firstOrderCellData.orderAmount) / 100;
+        turnoverRate = Number((tradedAmount * 100n) / firstOrderCellData.order_amount) / 100;
       } catch (error) {
         console.error("zero order amount for the  first order cell");
         turnoverRate = 0;
       }
 
       let paidAmount;
-      if (firstOrderCellData.isBid) {
+      if (firstOrderCellData.is_bid) {
         paidAmount =
           BigInt(firstOrderCell.capacity) - BigInt(lastOrderCell.capacity);
       } else {
         paidAmount =
-          firstOrderCellData.sUDTAmount - lastOrderCellData.sUDTAmount;
+          firstOrderCellData.sudt_amount - lastOrderCellData.sudt_amount;
       }
 
       orderHistory.paidAmount = paidAmount;
       orderHistory.tradedAmount = tradedAmount;
       orderHistory.turnoverRate = turnoverRate;
-      orderHistory.orderAmount = firstOrderCellData.orderAmount;
-      orderHistory.isBid = firstOrderCellData.isBid;
+      orderHistory.orderAmount = firstOrderCellData.order_amount;
+      orderHistory.isBid = firstOrderCellData.is_bid;
       orderHistory.price = firstOrderCellData.price;
 
       const outpoint = orderHistory.lastOrderCell.outpoint;

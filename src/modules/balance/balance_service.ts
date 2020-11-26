@@ -121,7 +121,7 @@ export default class BalanceService {
 
     const lockedOrderBalance = orderCells.reduce((total, cell: Cell) => {
       try {
-        return total + CkbUtils.parseOrderData(cell.data).sUDTAmount;
+        return total + CkbUtils.parseOrderData(cell.data).sudt_amount;
       } catch (error) {
         console.error(error);
         return total;
