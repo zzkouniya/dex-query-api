@@ -36,6 +36,7 @@ export default class OrdersHistoryService {
 
     const formattedOrdersHistory = ordersHistory.map((o) => {
       const orderHistory = {
+        average_price: o.average_price.toString(),
         block_hash: o.block_hash,
         is_bid: o.isBid,
         order_amount: o.orderAmount.toString(),

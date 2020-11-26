@@ -1,4 +1,5 @@
 import { Script } from "@ckb-lumos/base";
+import BigNumber from 'bignumber.js';
 
 import {
   CkbUtils,
@@ -129,7 +130,16 @@ export default class OrdersHistoryCalculate {
         paidAmount =
           firstOrderCellData.sUDTAmount - lastOrderCellData.sUDTAmount;
       }
+      
+      let average_price = BigInt(0)
+      if(tradedAmount !== average_price) {
+        const big_number_average_price = new BigNumber(tradedAmount.toString())
+          .div(new BigNumber(paidAmount.toString()))
+          .multipliedBy(new BigNumber(10000000000));
 
+        average_price = BigInt(parseInt(big_number_average_price.toFixed(0)));
+      }   
+      orderHistory.average_price = average_price;
       orderHistory.paidAmount = paidAmount;
       orderHistory.tradedAmount = tradedAmount;
       orderHistory.turnoverRate = turnoverRate;
