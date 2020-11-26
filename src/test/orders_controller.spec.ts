@@ -456,6 +456,7 @@ describe('Orders controller', () => {
             res.json.should.have.been.calledWith(
               [
                 {
+                  block_hash: "0x50c20ecc2b3b56ed336e4d8b840cf99a29069ffa7b279433e1c7093a359657b9",
                   paid_amount: '1',
                   price: '1',
                   traded_amount: '1',
@@ -510,6 +511,7 @@ describe('Orders controller', () => {
               res.json.should.have.been.calledWith(
                 [
                   {
+                    block_hash: "0x50c20ecc2b3b56ed336e4d8b840cf99a29069ffa7b279433e1c7093a359657b9",
                     paid_amount: '1',
                     traded_amount: '1',
                     order_amount: '1',
@@ -641,6 +643,7 @@ describe('Orders controller', () => {
               res.json.should.have.been.calledWith(
                 [
                   {
+                    block_hash: "0x50c20ecc2b3b56ed336e4d8b840cf99a29069ffa7b279433e1c7093a359657b9",
                     paid_amount: '2',
                     traded_amount: '1',
                     order_amount: '1',
@@ -654,6 +657,7 @@ describe('Orders controller', () => {
                     },
                   },
                   {
+                    block_hash: "0x50c20ecc2b3b56ed336e4d8b840cf99a29069ffa7b279433e1c7093a359657b9",
                     paid_amount: '3',
                     traded_amount: '10',
                     order_amount: '10',
@@ -808,6 +812,7 @@ describe('Orders controller', () => {
             res.json.should.have.been.calledWith(
               [
                 {
+                  block_hash: "0x50c20ecc2b3b56ed336e4d8b840cf99a29069ffa7b279433e1c7093a359657b9",
                   paid_amount: '2',
                   traded_amount: '1',
                   order_amount: '1',
@@ -821,6 +826,7 @@ describe('Orders controller', () => {
                   },
                 },
                 {
+                  block_hash: '0x50c20ecc2b3b56ed336e4d8b840cf99a29069ffa7b279433e1c7093a359657b9',
                   paid_amount: '3',
                   traded_amount: '10',
                   order_amount: '10',
@@ -915,6 +921,7 @@ describe('Orders controller', () => {
         res.status.should.have.been.calledWith(200);
         res.json.should.have.been.calledWith([
           {
+            block_hash: "0x50c20ecc2b3b56ed336e4d8b840cf99a29069ffa7b279433e1c7093a359657b9",
             paid_amount: '0',
             traded_amount: '0',
             order_amount: '1',
@@ -979,6 +986,7 @@ describe('Orders controller', () => {
         res.status.should.have.been.calledWith(200);
         res.json.should.have.been.calledWith([
           {
+            block_hash: "0x50c20ecc2b3b56ed336e4d8b840cf99a29069ffa7b279433e1c7093a359657b9",
             paid_amount: '0',
             traded_amount: '0',
             order_amount: '1',
