@@ -5,6 +5,8 @@ import bodyParser from "body-parser";
 import { container } from "./ioc/container";
 import Bootstrap from "./ioc/bootstrap";
 import * as swagger from "swagger-express-ts";
+import helmet from 'helmet';
+import cors from 'cors';
 import { port } from "./config";
 
 export class DexQueryApiServer {
@@ -14,6 +16,8 @@ export class DexQueryApiServer {
     const server = new InversifyExpressServer(container);
 
     server.setConfig((app) => {
+      app.use(helmet());
+      app.use(cors());
       app.use(
         bodyParser.urlencoded({
           extended: true,
