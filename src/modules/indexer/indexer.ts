@@ -6,9 +6,11 @@ import {
 } from "@ckb-lumos/indexer";
 import { injectable } from "inversify";
 import { indexer_config } from "../../config";
+import { IndexerService } from './indexer_service';
+
 
 @injectable()
-export default class IndexerWrapper {
+export default class IndexerWrapper implements IndexerService {
   private indexer: Indexer;
 
   constructor() {
@@ -26,6 +28,7 @@ export default class IndexerWrapper {
 
     const cells = [];
     for await (const cell of cellCollector.collect()) cells.push(cell);
+    
 
     return cells;
   }

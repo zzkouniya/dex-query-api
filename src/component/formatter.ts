@@ -12,7 +12,7 @@ export interface DexOrderCellFormat {
   orderAmount: string;
   price: string;
   isBid: boolean;
-  rawData: Cell
+  rawData: Cell;
 }
 
 export class CkbUtils {
@@ -59,19 +59,6 @@ export class CkbUtils {
     return (buf.readBigUInt64LE(8) << BigInt(64)) + buf.readBigUInt64LE(0);
   }
 
-  // static formatOrderCell(orderCell: Cell): DexOrderCellFormat {
-  //   const parsedOrderData = this.parseOrderData(orderCell.data);
-  //   const result: DexOrderCellFormat = {
-  //     sUDTAmount: parsedOrderData.sUDTAmount.toString(),
-  //     orderAmount: parsedOrderData.orderAmount.toString(),
-  //     price: parsedOrderData.price.toString(),
-  //     isBid: parsedOrderData.isBid,
-  //     rawData: orderCell,
-  //   };
-
-  //   return result;
-  // }
-
   static formatOrderCells(orderCells: Cell[]): Array<DexOrderCellFormat> {
     const formattedOrderCells = orderCells.map((orderCell) => {
       const parsedOrderData = this.parseOrderData(orderCell.data);
@@ -88,40 +75,43 @@ export class CkbUtils {
     });
     return formattedOrderCells;
   }
+
+  static formatBigUInt128LE(u128) {
+    const U128_MAX = BigInt(2) ** BigInt(128) - BigInt(1);
+    const U128_MIN = BigInt(0);
+
+    if (u128 < U128_MIN) {
+      throw new Error(`u128 ${u128} too small`);
+    }
+    if (u128 > U128_MAX) {
+      throw new Error(`u128 ${u128} too large`);
+    }
+    const buf = Buffer.alloc(16);
+    buf.writeBigUInt64LE(u128 & BigInt("0xFFFFFFFFFFFFFFFF"), 0);
+    buf.writeBigUInt64LE(u128 >> BigInt(64), 8);
+    return `0x${buf.toString("hex")}`;
+  }
+
+  static formatOrderData(currentAmount, orderAmount, price, isBid) {
+    const udtAmountHex = this.formatBigUInt128LE(currentAmount);
+    if (isBid === undefined) {
+      return udtAmountHex;
+    }
+
+    const orderAmountHex = this.formatBigUInt128LE(orderAmount).replace(
+      "0x",
+      ""
+    );
+
+    const priceBuf = Buffer.alloc(8);
+    priceBuf.writeBigUInt64LE(price);
+    const priceHex = `${priceBuf.toString("hex")}`;
+
+    const bidOrAskBuf = Buffer.alloc(1);
+    bidOrAskBuf.writeInt8(isBid ? 0 : 1);
+    const isBidHex = `${bidOrAskBuf.toString("hex")}`;
+
+    const dataHex = udtAmountHex + orderAmountHex + priceHex + isBidHex;
+    return dataHex;
+  }
 }
-
-// export const formatOrderData = (currentAmount, orderAmount, price, isBid) => {
-//   const udtAmountHex = formatBigUInt128LE(currentAmount);
-//   if (isBid === undefined) {
-//     return udtAmountHex;
-//   }
-
-//   const orderAmountHex = formatBigUInt128LE(orderAmount).replace("0x", "");
-
-//   const priceBuf = Buffer.alloc(8);
-//   priceBuf.writeBigUInt64LE(price);
-//   const priceHex = `${priceBuf.toString("hex")}`;
-
-//   const bidOrAskBuf = Buffer.alloc(1);
-//   bidOrAskBuf.writeInt8(isBid ? 0 : 1);
-//   const isBidHex = `${bidOrAskBuf.toString("hex")}`;
-
-//   const dataHex = udtAmountHex + orderAmountHex + priceHex + isBidHex;
-//   return dataHex;
-// };
-
-// export const formatBigUInt128LE = (u128) => {
-//   const U128_MAX = BigInt(2) ** BigInt(128) - BigInt(1);
-//   const U128_MIN = BigInt(0);
-
-//   if (u128 < U128_MIN) {
-//     throw new Error(`u128 ${u128} too small`);
-//   }
-//   if (u128 > U128_MAX) {
-//     throw new Error(`u128 ${u128} too large`);
-//   }
-//   const buf = Buffer.alloc(16);
-//   buf.writeBigUInt64LE(u128 & BigInt("0xFFFFFFFFFFFFFFFF"), 0);
-//   buf.writeBigUInt64LE(u128 >> BigInt(64), 8);
-//   return `0x${buf.toString("hex")}`;
-// };

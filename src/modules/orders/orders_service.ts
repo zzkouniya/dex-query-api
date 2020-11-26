@@ -6,12 +6,13 @@ import { modules } from "../../ioc";
 import { contracts } from "../../config";
 import { CkbUtils, DexOrderCellFormat } from "../../component";
 import BestPriceModel from "./best_price_model";
+import { IndexerService } from '../indexer/indexer_service';
 
 @injectable()
 export default class OrdersService {
   constructor(
     @inject(new LazyServiceIdentifer(() => modules[IndexerWrapper.name]))
-    private indexer: IndexerWrapper
+    private indexer: IndexerService
   ) {}
 
   async getOrders(
@@ -32,17 +33,6 @@ export default class OrdersService {
         args: order_lock_args,
       },
     });
-
-    // const formattedOrderCells = orderCells.map((orderCell) => {
-    //   const parsedOrderData = CkbUtils.parseOrderData(orderCell.data);
-    //   return {
-    //     sudt_amount: parsedOrderData.sUDTAmount.toString(),
-    //     order_amount: parsedOrderData.orderAmount.toString(),
-    //     price: parsedOrderData.price.toString(),
-    //     is_bid: parsedOrderData.isBid,
-    //     raw_data: orderCell,
-    //   };
-    // });
 
     return CkbUtils.formatOrderCells(orderCells);
   }
@@ -72,7 +62,6 @@ export default class OrdersService {
     }
 
     const formattedOrderCells = CkbUtils.formatOrderCells(orderCells);
-    console.log(formattedOrderCells);
 
     const sortedCells = formattedOrderCells
       .filter((cell) => is_bid !== cell.isBid && cell.orderAmount !== "0")

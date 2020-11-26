@@ -6,8 +6,9 @@
     "esModuleInterop": true,
     "outDir": "./build", 
     "rootDir": "./src",
-    "removeComments": true,                 
-    /* "importHelpers": true,
+    "removeComments": true,  
+    "importHelpers": true,               
+    /* 
     "downlevelIteration": true,
     "isolatedModules": true,
     "strict": true,
@@ -21,5 +22,6 @@
     "emitDecoratorMetadata": true,
     "skipLibCheck": false,                    
     "forceConsistentCasingInFileNames": true
-  }
+  },
+  "exclude": ["src/test/**/*.modules.ts" ]
 }

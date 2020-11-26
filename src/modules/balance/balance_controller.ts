@@ -66,7 +66,7 @@ export default class BalanceController {
     res: express.Response
   ): Promise<express.Response<void>> {
     const { lock_code_hash, lock_hash_type, lock_args } = req.query;
-
+    
     if (!this.isValidScript(lock_code_hash, lock_hash_type, lock_args)) {
       return res
         .status(400)
@@ -165,7 +165,7 @@ export default class BalanceController {
     }
 
     try {
-      const result = this.banlanceService.getSUDTBalance(
+      const result = await this.banlanceService.getSUDTBalance(
         lock_code_hash,
         lock_hash_type,
         lock_args,

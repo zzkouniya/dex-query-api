@@ -1,18 +1,22 @@
 import { inject, injectable, LazyServiceIdentifer } from "inversify";
-import { utils, Script, HashType, HexString, Hash, QueryOptions, Cell } from "@ckb-lumos/base";
+import { utils, Script, QueryOptions, Cell } from "@ckb-lumos/base";
 import IndexerWrapper from "../indexer/indexer";
 import { modules } from "../../ioc";
 import { contracts } from "../../config";
-import { CkbUtils } from "../../component";
+import { CkbUtils, DexLogger } from "../../component";
 import BalanceCkbModel from "./balance_ckb_model";
 import BalanceSudtModel from "./balance_sudt_model";
+import { IndexerService } from '../indexer/indexer_service';
 
 @injectable()
 export default class BalanceService {
+  private logger: DexLogger;
   constructor(
     @inject(new LazyServiceIdentifer(() => modules[IndexerWrapper.name]))
-    private indexer: IndexerWrapper
-  ) {}
+    private indexer: IndexerService
+  ) {
+    this.logger = new DexLogger(BalanceService.name);
+  }
 
   async getCKBBalance(
     lock_code_hash: any,
@@ -28,11 +32,11 @@ export default class BalanceService {
 
     const cells = await this.indexer.collectCells({
       lock: queryLock,
-    });
+    });  
 
     const normalCells = cells.filter(
-      (cell) => cell.data === "0x" && !cell.cell_output.type
-    );
+      (cell: Cell) => cell.data === "0x" && !cell.cell_output.type);
+
     const balance = normalCells.reduce(
       (total, cell) => total + BigInt(cell.cell_output.capacity),
       BigInt(0)
@@ -41,6 +45,7 @@ export default class BalanceService {
     const occupiedCells = cells.filter(
       (cell) => cell.data !== "0x" || cell.cell_output.type
     );
+
     const occupiedBalance = occupiedCells.reduce(
       (total, cell) => total + BigInt(cell.cell_output.capacity),
       BigInt(0)
@@ -57,6 +62,7 @@ export default class BalanceService {
       lock: orderLock,
     });
 
+    // this.logger.error("orderCells" + orderCells)
     const lockedOrderBalance = orderCells.reduce(
       (total, cell) => total + BigInt(cell.cell_output.capacity),
       BigInt(0)
@@ -99,7 +105,7 @@ export default class BalanceService {
         console.error(error);
         return total;
       }
-    }, BigInt(0));
+    }, BigInt(0));    
 
     const queryLockHash = utils.computeScriptHash(<Script>queryOptions.lock);
     const orderLock: Script = {
@@ -121,10 +127,11 @@ export default class BalanceService {
         return total;
       }
     }, BigInt(0));
-
+    
     return {
       free: balance.toString(),
       locked_order: lockedOrderBalance.toString(),
     };
   }
+
 }
