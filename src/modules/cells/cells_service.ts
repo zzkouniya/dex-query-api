@@ -24,7 +24,6 @@ export default class CellsSerive {
     reqParam: CellsAmountRequestModel
   ): Promise<Array<Cell>> {
     const queryOptions = this.buildQueryParams(reqParam);
-    queryOptions.type = "empty";
 
     let cells = await this.indexer.collectCells(queryOptions);
 
@@ -46,6 +45,7 @@ export default class CellsSerive {
 
   private buildQueryParams(reqParam: CellsAmountRequestModel): QueryOptions {
     const queryOptions: QueryOptions = {};
+    queryOptions.type = "empty";
 
     if (
       reqParam.lock_code_hash &&
