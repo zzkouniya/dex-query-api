@@ -93,11 +93,7 @@ export default class OrdersHistoryCalculate {
           txHash: hash,
           index: originalIndex,
         };
-        const orderCells = this.getChainedOrderCells(
-          hash,
-          originalIndex,
-          groupedOrderCell
-        );
+        const orderCells = this.getChainedOrderCells(output);
         ordersHistory.push({
           orderCells,
           block_hash: txWithStatus.tx_status.block_hash
@@ -207,23 +203,10 @@ export default class OrdersHistoryCalculate {
     return true;
   }
 
-  getChainedOrderCells(hash, index, groupedOrderCell, prevOrderCells = []) {
-    const inputOutPoint = this.formatInputOutPoint(hash, index);
-    const nextTransaction = this.txsByInputOutPoint.get(inputOutPoint);
-
-    if (!this.usedInputOutPoints.has(inputOutPoint)) {
-      this.usedInputOutPoints.add(inputOutPoint);
-    }
-
-    const [, currentOutput] = groupedOrderCell;
-
-    if (!nextTransaction) {
-      return [...prevOrderCells, currentOutput];
-    }
-
+  determineGroupedOrderCellIndex(inputs, outpoint) {
     const inputOutpointList = [];
-    for (let i = 0; i < nextTransaction.inputs.length; i++) {
-      const input = nextTransaction.inputs[i];
+    for (let i = 0; i < inputs.length; i++) {
+      const input = inputs[i];
       const { previous_output } = input;
       const outpointStr = this.formatInputOutPoint(
         previous_output.tx_hash,
@@ -234,7 +217,23 @@ export default class OrdersHistoryCalculate {
       }
     }
 
-    const nextGroupedOrderCellIndex = inputOutpointList.indexOf(inputOutPoint);
+    return inputOutpointList.indexOf(outpoint);
+  }
+
+  getChainedOrderCells(currentOutput, prevOrderCells = []) {
+    const {outpoint} = currentOutput;
+    const inputOutPoint = this.formatInputOutPoint(outpoint.txHash, outpoint.index);
+    const nextTransaction = this.txsByInputOutPoint.get(inputOutPoint);
+
+    if (!this.usedInputOutPoints.has(inputOutPoint)) {
+      this.usedInputOutPoints.add(inputOutPoint);
+    }
+
+    if (!nextTransaction) {
+      return [...prevOrderCells, currentOutput];
+    }
+
+    const nextGroupedOrderCellIndex = this.determineGroupedOrderCellIndex(nextTransaction.inputs, inputOutPoint);
 
     const nextGroupedOrderCells = this.groupOrderCells(
       nextTransaction.outputs,
@@ -264,9 +263,7 @@ export default class OrdersHistoryCalculate {
     };
 
     return this.getChainedOrderCells(
-      nextTxHash,
-      nextOriginalIndex,
-      nextGroupedOrderCell,
+      nextOutput,
       [...prevOrderCells, currentOutput]
     );
   }
