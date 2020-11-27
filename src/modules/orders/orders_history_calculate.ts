@@ -93,21 +93,18 @@ export default class OrdersHistoryCalculate {
           txHash: hash,
           index: originalIndex,
         };
-        const lastOrderCell = this.getLastOrderCell(
-          hash,
-          originalIndex,
-          groupedOrderCell
-        );
+        const orderCells = this.getChainedOrderCells(output);
         ordersHistory.push({
-          firstOrderCell: output,
-          lastOrderCell,
+          orderCells,
           block_hash: txWithStatus.tx_status.block_hash
         });
       }
     }
 
     for (const orderHistory of ordersHistory) {
-      const { firstOrderCell, lastOrderCell } = orderHistory;
+      const { orderCells } = orderHistory;
+      const firstOrderCell = orderCells[0];
+      const lastOrderCell = orderCells[orderCells.length - 1];
       const firstOrderCellData = CkbUtils.parseOrderData(firstOrderCell.data);
       const lastOrderCellData = CkbUtils.parseOrderData(lastOrderCell.data);
 
@@ -137,7 +134,7 @@ export default class OrdersHistoryCalculate {
       orderHistory.isBid = firstOrderCellData.isBid;
       orderHistory.price = firstOrderCellData.price;
 
-      const outpoint = orderHistory.lastOrderCell.outpoint;
+      const outpoint = lastOrderCell.outpoint;
       const inputOutPoint = this.formatInputOutPoint(
         outpoint.txHash,
         outpoint.index
@@ -206,23 +203,10 @@ export default class OrdersHistoryCalculate {
     return true;
   }
 
-  getLastOrderCell(hash, index, groupedOrderCell) {
-    const inputOutPoint = this.formatInputOutPoint(hash, index);
-    const nextTransaction = this.txsByInputOutPoint.get(inputOutPoint);
-
-    if (!this.usedInputOutPoints.has(inputOutPoint)) {
-      this.usedInputOutPoints.add(inputOutPoint);
-    }
-
-    const [, currentOutput] = groupedOrderCell;
-
-    if (!nextTransaction) {
-      return currentOutput;
-    }
-
+  determineGroupedOrderCellIndex(inputs, outpoint) {
     const inputOutpointList = [];
-    for (let i = 0; i < nextTransaction.inputs.length; i++) {
-      const input = nextTransaction.inputs[i];
+    for (let i = 0; i < inputs.length; i++) {
+      const input = inputs[i];
       const { previous_output } = input;
       const outpointStr = this.formatInputOutPoint(
         previous_output.tx_hash,
@@ -233,7 +217,23 @@ export default class OrdersHistoryCalculate {
       }
     }
 
-    const nextGroupedOrderCellIndex = inputOutpointList.indexOf(inputOutPoint);
+    return inputOutpointList.indexOf(outpoint);
+  }
+
+  getChainedOrderCells(currentOutput, prevOrderCells = []) {
+    const {outpoint} = currentOutput;
+    const inputOutPoint = this.formatInputOutPoint(outpoint.txHash, outpoint.index);
+    const nextTransaction = this.txsByInputOutPoint.get(inputOutPoint);
+
+    if (!this.usedInputOutPoints.has(inputOutPoint)) {
+      this.usedInputOutPoints.add(inputOutPoint);
+    }
+
+    if (!nextTransaction) {
+      return [...prevOrderCells, currentOutput];
+    }
+
+    const nextGroupedOrderCellIndex = this.determineGroupedOrderCellIndex(nextTransaction.inputs, inputOutPoint);
 
     const nextGroupedOrderCells = this.groupOrderCells(
       nextTransaction.outputs,
@@ -247,12 +247,12 @@ export default class OrdersHistoryCalculate {
     currentOutput.nextTxHash = nextTxHash;
 
     if (!nextGroupedOrderCell) {
-      return currentOutput;
+      return [...prevOrderCells, currentOutput];
     }
 
     const [nextOriginalIndex, nextOutput] = nextGroupedOrderCell;
     if (!this.isOrderCell(nextOutput, this.orderLock, this.sudtType)) {
-      return currentOutput;
+      return [...prevOrderCells, currentOutput];
     }
 
     nextOutput.data = nextTransaction.outputs_data[nextOriginalIndex];
@@ -262,10 +262,9 @@ export default class OrdersHistoryCalculate {
       index: nextOriginalIndex,
     };
 
-    return this.getLastOrderCell(
-      nextTxHash,
-      nextOriginalIndex,
-      nextGroupedOrderCell
+    return this.getChainedOrderCells(
+      nextOutput,
+      [...prevOrderCells, currentOutput]
     );
   }
 

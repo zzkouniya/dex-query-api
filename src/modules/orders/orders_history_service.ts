@@ -35,6 +35,8 @@ export default class OrdersHistoryService {
     const ordersHistory = await ordersHistoryService.calculateOrdersHistory();
 
     const formattedOrdersHistory = ordersHistory.map((o) => {
+      const {orderCells} = o
+      const lastOrderCell = orderCells[orderCells.length - 1]
       const orderHistory = {
         block_hash: o.block_hash,
         is_bid: o.isBid,
@@ -45,13 +47,17 @@ export default class OrdersHistoryService {
         price: o.price.toString(),
         status: o.status,
         last_order_cell_outpoint: {
-          tx_hash: o.lastOrderCell.outpoint.txHash,
-          index: `0x${o.lastOrderCell.outpoint.index.toString(16)}`,
+          tx_hash: lastOrderCell.outpoint.txHash,
+          index: `0x${lastOrderCell.outpoint.index.toString(16)}`,
         },
+        order_cells: orderCells.map(orderCell => ({
+          tx_hash: orderCell.outpoint.txHash,
+          index: orderCell.outpoint.index,
+        }))
       };
-      if (o.lastOrderCell.nextTxHash) {
+      if (lastOrderCell.nextTxHash) {
         orderHistory.last_order_cell_outpoint = {
-          tx_hash: o.lastOrderCell.nextTxHash,
+          tx_hash: lastOrderCell.nextTxHash,
           index: "0x1",
         };
       }

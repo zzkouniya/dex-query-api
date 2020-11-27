@@ -371,9 +371,28 @@ describe('Orders controller', () => {
       return dataHex;
     };
 
+    const price = 1n;
+    const orderLockArgs = 'orderLockArgs';
+    const orderCell1 = {
+      capacity: '0x1',
+      lock: {
+        ...orderLockScript,
+        args: orderLockArgs,
+      },
+      type: typeScript,
+      data: formatOrderData(1n, 1n, price, true)
+    }
+    const orderCell2 = {
+      capacity: '0x0',
+      lock: {
+        ...orderLockScript,
+        args: orderLockArgs,
+      },
+      type: typeScript,
+      data: formatOrderData(2n, 0n, price, true)
+    }
+
     describe('completed order', () => {
-      const price = 1n;
-      const orderLockArgs = 'orderLockArgs';
       let transactions;
 
       describe('with single order history', () => {
@@ -392,16 +411,13 @@ describe('Orders controller', () => {
                 ],
                 outputs: [
                   {
-                    capacity: '0x1',
-                    lock: {
-                      ...orderLockScript,
-                      args: orderLockArgs,
-                    },
-                    type: typeScript,
+                    capacity: orderCell1.capacity,
+                    lock: orderCell1.lock,
+                    type: orderCell1.type,
                   },
                 ],
                 outputs_data: [
-                  formatOrderData(1n, 1n, price, true),
+                  orderCell1.data,
                 ],
               },
               tx_status: {
@@ -422,16 +438,13 @@ describe('Orders controller', () => {
                 ],
                 outputs: [
                   {
-                    capacity: '0x0',
-                    lock: {
-                      ...orderLockScript,
-                      args: orderLockArgs,
-                    },
-                    type: typeScript,
+                    capacity: orderCell2.capacity,
+                    lock: orderCell2.lock,
+                    type: orderCell2.type,
                   },
                 ],
                 outputs_data: [
-                  formatOrderData(2n, 0n, price, true),
+                  orderCell2.data,
                 ],
               },
               tx_status: {
@@ -468,6 +481,10 @@ describe('Orders controller', () => {
                     tx_hash: 'hash2',
                     index: '0x0',
                   },
+                  order_cells: [
+                    { index: 0, tx_hash: "hash1" },
+                    { index: 0, tx_hash: "hash2" },
+                  ]
                 },
               ],
             );
@@ -523,6 +540,10 @@ describe('Orders controller', () => {
                       tx_hash: 'hash3',
                       index: '0x1',
                     },
+                    order_cells: [
+                      { index: 0, tx_hash: "hash1" },
+                      { index: 0, tx_hash: "hash2" },
+                    ]
                   },
                 ],
               );
@@ -531,6 +552,42 @@ describe('Orders controller', () => {
         });
       });
       describe('with multiple order history', () => {
+        const orderCell1_1 = {
+          capacity: '0x3',
+          lock: {
+            ...orderLockScript,
+            args: orderLockArgs,
+          },
+          type: typeScript,
+          data: formatOrderData(1n, 1n, price, true)
+        }
+        const orderCell1_2 = {
+          capacity: '0x1',
+          lock: {
+            ...orderLockScript,
+            args: orderLockArgs,
+          },
+          type: typeScript,
+          data: formatOrderData(2n, 0n, price, true)
+        }
+        const orderCell2_1 = {
+          capacity: '0x4',
+          lock: {
+            ...orderLockScript,
+            args: orderLockArgs,
+          },
+          type: typeScript,
+          data: formatOrderData(10n, 10n, price, true)
+        }
+        const orderCell2_2 = {
+          capacity: '0x1',
+          lock: {
+            ...orderLockScript,
+            args: orderLockArgs,
+          },
+          type: typeScript,
+          data: formatOrderData(20n, 0n, price, true)
+        }
         describe('with one input transaction to one output transaction', () => {
           beforeEach(async () => {
             transactions = [
@@ -547,25 +604,19 @@ describe('Orders controller', () => {
                   ],
                   outputs: [
                     {
-                      capacity: '0x3',
-                      lock: {
-                        ...orderLockScript,
-                        args: orderLockArgs,
-                      },
-                      type: typeScript,
+                      capacity: orderCell1_1.capacity,
+                      lock: orderCell1_1.lock,
+                      type: orderCell1_1.type,
                     },
                     {
-                      capacity: '0x4',
-                      lock: {
-                        ...orderLockScript,
-                        args: orderLockArgs,
-                      },
-                      type: typeScript,
+                      capacity: orderCell2_1.capacity,
+                      lock: orderCell2_1.lock,
+                      type: orderCell2_1.type,
                     },
                   ],
                   outputs_data: [
-                    formatOrderData(1n, 1n, price, true),
-                    formatOrderData(10n, 10n, price, true),
+                    orderCell1_1.data,
+                    orderCell2_1.data,
                   ],
                 },
                 tx_status: {
@@ -599,26 +650,20 @@ describe('Orders controller', () => {
                       },
                     },
                     {
-                      capacity: '0x1',
-                      lock: {
-                        ...orderLockScript,
-                        args: orderLockArgs,
-                      },
-                      type: typeScript,
+                      capacity: orderCell1_2.capacity,
+                      lock: orderCell1_2.lock,
+                      type: orderCell1_2.type,
                     },
                     {
-                      capacity: '0x1',
-                      lock: {
-                        ...orderLockScript,
-                        args: orderLockArgs,
-                      },
-                      type: typeScript,
+                      capacity: orderCell2_2.capacity,
+                      lock: orderCell2_2.lock,
+                      type: orderCell2_2.type,
                     },
                   ],
                   outputs_data: [
                     '0x',
-                    formatOrderData(2n, 0n, price, true),
-                    formatOrderData(20n, 0n, price, true),
+                    orderCell1_2.data,
+                    orderCell2_2.data,
                   ],
                 },
                 tx_status: {
@@ -655,6 +700,10 @@ describe('Orders controller', () => {
                       tx_hash: 'hash2',
                       index: '0x1',
                     },
+                    order_cells: [
+                      { index: 0, tx_hash: "hash1" },
+                      { index: 1, tx_hash: "hash2" },
+                    ]
                   },
                   {
                     block_hash: "0x50c20ecc2b3b56ed336e4d8b840cf99a29069ffa7b279433e1c7093a359657b9",
@@ -669,6 +718,10 @@ describe('Orders controller', () => {
                       tx_hash: 'hash2',
                       index: '0x2',
                     },
+                    order_cells: [
+                      { index: 1, tx_hash: "hash1" },
+                      { index: 2, tx_hash: "hash2" },
+                    ]
                   },
                 ],
               );
@@ -691,16 +744,13 @@ describe('Orders controller', () => {
                   ],
                   outputs: [
                     {
-                      capacity: '0x3',
-                      lock: {
-                        ...orderLockScript,
-                        args: orderLockArgs,
-                      },
-                      type: typeScript,
+                      capacity: orderCell1_1.capacity,
+                      lock: orderCell1_1.lock,
+                      type: orderCell1_1.type,
                     },
                   ],
                   outputs_data: [
-                    formatOrderData(1n, 1n, price, true),
+                    orderCell1_1.data,
                   ],
                 },
                 tx_status: {
@@ -721,16 +771,13 @@ describe('Orders controller', () => {
                   ],
                   outputs: [
                     {
-                      capacity: '0x4',
-                      lock: {
-                        ...orderLockScript,
-                        args: orderLockArgs,
-                      },
-                      type: typeScript,
+                      capacity: orderCell2_1.capacity,
+                      lock: orderCell2_1.lock,
+                      type: orderCell2_1.type,
                     },
                   ],
                   outputs_data: [
-                    formatOrderData(10n, 10n, price, true),
+                    orderCell2_1.data,
                   ],
                 },
                 tx_status: {
@@ -770,26 +817,20 @@ describe('Orders controller', () => {
                       },
                     },
                     {
-                      capacity: '0x1',
-                      lock: {
-                        ...orderLockScript,
-                        args: orderLockArgs,
-                      },
-                      type: typeScript,
+                      capacity: orderCell2_2.capacity,
+                      lock: orderCell2_2.lock,
+                      type: orderCell2_2.type,
                     },
                     {
-                      capacity: '0x1',
-                      lock: {
-                        ...orderLockScript,
-                        args: orderLockArgs,
-                      },
-                      type: typeScript,
+                      capacity: orderCell1_2.capacity,
+                      lock: orderCell1_2.lock,
+                      type: orderCell1_2.type,
                     },
                   ],
                   outputs_data: [
                     '0x',
-                    formatOrderData(20n, 0n, price, true),
-                    formatOrderData(2n, 0n, price, true),
+                    orderCell2_2.data,
+                    orderCell1_2.data,
                   ],
                 },
                 tx_status: {
@@ -824,6 +865,10 @@ describe('Orders controller', () => {
                     tx_hash: 'hash3',
                     index: '0x2',
                   },
+                  order_cells: [
+                    { index: 0, tx_hash: "hash1" },
+                    { index: 2, tx_hash: "hash3" },
+                  ]
                 },
                 {
                   block_hash: '0x50c20ecc2b3b56ed336e4d8b840cf99a29069ffa7b279433e1c7093a359657b9',
@@ -838,6 +883,10 @@ describe('Orders controller', () => {
                     tx_hash: 'hash3',
                     index: '0x1',
                   },
+                  order_cells: [
+                    { index: 0, tx_hash: "hash2" },
+                    { index: 1, tx_hash: "hash3" },
+                  ]
                 },
               ],
             );
@@ -847,8 +896,6 @@ describe('Orders controller', () => {
     });
     describe('aborted order', () => {
       beforeEach(async () => {
-        const price = 1n;
-        const orderLockArgs = 'orderLockArgs';
         const transactions = [
           {
             transaction: {
@@ -863,16 +910,13 @@ describe('Orders controller', () => {
               ],
               outputs: [
                 {
-                  capacity: '0x1',
-                  lock: {
-                    ...orderLockScript,
-                    args: orderLockArgs,
-                  },
-                  type: typeScript,
+                  capacity: orderCell1.capacity,
+                  lock: orderCell1.lock,
+                  type: orderCell1.type,
                 },
               ],
               outputs_data: [
-                formatOrderData(1n, 1n, price, true),
+                orderCell1.data,
               ],
             },
             tx_status: {
@@ -933,13 +977,15 @@ describe('Orders controller', () => {
               tx_hash: 'hash2',
               index: '0x1',
             },
+            order_cells: [
+              {index: 0, tx_hash: "hash1"},
+            ]
           },
         ]);
       });
     });
     describe('incompleted order', () => {
       beforeEach(async () => {
-        const price = 1n;
         const orderLockArgs = 'orderLockArgs';
         const transactions = [
           {
@@ -955,16 +1001,13 @@ describe('Orders controller', () => {
               ],
               outputs: [
                 {
-                  capacity: '0x1',
-                  lock: {
-                    ...orderLockScript,
-                    args: orderLockArgs,
-                  },
-                  type: typeScript,
+                  capacity: orderCell1.capacity,
+                  lock: orderCell1.lock,
+                  type: orderCell1.type,
                 },
               ],
               outputs_data: [
-                formatOrderData(1n, 1n, price, true),
+                orderCell1.data,
               ],
             },
             tx_status: {
@@ -998,6 +1041,9 @@ describe('Orders controller', () => {
               tx_hash: 'hash1',
               index: '0x0',
             },
+            order_cells: [
+              { index: 0, tx_hash: "hash1" }
+            ]
           },
         ]);
       });
