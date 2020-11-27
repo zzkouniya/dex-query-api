@@ -2,7 +2,6 @@ import CKB from "@nervosnetwork/ckb-sdk-core";
 import { injectable } from "inversify";
 import { indexer_config } from "../../config";
 import CkbTransactionWithStatusModelWrapper from "../../model/ckb/ckb_transaction_with_status";
-import CkbTransactionWithStatusModel from "../../model/ckb/ckb_transaction_with_status";
 
 @injectable()
 export default class CkbService {

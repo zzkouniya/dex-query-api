@@ -1,6 +1,5 @@
 import { inject, injectable, LazyServiceIdentifer } from "inversify";
 import { QueryOptions } from "@ckb-lumos/base";
-import CKB from "@nervosnetwork/ckb-sdk-core";
 
 import IndexerWrapper from "../indexer/indexer";
 import { modules } from "../../ioc";
@@ -13,7 +12,6 @@ import TransactionDetailsModel from './transaction_details_model';
 
 @injectable()
 export default class TxService {
-  private ckb: CKB;
 
   constructor(
     @inject(new LazyServiceIdentifer(() => modules[IndexerWrapper.name]))
@@ -47,11 +45,11 @@ export default class TxService {
           requests.push(["getTransaction", input.previous_output.tx_hash]);
         }
       }
-      const inputTxs = await this.ckb.rpc.createBatchRequest(requests).exec();
+      const inputTxs = await this.ckbService.getTransactions(requests);
       
       const inputTxsMap = new Map();
       for (const tx of inputTxs) {
-        inputTxsMap.set(tx.transaction.hash, tx);
+        inputTxsMap.set(tx.ckbTransactionWithStatus.transaction.hash, tx);
       }
 
       for (let i = 0; i < txsWithStatus.length; i++) {

@@ -16,7 +16,7 @@ export class DexQueryApiServer {
     const server = new InversifyExpressServer(container);
 
     server.setConfig((app) => {
-      app.use(helmet());
+      app.use(helmet({ contentSecurityPolicy: false }));
       app.use(cors());
       app.use(
         bodyParser.urlencoded({
