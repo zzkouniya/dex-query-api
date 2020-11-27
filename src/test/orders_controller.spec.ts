@@ -33,10 +33,10 @@ describe('Orders controller', () => {
   beforeEach(() => {
     orders = [
       {
-        // sUDTAmount: '5000000000',
-        // orderAmount: '15000000000',
-        // price: '50000000000',
-        // isBid: true,
+        sUDTAmount: '5000000000',
+        orderAmount: '15000000000',
+        price: '50000000000',
+        isBid: true,
         cell_output: {
           capacity: `0x${BigInt(200000000000).toString(16)}`,
           lock: {
@@ -59,10 +59,10 @@ describe('Orders controller', () => {
         data: CkbUtils.formatOrderData(5000000000n, 15000000000n, 50000000000n, true),
       },
       {
-        // sUDTAmount: '5000000000',
-        // orderAmount: '15000000000',
-        // price: '70000000000',
-        // isBid: true,
+        sUDTAmount: '5000000000',
+        orderAmount: '15000000000',
+        price: '70000000000',
+        isBid: true,
         cell_output: {
           capacity: `0x${BigInt(200000000000).toString(16)}`,
           lock: {
@@ -85,10 +85,10 @@ describe('Orders controller', () => {
         data: CkbUtils.formatOrderData(5000000000n, 15000000000n, 70000000000n, true),
       },
       {
-        // sUDTAmount: '50000000000',
-        // orderAmount: '100000000000',
-        // price: '50000000000',
-        // isBid: false,
+        sUDTAmount: '50000000000',
+        orderAmount: '100000000000',
+        price: '50000000000',
+        isBid: false,
         cell_output: {
           capacity: `0x${BigInt(80000000000).toString(16)}`,
           lock: {
@@ -111,10 +111,10 @@ describe('Orders controller', () => {
         data: CkbUtils.formatOrderData(50000000000n, 100000000000n, 50000000000n, false),
       },
       {
-        // sUDTAmount: '50000000000',
-        // orderAmount: '100000000000',
-        // price: '55000000000',
-        // isBid: false,
+        sUDTAmount: '50000000000',
+        orderAmount: '100000000000',
+        price: '55000000000',
+        isBid: false,
         cell_output: {
           capacity: `0x${BigInt(80000000000).toString(16)}`,
           lock: {
@@ -420,6 +420,10 @@ describe('Orders controller', () => {
                   orderCell1.data,
                 ],
               },
+              tx_status: {
+                block_hash: '0x50c20ecc2b3b56ed336e4d8b840cf99a29069ffa7b279433e1c7093a359657b9',
+                status: 'committed'
+              }
             },
             {
               transaction: {
@@ -443,6 +447,10 @@ describe('Orders controller', () => {
                   orderCell2.data,
                 ],
               },
+              tx_status: {
+                block_hash: '0x50c20ecc2b3b56ed336e4d8b840cf99a29069ffa7b279433e1c7093a359657b9',
+                status: 'committed'
+              }
             },
           ];
 
@@ -461,6 +469,7 @@ describe('Orders controller', () => {
             res.json.should.have.been.calledWith(
               [
                 {
+                  block_hash: "0x50c20ecc2b3b56ed336e4d8b840cf99a29069ffa7b279433e1c7093a359657b9",
                   paid_amount: '1',
                   price: '1',
                   traded_amount: '1',
@@ -506,6 +515,10 @@ describe('Orders controller', () => {
                   ],
                   outputs_data: ['0x'],
                 },
+                tx_status: {
+                  block_hash: '0x50c20ecc2b3b56ed336e4d8b840cf99a29069ffa7b279433e1c7093a359657b9',
+                  status: 'committed'
+                }
               });
               mock_transaction.resolves(transactions);
               await controller.getOrderHistory(req, res, next);
@@ -515,6 +528,7 @@ describe('Orders controller', () => {
               res.json.should.have.been.calledWith(
                 [
                   {
+                    block_hash: "0x50c20ecc2b3b56ed336e4d8b840cf99a29069ffa7b279433e1c7093a359657b9",
                     paid_amount: '1',
                     traded_amount: '1',
                     order_amount: '1',
@@ -605,6 +619,10 @@ describe('Orders controller', () => {
                     orderCell2_1.data,
                   ],
                 },
+                tx_status: {
+                  block_hash: '0x50c20ecc2b3b56ed336e4d8b840cf99a29069ffa7b279433e1c7093a359657b9',
+                  status: 'committed'
+                }
               },
               {
                 transaction: {
@@ -648,6 +666,10 @@ describe('Orders controller', () => {
                     orderCell2_2.data,
                   ],
                 },
+                tx_status: {
+                  block_hash: '0x50c20ecc2b3b56ed336e4d8b840cf99a29069ffa7b279433e1c7093a359657b9',
+                  status: 'committed'
+                }
               },
             ];
 
@@ -666,6 +688,7 @@ describe('Orders controller', () => {
               res.json.should.have.been.calledWith(
                 [
                   {
+                    block_hash: "0x50c20ecc2b3b56ed336e4d8b840cf99a29069ffa7b279433e1c7093a359657b9",
                     paid_amount: '2',
                     traded_amount: '1',
                     order_amount: '1',
@@ -683,6 +706,7 @@ describe('Orders controller', () => {
                     ]
                   },
                   {
+                    block_hash: "0x50c20ecc2b3b56ed336e4d8b840cf99a29069ffa7b279433e1c7093a359657b9",
                     paid_amount: '3',
                     traded_amount: '10',
                     order_amount: '10',
@@ -729,6 +753,10 @@ describe('Orders controller', () => {
                     orderCell1_1.data,
                   ],
                 },
+                tx_status: {
+                  block_hash: '0x50c20ecc2b3b56ed336e4d8b840cf99a29069ffa7b279433e1c7093a359657b9',
+                  status: 'committed'
+                }
               },
               {
                 transaction: {
@@ -752,6 +780,10 @@ describe('Orders controller', () => {
                     orderCell2_1.data,
                   ],
                 },
+                tx_status: {
+                  block_hash: '0x50c20ecc2b3b56ed336e4d8b840cf99a29069ffa7b279433e1c7093a359657b9',
+                  status: 'committed'
+                }
               },
               {
                 transaction: {
@@ -801,6 +833,10 @@ describe('Orders controller', () => {
                     orderCell1_2.data,
                   ],
                 },
+                tx_status: {
+                  block_hash: '0x50c20ecc2b3b56ed336e4d8b840cf99a29069ffa7b279433e1c7093a359657b9',
+                  status: 'committed'
+                }
               },
             ];
 
@@ -817,6 +853,7 @@ describe('Orders controller', () => {
             res.json.should.have.been.calledWith(
               [
                 {
+                  block_hash: "0x50c20ecc2b3b56ed336e4d8b840cf99a29069ffa7b279433e1c7093a359657b9",
                   paid_amount: '2',
                   traded_amount: '1',
                   order_amount: '1',
@@ -834,6 +871,7 @@ describe('Orders controller', () => {
                   ]
                 },
                 {
+                  block_hash: '0x50c20ecc2b3b56ed336e4d8b840cf99a29069ffa7b279433e1c7093a359657b9',
                   paid_amount: '3',
                   traded_amount: '10',
                   order_amount: '10',
@@ -881,6 +919,10 @@ describe('Orders controller', () => {
                 orderCell1.data,
               ],
             },
+            tx_status: {
+              block_hash: '0x50c20ecc2b3b56ed336e4d8b840cf99a29069ffa7b279433e1c7093a359657b9',
+              status: 'committed'
+            }
           },
           {
             transaction: {
@@ -904,6 +946,10 @@ describe('Orders controller', () => {
               ],
               outputs_data: ['0x'],
             },
+            tx_status: {
+              block_hash: '0x50c20ecc2b3b56ed336e4d8b840cf99a29069ffa7b279433e1c7093a359657b9',
+              status: 'committed'
+            }
           },
         ];
 
@@ -919,6 +965,7 @@ describe('Orders controller', () => {
         res.status.should.have.been.calledWith(200);
         res.json.should.have.been.calledWith([
           {
+            block_hash: "0x50c20ecc2b3b56ed336e4d8b840cf99a29069ffa7b279433e1c7093a359657b9",
             paid_amount: '0',
             traded_amount: '0',
             order_amount: '1',
@@ -963,6 +1010,10 @@ describe('Orders controller', () => {
                 orderCell1.data,
               ],
             },
+            tx_status: {
+              block_hash: '0x50c20ecc2b3b56ed336e4d8b840cf99a29069ffa7b279433e1c7093a359657b9',
+              status: 'committed'
+            }
           },
         ];
 
@@ -978,6 +1029,7 @@ describe('Orders controller', () => {
         res.status.should.have.been.calledWith(200);
         res.json.should.have.been.calledWith([
           {
+            block_hash: "0x50c20ecc2b3b56ed336e4d8b840cf99a29069ffa7b279433e1c7093a359657b9",
             paid_amount: '0',
             traded_amount: '0',
             order_amount: '1',
@@ -997,4 +1049,49 @@ describe('Orders controller', () => {
       });
     });
   });
+
+  describe('#getOrders()', () => {
+    beforeEach(() => {
+      const TYPE_SCRIPT = {
+        code_hash: '0xe1e354d6d643ad42724d40967e334984534e0367405c5ae42a9d7d63d77df419',
+        hash_type: 'data',
+        args: '0x32e555f3ff8e135cece1351a6a2971518392c1e30375c1e006ad0ce8eac07947'
+      }
+      req.query.type_code_hash = TYPE_SCRIPT.code_hash
+      req.query.type_hash_type = TYPE_SCRIPT.hash_type
+      req.query.type_args = TYPE_SCRIPT.args;
+      mock_cell.resolves(orders)
+    })
+
+    it('should return bid orders and ask orders', async () => {
+      await controller.getOrders(req, res, next);
+      res.status.should.have.been.calledWith(200);
+      res.json.should.have.been.calledWith({
+        ask_orders: [
+          {
+            order_amount: "100000000000",
+            price: "55000000000",
+            sudt_amount: "50000000000",
+          },
+          { 
+            order_amount: "100000000000",
+            price: "50000000000",
+            sudt_amount: "50000000000",
+          },
+        ],
+        bid_orders: [
+          {
+            order_amount: "15000000000",
+            price: "50000000000",
+            sudt_amount: "5000000000",
+          },
+          { 
+            order_amount: "15000000000",
+            price: "70000000000",
+            sudt_amount: "5000000000"
+          },
+        ]
+      });
+    })
+  })
 });

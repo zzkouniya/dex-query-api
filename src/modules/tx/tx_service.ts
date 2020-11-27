@@ -4,9 +4,12 @@ import CKB from "@nervosnetwork/ckb-sdk-core";
 
 import IndexerWrapper from "../indexer/indexer";
 import { modules } from "../../ioc";
-import CkbRequestModel from "../ckb_request_model";
+import CkbRequestModel from "../../model/req/ckb_request_model";
 import { CkbUtils } from "../../component";
-import { indexer_config } from "../../config";
+
+import CkbService from "../ckb/ckb_service";
+import CkbCellScriptModel from "../../model/ckb/ckb_cell_script";
+import TransactionDetailsModel from './transaction_details_model';
 
 @injectable()
 export default class TxService {
@@ -14,10 +17,10 @@ export default class TxService {
 
   constructor(
     @inject(new LazyServiceIdentifer(() => modules[IndexerWrapper.name]))
-    private indexer: IndexerWrapper
-  ) {
-    this.ckb = new CKB(indexer_config.nodeUrl);
-  }
+    private indexer: IndexerWrapper,
+    @inject(new LazyServiceIdentifer(() => modules[CkbService.name]))
+    private ckbService: CkbService
+  ) {}
 
   async getSudtTransactions(reqParam: CkbRequestModel): Promise<any> {
     const queryOptions: QueryOptions = {};
@@ -104,6 +107,67 @@ export default class TxService {
       }
 
       return txs;
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  async getTransactionDetailsByHash(
+    reqParam: CkbRequestModel,
+    txHash: string
+  ): Promise<TransactionDetailsModel> {
+
+    try {
+
+      const tx = await this.ckbService.getTransactionByHash(txHash);
+      if (!tx) {
+        throw { error: "The transaction does not exist!" };
+      }
+
+      const requests = [];
+      const { inputs } = tx.ckbTransactionWithStatus.transaction;
+      for (const input of inputs) {          
+        requests.push(["getTransaction", input.previousOutput.txHash]);
+      }
+
+      const inputTransactions = await this.ckbService.getTransactions(requests);
+    
+      const fee = tx.getFee(inputTransactions);
+      let amount: bigint;
+      const lock: CkbCellScriptModel = {
+        codeHash: reqParam.lock_code_hash,
+        hashType: reqParam.lock_hash_type,
+        args: reqParam.lock_args
+      }
+
+      const type: CkbCellScriptModel = {
+        codeHash: reqParam.type_code_hash,
+        hashType: reqParam.type_hash_type,
+        args: reqParam.type_args
+      }
+      if(reqParam.isValidTypeScript()) {
+        amount = tx.getSudtAmountByScript(inputTransactions, lock, type);
+      } else {
+        amount = tx.getCkbAmountByScript(inputTransactions, lock);
+      }
+
+      const blockNumber = await this.ckbService.getblockNumberByBlockHash(tx.ckbTransactionWithStatus.txStatus.blockHash);
+
+      const from = tx.getFromAddress(lock);
+      const to = tx.getToAddress(lock);
+
+      const details: TransactionDetailsModel = {
+        status: tx.ckbTransactionWithStatus.txStatus.status,
+        transaction_fee: fee.toString(),
+        amount: amount.toString(),
+        to: to,
+        from: from,
+        hash: txHash,
+        block_no: blockNumber
+      }
+
+      return details
+
     } catch (err) {
       console.error(err);
     }

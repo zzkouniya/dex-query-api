@@ -98,7 +98,10 @@ export default class OrdersHistoryCalculate {
           originalIndex,
           groupedOrderCell
         );
-        ordersHistory.push({orderCells});
+        ordersHistory.push({
+          orderCells,
+          block_hash: txWithStatus.tx_status.block_hash
+        });
       }
     }
 
@@ -156,6 +159,7 @@ export default class OrdersHistoryCalculate {
       }
 
       orderHistory.status = status;
+      
     }
 
     return ordersHistory;
