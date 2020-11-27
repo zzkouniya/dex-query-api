@@ -23,7 +23,7 @@ export default class CellsSerive {
   async getLiveCellsForAmount(
     reqParam: CellsAmountRequestModel
   ): Promise<Array<Cell>> {
-    Parameters    const queryOptions = this.buildQueryParams(reqParam);
+    const queryOptions = this.buildQueryParams(reqParam);
 
     let cells = await this.indexer.collectCells(queryOptions);
 
