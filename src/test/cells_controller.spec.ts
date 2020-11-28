@@ -77,10 +77,12 @@ describe('Cells controller', () => {
 
   beforeEach(() => {
     class MockIndex implements IndexerService {
-      collectCells(queryOptons: QueryOptions): Promise<Cell[]> {
+      collectCells(queryOptions: QueryOptions): Promise<Cell[]> {
+        console.log(queryOptions + " is mock");
         return null;
       }
       collectTransactions(queryOptions: QueryOptions): Promise<TransactionWithStatus[]> {
+        console.log(queryOptions + " is mock");
         return null;
       }
   

@@ -139,10 +139,12 @@ describe('Orders controller', () => {
     ];
 
     class MockIndex implements IndexerService {
-      collectCells(queryOptons: QueryOptions): Promise<Cell[]> {
+      collectCells(queryOptions: QueryOptions): Promise<Cell[]> {
+        console.log(queryOptions + " is mock");
         return null;
       }
       collectTransactions(queryOptions: QueryOptions): Promise<TransactionWithStatus[]> {
+        console.log(queryOptions + " is mock");
         return null;
       }
 
@@ -482,8 +484,8 @@ describe('Orders controller', () => {
                     index: '0x0',
                   },
                   order_cells: [
-                    { index: 0, tx_hash: "hash1" },
-                    { index: 0, tx_hash: "hash2" },
+                    { index: "0", tx_hash: "hash1" },
+                    { index: "0", tx_hash: "hash2" },
                   ]
                 },
               ],
@@ -541,8 +543,8 @@ describe('Orders controller', () => {
                       index: '0x1',
                     },
                     order_cells: [
-                      { index: 0, tx_hash: "hash1" },
-                      { index: 0, tx_hash: "hash2" },
+                      { index: "0", tx_hash: "hash1" },
+                      { index: "0", tx_hash: "hash2" },
                     ]
                   },
                 ],
@@ -701,8 +703,8 @@ describe('Orders controller', () => {
                       index: '0x1',
                     },
                     order_cells: [
-                      { index: 0, tx_hash: "hash1" },
-                      { index: 1, tx_hash: "hash2" },
+                      { index: "0", tx_hash: "hash1" },
+                      { index: "1", tx_hash: "hash2" },
                     ]
                   },
                   {
@@ -719,8 +721,8 @@ describe('Orders controller', () => {
                       index: '0x2',
                     },
                     order_cells: [
-                      { index: 1, tx_hash: "hash1" },
-                      { index: 2, tx_hash: "hash2" },
+                      { index: "1", tx_hash: "hash1" },
+                      { index: "2", tx_hash: "hash2" },
                     ]
                   },
                 ],
@@ -866,8 +868,8 @@ describe('Orders controller', () => {
                     index: '0x2',
                   },
                   order_cells: [
-                    { index: 0, tx_hash: "hash1" },
-                    { index: 2, tx_hash: "hash3" },
+                    { index: "0", tx_hash: "hash1" },
+                    { index: "2", tx_hash: "hash3" },
                   ]
                 },
                 {
@@ -884,8 +886,8 @@ describe('Orders controller', () => {
                     index: '0x1',
                   },
                   order_cells: [
-                    { index: 0, tx_hash: "hash2" },
-                    { index: 1, tx_hash: "hash3" },
+                    { index: "0", tx_hash: "hash2" },
+                    { index: "1", tx_hash: "hash3" },
                   ]
                 },
               ],
@@ -978,7 +980,7 @@ describe('Orders controller', () => {
               index: '0x1',
             },
             order_cells: [
-              {index: 0, tx_hash: "hash1"},
+              {index: "0", tx_hash: "hash1"},
             ]
           },
         ]);
@@ -1042,7 +1044,7 @@ describe('Orders controller', () => {
               index: '0x0',
             },
             order_cells: [
-              { index: 0, tx_hash: "hash1" }
+              { index: "0", tx_hash: "hash1" }
             ]
           },
         ]);
