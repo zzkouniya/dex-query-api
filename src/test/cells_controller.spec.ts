@@ -85,6 +85,9 @@ describe('Cells controller', () => {
         console.log(queryOptions + " is mock");
         return null;
       }
+      getLastMatchOrders(type) {
+        return null;
+      }
   
     }
   
