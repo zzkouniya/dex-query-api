@@ -149,6 +149,7 @@ describe('Orders controller', () => {
         return null;
       }
       getLastMatchOrders(type) {
+        console.log(type + " is mock");
         return null;
       }
 
@@ -1111,7 +1112,7 @@ describe('Orders controller', () => {
       };
       req.query.type_code_hash = TYPE_SCRIPT.code_hash;
       req.query.type_hash_type = TYPE_SCRIPT.hash_type;
-      req.query.type_args = TYPE_SCRIPT.args;;
+      req.query.type_args = TYPE_SCRIPT.args;
     })
 
     describe('when orders are found', () => {

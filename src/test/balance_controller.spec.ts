@@ -106,6 +106,7 @@ describe('Balance controller', () => {
         return null;
       }
       getLastMatchOrders(type) {
+        console.log(type + " is mock");
         return null;
       }
   

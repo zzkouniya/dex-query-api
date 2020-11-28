@@ -41,7 +41,7 @@ export default class OrdersService {
     return CkbUtils.formatOrderCells(orderCells.filter(o => o.data.length === REQUIRED_DATA_LENGTH));
   }
 
-  async getCurrentPrice(type: { code_hash: string, args: string, hash_type: 'data' | 'type' }): Promise<string> {
+  async getCurrentPrice(type: { code_hash: string, args: string, hash_type: HashType }): Promise<string> {
     const orders = await this.indexer.getLastMatchOrders(type);
     if (!orders) {
       return '';
