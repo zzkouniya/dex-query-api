@@ -69,7 +69,7 @@ export default class TxService {
           const inputIndex = parseInt(index, 16);
           const tx = inputTxsMap.get(tx_hash);
           if (tx) {
-            const cell = tx.transaction.outputs[inputIndex];
+            const cell = tx.ckbTransactionWithStatus.transaction.outputs[inputIndex];
             if (
               cell &&
               this.isSameTypeScript(cell.lock, queryOptions.lock) &&
@@ -96,7 +96,7 @@ export default class TxService {
         const income = outputSum - inputSum;        
 
         if (income.toString() !== "0") {
-          console.log(inputSum, outputSum);
+          // console.log(inputSum, outputSum);
           txs.push({
             hash,
             income: income.toString(),
