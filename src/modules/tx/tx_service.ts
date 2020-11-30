@@ -75,7 +75,7 @@ export default class TxService {
               this.isSameTypeScript(cell.lock, queryOptions.lock) &&
               this.isSameTypeScript(cell.type, queryOptions.type)
             ) {
-              const data = tx.transaction.outputsData[inputIndex];
+              const data = tx.ckbTransactionWithStatus.transaction.outputsData[inputIndex];
               const amount = CkbUtils.parseAmountFromLeHex(data);
               inputSum += amount;
             }
