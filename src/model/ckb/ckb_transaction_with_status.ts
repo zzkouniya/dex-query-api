@@ -52,7 +52,7 @@ export default class CkbTransactionWithStatusModelWrapper {
       inputAmount += amount;
     }    
 
-    return inputAmount - outputAmount;
+    return outputAmount - inputAmount;
   }
 
   getCkbAmountByScript(
@@ -82,7 +82,7 @@ export default class CkbTransactionWithStatusModelWrapper {
 
     const fee = this.getFee(inputTransactions);
 
-    return inputAmount - outputAmount - fee;
+    return outputAmount - (inputAmount + fee);
   }
 
   public getFee(
