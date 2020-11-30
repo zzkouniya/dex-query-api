@@ -101,7 +101,7 @@ export default class OrderController {
   }
   
   @ApiOperationGet({
-    path: "current price",
+    path: "current-price",
     description: "Get current price",
     summary: "Get current price",
     parameters: {

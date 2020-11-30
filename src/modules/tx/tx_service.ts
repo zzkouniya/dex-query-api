@@ -96,10 +96,13 @@ export default class TxService {
         const income = outputSum - inputSum;        
 
         if (income.toString() !== "0") {
-          // console.log(inputSum, outputSum);
+          const blockHash: string = txWithStatus.tx_status.block_hash;          
+          const timestamp = await this.ckbService.getBlockTimestampByHash(blockHash);
+        
           txs.push({
             hash,
             income: income.toString(),
+            timestamp: parseInt(timestamp).toString()
           });
         }
       }
