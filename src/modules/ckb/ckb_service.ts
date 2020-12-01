@@ -37,4 +37,15 @@ export default class CkbService {
 
     return blockNumber;
   }
+
+  async getBlockTimestampByHash(blockHash: string): Promise<string> {
+    const req = []
+    req.push(["getBlock", blockHash])
+    
+    const block = await this.ckbNode.rpc
+      .createBatchRequest(req)
+      .exec();
+
+    return block[0].header.timestamp;
+  }
 }
