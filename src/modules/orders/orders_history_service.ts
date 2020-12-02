@@ -1,17 +1,18 @@
 import { inject, injectable, LazyServiceIdentifer } from "inversify";
 import { HashType, Script } from "@ckb-lumos/base";
-import IndexerWrapper from "../indexer/indexer";
+
 
 import { modules } from "../../ioc";
 import { contracts } from "../../config";
 import OrdersHistoryCalculate from "./orders_history_calculate";
 import { IndexerService } from '../indexer/indexer_service';
 import { OrdersHistoryModel } from './orders_history_model';
+import SqlIndexerWrapper from '../indexer/indexer_sql';
 
 @injectable()
 export default class OrdersHistoryService {
   constructor(
-    @inject(new LazyServiceIdentifer(() => modules[IndexerWrapper.name]))
+    @inject(new LazyServiceIdentifer(() => modules[SqlIndexerWrapper.name]))
     private indexer: IndexerService
   ) {}
   async getOrderHistory(

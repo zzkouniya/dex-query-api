@@ -8,7 +8,7 @@ import {
 import * as express from "express";
 
 import { modules } from "../../ioc";
-import { DexLogger } from "../../component";
+import { CkbUtils, DexLogger } from "../../component";
 import OrderService from "./orders_service";
 import OrdersHistoryService from "./orders_history_service";
 import { HashType } from '@ckb-lumos/base';
@@ -92,6 +92,10 @@ export default class OrderController {
             ask_orders.push(order)
           }
         })
+
+        
+      console.log(CkbUtils.parseOrderData("0x000000000000000000000000000000000000e8890423c78a000000000000000000e876481700000000"));
+        
         
       res.status(200).json({
         bid_orders: bid_orders.slice(0, 5),

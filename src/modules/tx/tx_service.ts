@@ -1,7 +1,7 @@
 import { inject, injectable, LazyServiceIdentifer } from "inversify";
 import { QueryOptions, Script } from "@ckb-lumos/base";
 
-import IndexerWrapper from "../indexer/indexer";
+
 import { modules } from "../../ioc";
 import CkbRequestModel from "../../model/req/ckb_request_model";
 import { CkbUtils } from "../../component";
@@ -9,13 +9,14 @@ import { CkbUtils } from "../../component";
 import CkbService from "../ckb/ckb_service";
 import CkbCellScriptModel from "../../model/ckb/ckb_cell_script";
 import TransactionDetailsModel from './transaction_details_model';
+import SqlIndexerWrapper from '../indexer/indexer_sql';
 
 @injectable()
 export default class TxService {
 
   constructor(
-    @inject(new LazyServiceIdentifer(() => modules[IndexerWrapper.name]))
-    private indexer: IndexerWrapper,
+    @inject(new LazyServiceIdentifer(() => modules[SqlIndexerWrapper.name]))
+    private indexer: SqlIndexerWrapper,
     @inject(new LazyServiceIdentifer(() => modules[CkbService.name]))
     private ckbService: CkbService
   ) {}

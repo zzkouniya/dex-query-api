@@ -2,18 +2,18 @@ import { DexRepository } from './dex_repository';
 import { Cell, QueryOptions, TransactionWithStatus, Script } from "@ckb-lumos/base";
 import { inject, injectable, LazyServiceIdentifer } from "inversify";
 import { modules } from '../../ioc';
-import IndexerWrapper from '../indexer/indexer';
 import { IndexerService } from '../indexer/indexer_service';
 import CkbService from '../ckb/ckb_service';
 import { DexOrderData } from '../../component';
 import { ckb_methons } from '../ckb/ckb_service';
 import CkbTransactionWithStatusModelWrapper from '../../model/ckb/ckb_transaction_with_status';
+import SqlIndexerWrapper from '../indexer/indexer_sql';
 
 @injectable()
 export default class CkbRepository implements DexRepository {
 
   constructor(
-    @inject(new LazyServiceIdentifer(() => modules[IndexerWrapper.name]))
+    @inject(new LazyServiceIdentifer(() => modules[SqlIndexerWrapper.name]))
     private indexer: IndexerService,
     @inject(new LazyServiceIdentifer(() => modules[CkbService.name]))
     private ckbService: CkbService

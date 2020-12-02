@@ -1,16 +1,16 @@
 import { inject, injectable, LazyServiceIdentifer } from "inversify";
 import { Cell, HashType, QueryOptions } from "@ckb-lumos/base";
-import IndexerWrapper from "../indexer/indexer";
 import { modules } from "../../ioc";
 import { CkbUtils } from "../../component";
 import CellsAmountRequestModel from "./cells_amount_request_model";
 import { IndexerService } from '../indexer/indexer_service';
 import { OutPoint } from '../orders/orders_history_model';
+import SqlIndexerWrapper from '../indexer/indexer_sql';
 
 @injectable()
 export default class CellsSerive {
   constructor(
-    @inject(new LazyServiceIdentifer(() => modules[IndexerWrapper.name]))
+    @inject(new LazyServiceIdentifer(() => modules[SqlIndexerWrapper.name]))
     private indexer: IndexerService
   ) {}
 

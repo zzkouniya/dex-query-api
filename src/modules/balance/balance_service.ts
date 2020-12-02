@@ -1,6 +1,5 @@
 import { inject, injectable, LazyServiceIdentifer } from "inversify";
 import { utils, Script, QueryOptions, Cell } from "@ckb-lumos/base";
-import IndexerWrapper from "../indexer/indexer";
 import { modules } from "../../ioc";
 import { contracts } from "../../config";
 import { CkbUtils, DexLogger } from "../../component";
@@ -8,12 +7,13 @@ import BalanceCkbModel from "./balance_ckb_model";
 import BalanceSudtModel from "./balance_sudt_model";
 import { IndexerService } from '../indexer/indexer_service';
 import CkbRequestModel from '../../model/req/ckb_request_model';
+import SqlIndexerWrapper from '../indexer/indexer_sql';
 
 @injectable()
 export default class BalanceService {
   private logger: DexLogger;
   constructor(
-    @inject(new LazyServiceIdentifer(() => modules[IndexerWrapper.name]))
+    @inject(new LazyServiceIdentifer(() => modules[SqlIndexerWrapper.name]))
     private indexer: IndexerService
   ) {
     this.logger = new DexLogger(BalanceService.name);
