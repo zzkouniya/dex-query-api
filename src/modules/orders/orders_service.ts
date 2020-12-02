@@ -36,14 +36,16 @@ export default class OrdersService {
           args: "0x",
         },
         argsLen: 'any',
-      },
-      order: "desc"
+      }
     });
 
-    const REQUIRED_DATA_LENGTH = 84
-    const orders = CkbUtils.formatOrderCells(orderCells.filter(o => o.data.length === REQUIRED_DATA_LENGTH));
-    
-    return orders;
+    const REQUIRED_DATA_LENGTH = 84;
+    return CkbUtils.formatOrderCells(
+      orderCells
+        .filter(o => o.data.length === REQUIRED_DATA_LENGTH)
+        .sort((c1, c2) => parseInt(c1.block_number) - parseInt(c2.block_number))
+        .reverse()
+    );
   }
 
   async getCurrentPrice(type: { code_hash: string, args: string, hash_type: HashType }): Promise<string> {
