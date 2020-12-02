@@ -177,24 +177,38 @@ export default class TxService {
     }
   }
 
-  isSameTypeScript(script1: Script, script2: Script): boolean {
+  isSameTypeScript(script1: Script | CkbCellScriptModel, script2: Script): boolean {
     if (!script1 || !script2) {
       return false;
     }
-    // const s1 = this.normalizeScript(script1);
-    // const s2 = this.normalizeScript(script2);
+    const s1 = this.normalizeScript(script1);
+    const s2 = this.normalizeScript(script2);
     return (
-      script1.code_hash === script2.code_hash &&
-      script1.hash_type === script2.hash_type &&
-      script1.args === script2.args
+      s1.code_hash === s2.code_hash &&
+      s1.hash_type === s2.hash_type &&
+      s1.args === s2.args
     );
   }
 
-  // normalizeScript(script) {
-  //   return {
-  //     code_hash: script.code_hash || script.codeHash,
-  //     hash_type: script.hash_type || script.hashType,
-  //     args: script.args,
-  //   };
-  // }
+  normalizeScript(script: Script | CkbCellScriptModel): {
+    code_hash: string,
+    hash_type: string,
+    args: string
+  } {
+
+    if("code_hash" in script ) {
+      const s = <Script>script
+      return {
+        code_hash: s.code_hash,
+        hash_type: s.hash_type,
+        args: script.args,
+      }
+    } 
+
+    return {
+      code_hash: script.codeHash,
+      hash_type: script.hashType,
+      args: script.args,
+    };
+  }
 }
