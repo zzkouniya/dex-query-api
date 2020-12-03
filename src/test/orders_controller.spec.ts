@@ -368,41 +368,6 @@ describe('Orders controller', () => {
       hash_type: contracts.orderLock.hashType,
     };
 
-    const U128_MAX = BigInt(2) ** BigInt(128) - BigInt(1);
-    const U128_MIN = BigInt(0);
-
-    const writeBigUInt128LE = (u128) => {
-      if (u128 < U128_MIN) {
-        throw new Error(`u128 ${u128} too small`);
-      }
-      if (u128 > U128_MAX) {
-        throw new Error(`u128 ${u128} too large`);
-      }
-      const buf = Buffer.alloc(16);
-      buf.writeBigUInt64LE(u128 & BigInt('0xFFFFFFFFFFFFFFFF'), 0);
-      buf.writeBigUInt64LE(u128 >> BigInt(64), 8);
-      return `0x${buf.toString('hex')}`;
-    };
-
-    const formatOrderData = (currentAmount, orderAmount, price, isBid) => {
-      const udtAmountHex = writeBigUInt128LE(currentAmount);
-      if (isBid === undefined) {
-        return udtAmountHex;
-      }
-
-      const orderAmountHex = writeBigUInt128LE(orderAmount).replace('0x', '');
-
-      const priceBuf = Buffer.alloc(8);
-      priceBuf.writeBigUInt64LE(price);
-      const priceHex = `${priceBuf.toString('hex')}`;
-
-      const bidOrAskBuf = Buffer.alloc(1);
-      bidOrAskBuf.writeInt8(isBid ? 0 : 1);
-      const isBidHex = `${bidOrAskBuf.toString('hex')}`;
-
-      const dataHex = udtAmountHex + orderAmountHex + priceHex + isBidHex;
-      return dataHex;
-    };
 
     const price = 1n;
     const orderLockArgs = 'orderLockArgs';
@@ -413,7 +378,7 @@ describe('Orders controller', () => {
         args: orderLockArgs,
       },
       type: typeScript,
-      data: formatOrderData(1n, 1n, price, true)
+      data: CkbUtils.formatOrderData(1n, 1n, price, true)
     }
     const orderCell2 = {
       capacity: '0x0',
@@ -422,7 +387,7 @@ describe('Orders controller', () => {
         args: orderLockArgs,
       },
       type: typeScript,
-      data: formatOrderData(2n, 0n, price, true)
+      data: CkbUtils.formatOrderData(2n, 0n, price, true)
     }
 
     describe('completed order', () => {
@@ -592,7 +557,7 @@ describe('Orders controller', () => {
             args: orderLockArgs,
           },
           type: typeScript,
-          data: formatOrderData(1n, 1n, price, true)
+          data: CkbUtils.formatOrderData(1n, 1n, price, true)
         }
         const orderCell1_2 = {
           capacity: '0x1',
@@ -601,7 +566,7 @@ describe('Orders controller', () => {
             args: orderLockArgs,
           },
           type: typeScript,
-          data: formatOrderData(2n, 0n, price, true)
+          data: CkbUtils.formatOrderData(2n, 0n, price, true)
         }
         const orderCell2_1 = {
           capacity: '0x4',
@@ -610,7 +575,7 @@ describe('Orders controller', () => {
             args: orderLockArgs,
           },
           type: typeScript,
-          data: formatOrderData(10n, 10n, price, true)
+          data: CkbUtils.formatOrderData(10n, 10n, price, true)
         }
         const orderCell2_2 = {
           capacity: '0x1',
@@ -619,7 +584,7 @@ describe('Orders controller', () => {
             args: orderLockArgs,
           },
           type: typeScript,
-          data: formatOrderData(20n, 0n, price, true)
+          data: CkbUtils.formatOrderData(20n, 0n, price, true)
         }
         describe('with one input transaction to one output transaction', () => {
           beforeEach(async () => {
