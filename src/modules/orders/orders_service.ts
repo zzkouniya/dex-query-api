@@ -25,6 +25,9 @@ export default class OrdersService {
     ask_orders: {sudt_amount: string, order_amount: string, price: string}[]
   }> {
 
+    console.log(CkbUtils.parseOrderData("00a3e111000000000000000000000000"));
+    console.log(CkbUtils.readBigUInt128LE("0x00a3e111000000000000000000000000"));
+
     const orderCells = await this.repository.collectCells({
       type: {
         code_hash: type_code_hash,

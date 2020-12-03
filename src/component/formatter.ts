@@ -109,7 +109,7 @@ export class CkbUtils {
       ""
     );
 
-    const priceBuf = Buffer.alloc(8);
+    const priceBuf = Buffer.alloc(16);
     priceBuf.writeBigUInt64LE(price);
     const priceHex = `${priceBuf.toString("hex")}`;
 
