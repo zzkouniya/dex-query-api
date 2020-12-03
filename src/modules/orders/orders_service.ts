@@ -42,6 +42,7 @@ export default class OrdersService {
       order: "desc"
     });
 
+    const REQUIRED_DATA_LENGTH = CkbUtils.getRequiredDataLength();
     
     const dexOrdersBid = this.filterDexOrder(orderCells, true)
     const groupbyPriceBid = this.groupbyPrice(dexOrdersBid);
@@ -70,8 +71,6 @@ export default class OrdersService {
       }) 
 
     const dexOrdersAsk = this.filterDexOrder(orderCells, false)
-      .sort((c1, c2) => parseInt(c1.price) - parseInt(c2.price))
-
     const groupbyPriceAsk = this.groupbyPrice(dexOrdersAsk)
     const askOrderPriceMergeKeys: Set<string> = new Set()
     const askOrderPriceKeys: string[] = []

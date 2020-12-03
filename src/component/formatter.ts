@@ -24,13 +24,13 @@ export class CkbUtils {
 
     let price: bigint;
     try {
-      const priceBuf: Buffer = Buffer.from(hex.slice(66, 82), "hex");
+      const priceBuf: Buffer = Buffer.from(hex.slice(66, 98), "hex");
       price = priceBuf.readBigInt64LE();
     } catch (error) {
       price = null;
     }
 
-    const isBid = hex.slice(82, 84) === "00";
+    const isBid = hex.slice(98, this.getRequiredDataLength()) === "00";
 
     const orderData: DexOrderData = {
       sUDTAmount,
@@ -60,6 +60,10 @@ export class CkbUtils {
 
     return (buf.readBigUInt64LE(8) << BigInt(64)) + buf.readBigUInt64LE(0);
   }
+
+  static getRequiredDataLength(): number {
+    return 100;
+  } 
 
   static formatOrderCells(orderCells: Cell[]): Array<DexOrderCellFormat> {
     const formattedOrderCells = orderCells.map((orderCell) => {
@@ -106,7 +110,7 @@ export class CkbUtils {
       ""
     );
 
-    const priceBuf = Buffer.alloc(8);
+    const priceBuf = Buffer.alloc(16);
     priceBuf.writeBigUInt64LE(price);
     const priceHex = `${priceBuf.toString("hex")}`;
 
