@@ -10,10 +10,11 @@ import { DexOrderData, CkbUtils } from '../../component';
 import { IndexerService } from './indexer_service';
 import CkbService from '../ckb/ckb_service';
 import { modules } from '../../ioc';
+import { IndexerSubscribe } from './indexer_subscribe';
 
 
 @injectable()
-export default class IndexerWrapper implements IndexerService {
+export default class IndexerWrapper implements IndexerService, IndexerSubscribe {
   private indexer: Indexer;
 
   constructor(
@@ -27,6 +28,11 @@ export default class IndexerWrapper implements IndexerService {
       const { block_number } = await this.indexer.tip();
       console.log("indexer tip block", parseInt(block_number, 16));
     }, 5000);
+  }
+
+  subscribe(queryOptions: QueryOptions, listener: (...args: any[]) => void): void {
+    const eventEmitter = this.indexer.subscribe({lock: queryOptions.lock});
+    eventEmitter.on("changed", listener);
   }
 
   async tip(): Promise<number> {
