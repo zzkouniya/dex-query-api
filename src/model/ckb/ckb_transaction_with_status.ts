@@ -119,6 +119,9 @@ export default class CkbTransactionWithStatusModelWrapper {
   getToAddress(lock: CkbCellScriptModel): string {
     
     const cells = this.ckbTransactionWithStatus.transaction.outputs.find(x => !this.isSameTypeScript(x.lock, lock));
+    if(!cells) {
+      return lock.args;
+    }
 
     return cells.lock.args;
   }
