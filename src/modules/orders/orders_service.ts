@@ -43,6 +43,7 @@ export default class OrdersService {
     });
 
     const dexOrdersBid = this.filterDexOrder(orderCells, true)
+    
     const groupbyPriceBid = this.groupbyPrice(dexOrdersBid);
     const bidOrderPriceMergeKeys: Set<string> = new Set()
     const bidOrderPriceKeys: string[] = []
@@ -194,14 +195,14 @@ export default class OrdersService {
   }
 
   filterDexOrder(dexOrders: Cell[], isBid: boolean): DexOrderCellFormat[] {
-    const REQUIRED_DATA_LENGTH = 84;
+    const REQUIRED_DATA_LENGTH = CkbUtils.getRequiredDataLength();
     return CkbUtils.formatOrderCells(dexOrders
       .filter(o => o.data.length === REQUIRED_DATA_LENGTH))
       .filter(x => x.isBid === isBid)
       .filter(x => x.orderAmount !== '0')
   }
 
-  groupbyPrice(dexOrders: DexOrderCellFormat[]):Map<string, DexOrderCellFormat[]> {
+  groupbyPrice(dexOrders: DexOrderCellFormat[]):Map<string, DexOrderCellFormat[]> {  
     const groupbyPrice: Map<string, DexOrderCellFormat[]> = new Map()
     for(let i = 0; i < dexOrders.length; i++) {
       const dexOrder = dexOrders[i];
