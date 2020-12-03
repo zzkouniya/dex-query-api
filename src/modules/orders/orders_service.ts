@@ -42,7 +42,6 @@ export default class OrdersService {
       order: "desc"
     });
 
-    
     const dexOrdersBid = this.filterDexOrder(orderCells, true)
     const groupbyPriceBid = this.groupbyPrice(dexOrdersBid);
     const bidOrderPriceMergeKeys: Set<string> = new Set()
