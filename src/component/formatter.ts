@@ -131,11 +131,9 @@ export class CkbUtils {
       && output.type.args === type.args
   }
 
-  static shannonToCkb(price: string): BigNumber {
-    const BN = BigNumber.clone();
-    BN.config({DECIMAL_PLACES:4});
-
-    return new BN(price).div(100000000);
+  static roundHalfUp(price: string): string  {
+    
+    return new BigNumber(price).toFormat(BigNumber.ROUND_HALF_UP);
     
   }
 }

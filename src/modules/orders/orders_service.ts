@@ -44,16 +44,18 @@ export default class OrdersService {
 
     const dexOrdersBid = this.filterDexOrder(orderCells, true)
     
-    const groupbyPriceBid = this.groupbyPrice(dexOrdersBid);
+    const groupbyPriceBid = this.groupbyPrice(dexOrdersBid);  
     const bidOrderPriceMergeKeys: Set<string> = new Set()
     const bidOrderPriceKeys: string[] = []
-    dexOrdersBid.forEach(x => {
-      const key = CkbUtils.shannonToCkb(x.price).toString();
+    dexOrdersBid.forEach(x => {    
+      const key = CkbUtils.roundHalfUp(x.price).toString();
+      
       if(!bidOrderPriceMergeKeys.has(key))  {
         bidOrderPriceKeys.push(x.price);
         bidOrderPriceMergeKeys.add(key)
       }
     }) 
+
 
     const bid_orders = 
     bidOrderPriceKeys.sort((c1, c2) => parseInt(c1) - parseInt(c2))
@@ -76,7 +78,7 @@ export default class OrdersService {
     const askOrderPriceMergeKeys: Set<string> = new Set()
     const askOrderPriceKeys: string[] = []
     dexOrdersAsk.forEach(x => {
-      const key = CkbUtils.shannonToCkb(x.price).toString();
+      const key = CkbUtils.roundHalfUp(x.price).toString();
       if(!askOrderPriceMergeKeys.has(key))  {
         askOrderPriceKeys.push(x.price);
         askOrderPriceMergeKeys.add(key)
