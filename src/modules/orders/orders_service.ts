@@ -5,7 +5,7 @@ import { modules } from "../../ioc";
 import { contracts } from "../../config";
 import { CkbUtils, DexOrderCellFormat } from "../../component";
 import BestPriceModel from "./best_price_model";
-import { HashType } from '@ckb-lumos/base';
+import { Cell, HashType } from '@ckb-lumos/base';
 import { DexRepository } from '../repository/dex_repository';
 import CkbRepository from '../repository/ckb_repository';
 
@@ -21,8 +21,8 @@ export default class OrdersService {
     type_hash_type: string,
     type_args: string,
   ): Promise<{
-    bid_orders: {sudt_amount: string, order_amount: string, price: string}[],
-    ask_orders: {sudt_amount: string, order_amount: string, price: string}[]
+    bid_orders: {receive: string, price: string}[],
+    ask_orders: {receive: string, price: string}[]
   }> {
 
     const orderCells = await this.repository.collectCells({
@@ -42,54 +42,34 @@ export default class OrdersService {
       order: "desc"
     });
 
-    const REQUIRED_DATA_LENGTH = 84;
-    const dexOrders = CkbUtils.formatOrderCells(orderCells
-      .filter(o => o.data.length === REQUIRED_DATA_LENGTH))
+    
+    const dexOrdersBid = this.filterDexOrder(orderCells, true)
       .sort((c1, c2) => parseInt(c1.price) - parseInt(c2.price))
       .reverse();
 
-    const groupbyPrice: Map<string, DexOrderCellFormat[]> = new Map()
-    for(let i = 0; i < dexOrders.length; i++) {
-      const dexOrder = dexOrders[i];
-      let priceArr = groupbyPrice.get(dexOrder.price);
-      if(!priceArr) {
-        priceArr = []
-        groupbyPrice.set(dexOrder.price, priceArr);
-      }
-
-      priceArr.push(dexOrder);
-    }
-
-    const bid_orders = dexOrders.filter(x => x.isBid).slice(0, 5)
+    const groupbyPriceBid = this.groupbyPrice(dexOrdersBid);
+    const bid_orders = dexOrdersBid.slice(0, 5)
       .map(x => {
-        let sudt_amount = BigInt(0);
         let order_amount = BigInt(0); 
-  
-        groupbyPrice.get(x.price).filter(x => x.isBid).forEach(x => {
-          sudt_amount += BigInt(x.sUDTAmount);
-          order_amount += BigInt(x.orderAmount);
-        })
+        groupbyPriceBid.get(x.price).forEach(x => order_amount += BigInt(x.orderAmount))
   
         return {
-          sudt_amount: sudt_amount.toString(),
-          order_amount: order_amount.toString(),
+          receive: order_amount.toString(),
           price: x.price.toString(),
         }
 
       }) 
 
-    const ask_orders = dexOrders.filter(x => !x.isBid).slice(0, 5).map(x => {
-      let sudt_amount = BigInt(0);
-      let order_amount = BigInt(0); 
+    const dexOrdersAsk = this.filterDexOrder(orderCells, false)
+      .sort((c1, c2) => parseInt(c1.price) - parseInt(c2.price))
 
-      groupbyPrice.get(x.price).filter(x => !x.isBid).forEach(x => {
-        sudt_amount += BigInt(x.sUDTAmount);
-        order_amount += BigInt(x.orderAmount);
-      })
+    const groupbyPriceAsk = this.groupbyPrice(dexOrdersAsk)
+    const ask_orders = dexOrdersAsk.slice(0, 5).map(x => {
+      let order_amount = BigInt(0); 
+      groupbyPriceAsk.get(x.price).forEach(x => order_amount += BigInt(x.orderAmount))
 
       return {
-        sudt_amount: sudt_amount.toString(),
-        order_amount: order_amount.toString(),
+        receive: order_amount.toString(),
         price: x.price.toString(),
       }
 
@@ -192,6 +172,31 @@ export default class OrdersService {
     }
   }
 
+  filterDexOrder(dexOrders: Cell[], isBid: boolean): DexOrderCellFormat[] {
+    const REQUIRED_DATA_LENGTH = 84;
+    return CkbUtils.formatOrderCells(dexOrders
+      .filter(o => o.data.length === REQUIRED_DATA_LENGTH))
+      .filter(x => x.isBid === isBid)
+      .filter(x => x.price !== '0')
+  }
+
+  groupbyPrice(dexOrders: DexOrderCellFormat[]):Map<string, DexOrderCellFormat[]> {
+    const groupbyPrice: Map<string, DexOrderCellFormat[]> = new Map()
+    for(let i = 0; i < dexOrders.length; i++) {
+      const dexOrder = dexOrders[i];
+      let priceArr = groupbyPrice.get(dexOrder.price);
+      if(!priceArr) {
+        priceArr = []
+        groupbyPrice.set(dexOrder.price, priceArr);
+      }
+
+      priceArr.push(dexOrder);
+    }
+
+    return groupbyPrice;
+  }
+
+  
 }
 
 

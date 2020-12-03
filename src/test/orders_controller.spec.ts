@@ -1101,28 +1101,10 @@ describe('Orders controller', () => {
       res.status.should.have.been.calledWith(200);
       res.json.should.have.been.calledWith({
         ask_orders: [
-          {
-            order_amount: "100000000000",
-            price: "55000000000",
-            sudt_amount: "50000000000",
-          },
-          { 
-            order_amount: "100000000000",
-            price: "50000000000",
-            sudt_amount: "50000000000",
-          },
+          { price: "50000000000", receive: "100000000000" }, { price: "55000000000", receive: "100000000000" }
         ],
         bid_orders: [
-          {
-            order_amount: "15000000000",
-            price: "70000000000",
-            sudt_amount: "5000000000",
-          },
-          { 
-            order_amount: "15000000000",
-            price: "50000000000",
-            sudt_amount: "5000000000"
-          },
+          { price: "70000000000", receive: "15000000000" }, { price: "50000000000", receive: "15000000000" }
         ]
       });
     })
