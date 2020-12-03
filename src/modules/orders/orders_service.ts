@@ -42,7 +42,7 @@ export default class OrdersService {
       order: "desc"
     });
 
-    const REQUIRED_DATA_LENGTH = 84;
+    const REQUIRED_DATA_LENGTH = CkbUtils.getRequiredDataLength();
     const dexOrders = CkbUtils.formatOrderCells(orderCells
       .filter(o => o.data.length === REQUIRED_DATA_LENGTH))
       .sort((c1, c2) => parseInt(c1.price) - parseInt(c2.price))
@@ -59,6 +59,9 @@ export default class OrdersService {
 
       priceArr.push(dexOrder);
     }
+
+    console.log(dexOrders);
+    
 
     const bid_orders = dexOrders.filter(x => x.isBid).slice(0, 5)
       .map(x => {
