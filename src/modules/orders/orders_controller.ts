@@ -78,29 +78,8 @@ export default class OrderController {
         <string>type_hash_type,
         <string>type_args,
       );
-      const bid_orders: Array<Record<'order_amount'|'sudt_amount'|'price',string>> = []
-      const ask_orders: Array<Record<'order_amount'|'sudt_amount'|'price',string>>= []
-      orders
-        .forEach(({ isBid, sUDTAmount: sudt_amount, orderAmount: order_amount, price }) => {
-          if (order_amount === BigInt(0)) {
-            return
-          }
-          const order = { 
-            sudt_amount: sudt_amount.toString(), 
-            order_amount: order_amount.toString(), 
-            price: price.toString() 
-          }
-          if (isBid) {
-            bid_orders.push(order)
-          } else {
-            ask_orders.push(order)
-          }
-        })
-        
-      res.status(200).json({
-        bid_orders: bid_orders.slice(0, 5),
-        ask_orders: ask_orders.slice(0, 5),
-      });
+      res.status(200).json(orders)
+
     } catch (err) {
       console.error(err);
       res.status(500).send();

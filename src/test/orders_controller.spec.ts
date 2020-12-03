@@ -10,7 +10,7 @@ import sinonStubPromise from "sinon-stub-promise";
 sinonStubPromise(sinon);
 
 import { mockReq, mockRes } from "sinon-express-mock";
-import { CkbUtils, DexOrderData } from "../component/formatter";
+import { CkbUtils } from "../component/formatter";
 import OrdersService from '../modules/orders/orders_service';
 import OrdersHistoryService from '../modules/orders/orders_history_service';
 import OrderController from '../modules/orders/orders_controller';
@@ -31,7 +31,6 @@ describe('Orders controller', () => {
   let mock_cell;
   let mock_transaction;
   let mock_last_match_orders;
-  let mock_get_place_order;
 
   beforeEach(() => {
     orders = [
@@ -142,10 +141,6 @@ describe('Orders controller', () => {
     ];
 
     class MockRepository implements DexRepository {
-      getPlaceOrder(queryOptions: QueryOptions): Promise<DexOrderData[]> {
-        console.log(queryOptions + " is mock");      
-        return null;
-      }
 
       tip(): Promise<number> {
         return null;
@@ -189,9 +184,6 @@ describe('Orders controller', () => {
     mock_cell = sinon.stub(mock, 'collectCells');  
     mock_transaction = sinon.stub(mock, 'collectTransactions');  
     mock_last_match_orders = sinon.stub(mock, 'getLastMatchOrders');
-    mock_get_place_order = sinon.stub(mock, 'getPlaceOrder');
-    
-
     
     const service = new OrdersService(mock);
     const historyService = new OrdersHistoryService(mock);
@@ -1101,7 +1093,7 @@ describe('Orders controller', () => {
       req.query.type_code_hash = TYPE_SCRIPT.code_hash
       req.query.type_hash_type = TYPE_SCRIPT.hash_type
       req.query.type_args = TYPE_SCRIPT.args;
-      mock_get_place_order.resolves(orders)
+      mock_cell.resolves(orders)
     })
 
     it('should return bid orders and ask orders', async () => {

@@ -3,7 +3,7 @@ import BigNumber from "bignumber.js";
 
 import { modules } from "../../ioc";
 import { contracts } from "../../config";
-import { CkbUtils, DexOrderCellFormat, DexOrderData } from "../../component";
+import { CkbUtils, DexOrderCellFormat } from "../../component";
 import BestPriceModel from "./best_price_model";
 import { HashType } from '@ckb-lumos/base';
 import { DexRepository } from '../repository/dex_repository';
@@ -20,9 +20,12 @@ export default class OrdersService {
     type_code_hash: string,
     type_hash_type: string,
     type_args: string,
-  ): Promise<Array<DexOrderData>> {
+  ): Promise<{
+    bid_orders: {sudt_amount: string, order_amount: string, price: string}[],
+    ask_orders: {sudt_amount: string, order_amount: string, price: string}[]
+  }> {
 
-    const cells = await this.repository.getPlaceOrder({
+    const orderCells = await this.repository.collectCells({
       type: {
         code_hash: type_code_hash,
         hash_type: <HashType>type_hash_type,
@@ -39,7 +42,63 @@ export default class OrdersService {
       order: "desc"
     });
 
-    return cells.sort((c1, c2) => c1.block_number - c2.block_number).reverse();
+    const REQUIRED_DATA_LENGTH = 84;
+    const dexOrders = CkbUtils.formatOrderCells(orderCells
+      .filter(o => o.data.length === REQUIRED_DATA_LENGTH))
+      .sort((c1, c2) => parseInt(c1.price) - parseInt(c2.price))
+      .reverse();
+
+    const groupbyPrice: Map<string, DexOrderCellFormat[]> = new Map()
+    for(let i = 0; i < dexOrders.length; i++) {
+      const dexOrder = dexOrders[i];
+      let priceArr = groupbyPrice.get(dexOrder.price);
+      if(!priceArr) {
+        priceArr = []
+        groupbyPrice.set(dexOrder.price, priceArr);
+      }
+
+      priceArr.push(dexOrder);
+    }
+
+    const bid_orders = dexOrders.filter(x => x.isBid).slice(0, 5)
+      .map(x => {
+        let sudt_amount = BigInt(0);
+        let order_amount = BigInt(0); 
+  
+        groupbyPrice.get(x.price).filter(x => x.isBid).forEach(x => {
+          sudt_amount += BigInt(x.sUDTAmount);
+          order_amount += BigInt(x.orderAmount);
+        })
+  
+        return {
+          sudt_amount: sudt_amount.toString(),
+          order_amount: order_amount.toString(),
+          price: x.price.toString(),
+        }
+
+      }) 
+
+    const ask_orders = dexOrders.filter(x => !x.isBid).slice(0, 5).map(x => {
+      let sudt_amount = BigInt(0);
+      let order_amount = BigInt(0); 
+
+      groupbyPrice.get(x.price).filter(x => !x.isBid).forEach(x => {
+        sudt_amount += BigInt(x.sUDTAmount);
+        order_amount += BigInt(x.orderAmount);
+      })
+
+      return {
+        sudt_amount: sudt_amount.toString(),
+        order_amount: order_amount.toString(),
+        price: x.price.toString(),
+      }
+
+    }) 
+    
+    return {
+      bid_orders,
+      ask_orders
+    }
 
   }
 
