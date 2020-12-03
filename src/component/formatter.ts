@@ -1,4 +1,5 @@
 import { Cell, HexString, Output } from "@ckb-lumos/base";
+import BigNumber from 'bignumber.js';
 import { contracts } from '../config';
 
 export interface DexOrderData {
@@ -124,5 +125,13 @@ export class CkbUtils {
       && output.type.code_hash === type.code_hash
       && output.type.hash_type === type.hash_type
       && output.type.args === type.args
+  }
+
+  static shannonToCkb(price: string): BigNumber {
+    const BN = BigNumber.clone();
+    BN.config({DECIMAL_PLACES:4});
+
+    return new BN(price).div(100000000);
+    
   }
 }

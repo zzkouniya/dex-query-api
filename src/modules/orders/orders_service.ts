@@ -44,18 +44,27 @@ export default class OrdersService {
 
     
     const dexOrdersBid = this.filterDexOrder(orderCells, true)
-      .sort((c1, c2) => parseInt(c1.price) - parseInt(c2.price))
-      .reverse();
-
     const groupbyPriceBid = this.groupbyPrice(dexOrdersBid);
-    const bid_orders = dexOrdersBid.slice(0, 5)
-      .map(x => {
+    const bidOrderPriceMergeKeys: Set<string> = new Set()
+    const bidOrderPriceKeys: string[] = []
+    dexOrdersBid.forEach(x => {
+      const key = CkbUtils.shannonToCkb(x.price).toString();
+      if(!bidOrderPriceMergeKeys.has(key))  {
+        bidOrderPriceKeys.push(x.price);
+        bidOrderPriceMergeKeys.add(key)
+      }
+    }) 
+
+    const bid_orders = 
+    bidOrderPriceKeys.sort((c1, c2) => parseInt(c1) - parseInt(c2))
+      .reverse()
+      .slice(0, 5).map(x => {
         let order_amount = BigInt(0); 
-        groupbyPriceBid.get(x.price).forEach(x => order_amount += BigInt(x.orderAmount))
+        groupbyPriceBid.get(x).forEach(x => order_amount += BigInt(x.orderAmount))
   
         return {
           receive: order_amount.toString(),
-          price: x.price.toString(),
+          price: x
         }
 
       }) 
@@ -64,16 +73,29 @@ export default class OrdersService {
       .sort((c1, c2) => parseInt(c1.price) - parseInt(c2.price))
 
     const groupbyPriceAsk = this.groupbyPrice(dexOrdersAsk)
-    const ask_orders = dexOrdersAsk.slice(0, 5).map(x => {
-      let order_amount = BigInt(0); 
-      groupbyPriceAsk.get(x.price).forEach(x => order_amount += BigInt(x.orderAmount))
-
-      return {
-        receive: order_amount.toString(),
-        price: x.price.toString(),
+    const askOrderPriceMergeKeys: Set<string> = new Set()
+    const askOrderPriceKeys: string[] = []
+    dexOrdersAsk.forEach(x => {
+      const key = CkbUtils.shannonToCkb(x.price).toString();
+      if(!askOrderPriceMergeKeys.has(key))  {
+        askOrderPriceKeys.push(x.price);
+        askOrderPriceMergeKeys.add(key)
       }
-
     }) 
+    
+    const ask_orders =
+    askOrderPriceKeys.sort((c1, c2) => parseInt(c1) - parseInt(c2))
+      .reverse()
+      .slice(0, 5).map(x => {
+        let order_amount = BigInt(0); 
+        groupbyPriceAsk.get(x).forEach(x => order_amount += BigInt(x.orderAmount))
+
+        return {
+          receive: order_amount.toString(),
+          price: x
+        }
+
+      }) 
     
     return {
       bid_orders,
@@ -177,7 +199,7 @@ export default class OrdersService {
     return CkbUtils.formatOrderCells(dexOrders
       .filter(o => o.data.length === REQUIRED_DATA_LENGTH))
       .filter(x => x.isBid === isBid)
-      .filter(x => x.price !== '0')
+      .filter(x => x.orderAmount !== '0')
   }
 
   groupbyPrice(dexOrders: DexOrderCellFormat[]):Map<string, DexOrderCellFormat[]> {
