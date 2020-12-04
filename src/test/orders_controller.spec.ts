@@ -1329,11 +1329,7 @@ describe('Orders controller', () => {
                 '0xad53aaee12000000000000000000000080d26d8e580000000000000000000000000050efe2d6e41a1b0000000000000001'
               ],
               version: '0x0',
-              witnesses: [
-                '0x5500000010000000550000005500000041000000fd7bf4752631676e81da4a9cda1a0cf65dafc09cf2c843ea1e521697904a162564934438351568f2fa2c6fd46e9db7c386d38f10e0e053e98cd6e8ec069aa84800',
-                '0x',
-                '0x'
-              ]
+              witnesses: []
             },
             tx_status: {
               block_hash: '0x0c6379436b821d3174cb99a7792d14895c8e7797748a97c9f23e1471e9db864a',
@@ -1367,15 +1363,6 @@ describe('Orders controller', () => {
                     code_hash: '0xe1e354d6d643ad42724d40967e334984534e0367405c5ae42a9d7d63d77df419',
                     hash_type: 'data'
                   }
-                },
-                {
-                  capacity: '0x8978c85667',
-                  lock: {
-                    args: '0x6c8c7f80161485c3e4adceda4c6c425410140054',
-                    code_hash: '0xe6acf70d7e336db0368c920a833d9d9f9ca8c3c8aba39f24741c45db435c3e18',
-                    hash_type: 'type'
-                  },
-                  type: null
                 }
               ],
               outputs_data: [
