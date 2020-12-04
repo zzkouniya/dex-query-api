@@ -1380,14 +1380,10 @@ describe('Orders controller', () => {
         ]
         mock_transaction.resolves(transactions)
         mock_getblockNumberByBlockHash
-          .withArgs("0xdc2afe16fe64dfaa410b0929a398ebd9ddeeae9bb33fccc1846611cf6f6af841")
+          .withArgs("0xb86a4590f6c07c32b9bb1c8643869aa318720580f7deb0f7a63dec8c2297c8f2")
           .resolves(600330)
-          .withArgs("0x6e378ba6ebe2334fd5d20f36ea79a6db4ea3073269cf50370b085656afb7c2cf")
-          .resolves(600325)
           .withArgs("0x0c6379436b821d3174cb99a7792d14895c8e7797748a97c9f23e1471e9db864a")
           .resolves(600325)
-          .withArgs("0x0c6379436b821d3174cb99a7792d14895c8e7797748a97c9f23e1471e9db864a")
-          .resolves(600325);
       })
 
       it('should return bid orders and ask orders', async () => {
