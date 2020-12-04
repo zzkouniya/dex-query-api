@@ -24,8 +24,9 @@ export class CkbUtils {
 
     let price: bigint;
     try {
-      const priceBuf: Buffer = Buffer.from(hex.slice(66, 98), "hex");
-      price = priceBuf.readBigInt64LE();
+      price = this.parseAmountFromLeHex(hex.slice(66, 98));
+      // const priceBuf: Buffer = Buffer.from(hex.slice(66, 98), "hex");
+      // price = priceBuf.readBigInt64LE();
     } catch (error) {
       price = null;
     }
