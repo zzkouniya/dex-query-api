@@ -11,6 +11,7 @@ import { IndexerService } from './indexer_service';
 import CkbService from '../ckb/ckb_service';
 import { modules } from '../../ioc';
 import { IndexerSubscribe } from './indexer_subscribe';
+import { DexEvent } from '../../component/chian_event';
 
 
 @injectable()
@@ -30,9 +31,16 @@ export default class IndexerWrapper implements IndexerService, IndexerSubscribe 
     }, 5000);
   }
 
-  subscribe(queryOptions: QueryOptions, listener: (...args: any[]) => void): void {
-    const eventEmitter = this.indexer.subscribe({lock: queryOptions.lock});
-    eventEmitter.on("changed", listener);
+  subscribe(queryOptions: QueryOptions, event: DexEvent): void {
+    try {
+      const eventEmitter = this.indexer.subscribe({lock: queryOptions.lock});
+      eventEmitter.on("changed", () => {
+        event.sendChange();
+      });
+    } catch (error) {
+      console.error(error)
+    }
+
   }
 
   async tip(): Promise<number> {

@@ -17,7 +17,7 @@ export class EventContext {
       const indexer: IndexerWrapper = container.get(modules[IndexerWrapper.name]);
       this.io.on('connection', function(socket: Socket) {
         socket.on('dex-event', function(msg) {
-          try {
+          try {      
             const event = new CkbBalanceEvent(indexer, JSON.parse(msg), socket)
             event.subscribe();
           } catch (error) {
@@ -33,6 +33,7 @@ export class EventContext {
 
 export interface DexEvent {
     subscribe(): Promise<void>;
+    sendChange(): void;
 }
 
 
@@ -40,6 +41,7 @@ export class CkbBalanceEvent implements DexEvent {
     private indexer: IndexerWrapper; 
     private eventKey: QueryOptions;
     private socket: Socket;
+    private blockNumber = 0;
   
     constructor(
       indexer: IndexerWrapper,
@@ -51,11 +53,14 @@ export class CkbBalanceEvent implements DexEvent {
       this.socket = socket;
     }
 
+    async sendChange(): Promise<void> {
+      const blockNumber = await this.indexer.tip();
+      console.log(blockNumber);    
+      this.socket.emit("order-change", blockNumber);  
+    }
+
     async subscribe(): Promise<void> {
-      this.indexer.subscribe(this.eventKey, () => {
-        const blockNumber = this.indexer.tip();
-        this.socket.emit("dex-event", blockNumber);  
-      });
+      this.indexer.subscribe(this.eventKey, this);
     }
   
 }

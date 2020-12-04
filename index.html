@@ -21,7 +21,7 @@
 
         socket.emit('dex-event', "{\"lock\":{\"code_hash\":\"0xe6acf70d7e336db0368c920a833d9d9f9ca8c3c8aba39f24741c45db435c3e18\",\"hash_type\":\"type\",\"args\":\"0x988485609e16d5d5c62be0a4ae12b665fefcb448\"}}");
 
-        socket.on('dex-even', (data) => {
+        socket.on('order-change', (data) => {
           console.log(data);
         });
 

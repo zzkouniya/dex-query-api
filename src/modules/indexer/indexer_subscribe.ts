@@ -1,7 +1,7 @@
 import { QueryOptions } from 'winston';
-import IndexerWrapper from "./indexer";
+import { DexEvent } from '../../component/chian_event';
 
 
 export interface IndexerSubscribe {
-    subscribe(queryOptions: QueryOptions, listener: (...args: any[]) => void): void;
+    subscribe(queryOptions: QueryOptions, event: DexEvent): void;
 }
