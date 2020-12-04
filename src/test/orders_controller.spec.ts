@@ -31,6 +31,7 @@ describe('Orders controller', () => {
   let mock_cell;
   let mock_transaction;
   let mock_last_match_orders;
+  let mock_getblockNumberByBlockHash;
 
   beforeEach(() => {
     orders = [
@@ -183,8 +184,7 @@ describe('Orders controller', () => {
     const mock: MockRepository = new MockRepository();
     mock_cell = sinon.stub(mock, 'collectCells');  
     mock_transaction = sinon.stub(mock, 'collectTransactions');  
-    mock_last_match_orders = sinon.stub(mock, 'getLastMatchOrders');
-    
+    mock_getblockNumberByBlockHash = sinon.stub(mock, 'getblockNumberByBlockHash');
     const service = new OrdersService(mock);
     const historyService = new OrdersHistoryService(mock);
     controller = new OrderController(service, historyService);
@@ -1089,28 +1089,330 @@ describe('Orders controller', () => {
 
     describe('when orders are found', () => {
       beforeEach(() => {
-        mock_last_match_orders.resolves({
-          ask_orders: [
-            { sUDTAmount: 9775000006n, orderAmount: 0n, price: 20000000000n, isBid: false },
-            { sUDTAmount: 9775000006n, orderAmount: 0n, price: 10000000000n, isBid: false }
-          ],
-          bid_orders: [
-            { sUDTAmount: 4087736789n, orderAmount: 0n, price: 30000000000n, isBid: true },
-            { sUDTAmount: 6580259222n, orderAmount: 0n, price: 10000000000n, isBid: true }
-          ]
-        });
+        const transactions = [
+          {
+            transaction: {
+              cell_deps: [],
+              hash: '0xdc2afe16fe64dfaa410b0929a398ebd9ddeeae9bb33fccc1846611cf6f6af841',
+              header_deps: [],
+              inputs: [ 
+                {
+                  previous_output: {
+                    index: '0x0',
+                    tx_hash: '0x6e378ba6ebe2334fd5d20f36ea79a6db4ea3073269cf50370b085656afb7c2cf'
+                  },
+                  since: '0x0'
+                },
+                {
+                  previous_output: {
+                    index: '0x2',
+                    tx_hash: '0x6e378ba6ebe2334fd5d20f36ea79a6db4ea3073269cf50370b085656afb7c2cf'
+                  },
+                  since: '0x0'
+                },
+                {
+                  previous_output: {
+                    index: '0x0',
+                    tx_hash: '0x344c64b678ee4f6f0f569b44a484203b61a791a600e0e79a6f6188bbdbd43935'
+                  },
+                  since: '0x0'
+                }
+              ],
+              outputs: [ 
+                {
+                  capacity: '0x38d8761aedb13',
+                  lock: {
+                    args: '0x921e55249a7072f945a8adae259a8665196289bc',
+                    code_hash: '0x9bd7e06f3ecf4be0f2fcd2188b23f1b9fcc88e5d4b65a8637b17723bbda3cce8',
+                    hash_type: 'type'
+                  },
+                  type: {
+                    args: '0x32e555f3ff8e135cece1351a6a2971518392c1e30375c1e006ad0ce8eac07947',
+                    code_hash: '0xe1e354d6d643ad42724d40967e334984534e0367405c5ae42a9d7d63d77df419',
+                    hash_type: 'data'
+                  }
+                },
+                {
+                  capacity: '0x7d7f7fe47e',
+                  lock: {
+                    args: '0xc07b294df4873625d2c97d904a6cd91ff68c8d68e6b343b0b2490e15d79c094f',
+                    code_hash: '0xaebf4e5c3b523d91499da8f95dc13ab79f565b1486ab243ea3e7c6ffeec215ba',
+                    hash_type: 'type'
+                  },
+                  type: {
+                    args: '0x32e555f3ff8e135cece1351a6a2971518392c1e30375c1e006ad0ce8eac07947',
+                    code_hash: '0xe1e354d6d643ad42724d40967e334984534e0367405c5ae42a9d7d63d77df419',
+                    hash_type: 'data'
+                  }
+                },
+                {
+                  capacity: '0x950fa012ce',
+                  lock: {
+                    args: '0xc07b294df4873625d2c97d904a6cd91ff68c8d68e6b343b0b2490e15d79c094f',
+                    code_hash: '0xaebf4e5c3b523d91499da8f95dc13ab79f565b1486ab243ea3e7c6ffeec215ba',
+                    hash_type: 'type'
+                  },
+                  type: {
+                    args: '0x32e555f3ff8e135cece1351a6a2971518392c1e30375c1e006ad0ce8eac07947',
+                    code_hash: '0xe1e354d6d643ad42724d40967e334984534e0367405c5ae42a9d7d63d77df419',
+                    hash_type: 'data'
+                  }
+                }
+              ],
+              outputs_data: [
+                '0x4210d24d000000000000000000000000',
+                '0xfadfec2004000000000000000000000002000000000000000000000000000000000050efe2d6e41a1b0000000000000001',
+                '0x15a367c20e0000000000000000000000345f8b80120000000000000000000000000070b53d9373f2250000000000000000'
+              ],
+              version: '0x0',
+              witnesses: []
+            },
+            tx_status: {
+              block_hash: '0xb86a4590f6c07c32b9bb1c8643869aa318720580f7deb0f7a63dec8c2297c8f2',
+              status: 'committed'
+            }
+          },
+          {
+            transaction: {
+              cell_deps: [],
+              hash: '0x6e378ba6ebe2334fd5d20f36ea79a6db4ea3073269cf50370b085656afb7c2cf',
+              header_deps: [],
+              inputs: [ 
+                {
+                  previous_output: {
+                    index: '0x0',
+                    tx_hash: '0x3b0f1524b45a59a85d210871dcbee2949852999cc7d9593afe2c810a0ebe7aa4'
+                  },
+                  since: '0x0'
+                },
+                {
+                  previous_output: {
+                    index: '0x0',
+                    tx_hash: '0xd2bc38dcc242a87047ff1b25967e34769f4691857a58470ea7ce5a9c2551f4f0'
+                  },
+                  since: '0x0'
+                },
+                {
+                  previous_output: {
+                    index: '0x2',
+                    tx_hash: '0x3b0f1524b45a59a85d210871dcbee2949852999cc7d9593afe2c810a0ebe7aa4'
+                  },
+                  since: '0x0'
+                }
+              ],
+              outputs: [ 
+                {
+                  capacity: '0x38d871dbc5e97',
+                  lock: {
+                    args: '0x921e55249a7072f945a8adae259a8665196289bc',
+                    code_hash: '0x9bd7e06f3ecf4be0f2fcd2188b23f1b9fcc88e5d4b65a8637b17723bbda3cce8',
+                    hash_type: 'type'
+                  },
+                  type: {
+                    args: '0x32e555f3ff8e135cece1351a6a2971518392c1e30375c1e006ad0ce8eac07947',
+                    code_hash: '0xe1e354d6d643ad42724d40967e334984534e0367405c5ae42a9d7d63d77df419',
+                    hash_type: 'data'
+                  }
+                },
+                {
+                  capacity: '0x4f010c4e0',
+                  lock: {
+                    args: '0xc07b294df4873625d2c97d904a6cd91ff68c8d68e6b343b0b2490e15d79c094f',
+                    code_hash: '0xaebf4e5c3b523d91499da8f95dc13ab79f565b1486ab243ea3e7c6ffeec215ba',
+                    hash_type: 'type'
+                  },
+                  type: {
+                    args: '0x32e555f3ff8e135cece1351a6a2971518392c1e30375c1e006ad0ce8eac07947',
+                    code_hash: '0xe1e354d6d643ad42724d40967e334984534e0367405c5ae42a9d7d63d77df419',
+                    hash_type: 'data'
+                  }
+                },
+                {
+                  capacity: '0x24f1121200',
+                  lock: {
+                    args: '0xc07b294df4873625d2c97d904a6cd91ff68c8d68e6b343b0b2490e15d79c094f',
+                    code_hash: '0xaebf4e5c3b523d91499da8f95dc13ab79f565b1486ab243ea3e7c6ffeec215ba',
+                    hash_type: 'type'
+                  },
+                  type: {
+                    args: '0x32e555f3ff8e135cece1351a6a2971518392c1e30375c1e006ad0ce8eac07947',
+                    code_hash: '0xe1e354d6d643ad42724d40967e334984534e0367405c5ae42a9d7d63d77df419',
+                    hash_type: 'data'
+                  }
+                }
+              ],
+              outputs_data: [
+                '0xa43f7c42000000000000000000000000',
+                '0x00ca9a3b000000000000000000000000000000000000000000000000000000000000a0dec5adc935360000000000000000',
+                '0xad53aaee12000000000000000000000080d26d8e580000000000000000000000000050efe2d6e41a1b0000000000000001'
+              ],
+              version: '0x0',
+              witnesses: []
+            },
+            tx_status: {
+              block_hash: '0x0c6379436b821d3174cb99a7792d14895c8e7797748a97c9f23e1471e9db864a',
+              status: 'committed'
+            }
+          },
+          {
+            transaction: {
+              cell_deps: [],
+              hash: '0x6e378ba6ebe2334fd5d20f36ea79a6db4ea3073269cf50370b085656afb7c2cf',
+              header_deps: [],
+              inputs: [ 
+                {
+                  previous_output: {
+                    index: '0x0',
+                    tx_hash: '0x3b0f1524b45a59a85d210871dcbee2949852999cc7d9593afe2c810a0ebe7aa4'
+                  },
+                  since: '0x0'
+                },
+                {
+                  previous_output: {
+                    index: '0x0',
+                    tx_hash: '0xd2bc38dcc242a87047ff1b25967e34769f4691857a58470ea7ce5a9c2551f4f0'
+                  },
+                  since: '0x0'
+                },
+                {
+                  previous_output: {
+                    index: '0x2',
+                    tx_hash: '0x3b0f1524b45a59a85d210871dcbee2949852999cc7d9593afe2c810a0ebe7aa4'
+                  },
+                  since: '0x0'
+                }
+              ],
+              outputs: [ 
+                {
+                  capacity: '0x38d871dbc5e97',
+                  lock: {
+                    args: '0x921e55249a7072f945a8adae259a8665196289bc',
+                    code_hash: '0x9bd7e06f3ecf4be0f2fcd2188b23f1b9fcc88e5d4b65a8637b17723bbda3cce8',
+                    hash_type: 'type'
+                  },
+                  type: {
+                    args: '0x32e555f3ff8e135cece1351a6a2971518392c1e30375c1e006ad0ce8eac07947',
+                    code_hash: '0xe1e354d6d643ad42724d40967e334984534e0367405c5ae42a9d7d63d77df419',
+                    hash_type: 'data'
+                  }
+                },
+                {
+                  capacity: '0x4f010c4e0',
+                  lock: {
+                    args: '0xc07b294df4873625d2c97d904a6cd91ff68c8d68e6b343b0b2490e15d79c094f',
+                    code_hash: '0xaebf4e5c3b523d91499da8f95dc13ab79f565b1486ab243ea3e7c6ffeec215ba',
+                    hash_type: 'type'
+                  },
+                  type: {
+                    args: '0x32e555f3ff8e135cece1351a6a2971518392c1e30375c1e006ad0ce8eac07947',
+                    code_hash: '0xe1e354d6d643ad42724d40967e334984534e0367405c5ae42a9d7d63d77df419',
+                    hash_type: 'data'
+                  }
+                },
+                {
+                  capacity: '0x24f1121200',
+                  lock: {
+                    args: '0xc07b294df4873625d2c97d904a6cd91ff68c8d68e6b343b0b2490e15d79c094f',
+                    code_hash: '0xaebf4e5c3b523d91499da8f95dc13ab79f565b1486ab243ea3e7c6ffeec215ba',
+                    hash_type: 'type'
+                  },
+                  type: {
+                    args: '0x32e555f3ff8e135cece1351a6a2971518392c1e30375c1e006ad0ce8eac07947',
+                    code_hash: '0xe1e354d6d643ad42724d40967e334984534e0367405c5ae42a9d7d63d77df419',
+                    hash_type: 'data'
+                  }
+                }
+              ],
+              outputs_data: [
+                '0xa43f7c42000000000000000000000000',
+                '0x00ca9a3b000000000000000000000000000000000000000000000000000000000000a0dec5adc935360000000000000000',
+                '0xad53aaee12000000000000000000000080d26d8e580000000000000000000000000050efe2d6e41a1b0000000000000001'
+              ],
+              version: '0x0',
+              witnesses: [
+                '0x5500000010000000550000005500000041000000fd7bf4752631676e81da4a9cda1a0cf65dafc09cf2c843ea1e521697904a162564934438351568f2fa2c6fd46e9db7c386d38f10e0e053e98cd6e8ec069aa84800',
+                '0x',
+                '0x'
+              ]
+            },
+            tx_status: {
+              block_hash: '0x0c6379436b821d3174cb99a7792d14895c8e7797748a97c9f23e1471e9db864a',
+              status: 'committed'
+            }
+          },
+          {
+            transaction: {
+              cell_deps: [],
+              hash: '0x344c64b678ee4f6f0f569b44a484203b61a791a600e0e79a6f6188bbdbd43935',
+              header_deps: [],
+              inputs: [ 
+                {
+                  previous_output: {
+                    index: '0x1',
+                    tx_hash: '0xd2bc38dcc242a87047ff1b25967e34769f4691857a58470ea7ce5a9c2551f4f0'
+                  },
+                  since: '0x0'
+                }
+              ],
+              outputs: [ 
+                {
+                  capacity: '0xede210c900',
+                  lock: {
+                    args: '0xc07b294df4873625d2c97d904a6cd91ff68c8d68e6b343b0b2490e15d79c094f',
+                    code_hash: '0xaebf4e5c3b523d91499da8f95dc13ab79f565b1486ab243ea3e7c6ffeec215ba',
+                    hash_type: 'type'
+                  },
+                  type: {
+                    args: '0x32e555f3ff8e135cece1351a6a2971518392c1e30375c1e006ad0ce8eac07947',
+                    code_hash: '0xe1e354d6d643ad42724d40967e334984534e0367405c5ae42a9d7d63d77df419',
+                    hash_type: 'data'
+                  }
+                },
+                {
+                  capacity: '0x8978c85667',
+                  lock: {
+                    args: '0x6c8c7f80161485c3e4adceda4c6c425410140054',
+                    code_hash: '0xe6acf70d7e336db0368c920a833d9d9f9ca8c3c8aba39f24741c45db435c3e18',
+                    hash_type: 'type'
+                  },
+                  type: null
+                }
+              ],
+              outputs_data: [
+                '0x000000000000000000000000000000004902f342210000000000000000000000000070b53d9373f2250000000000000000',
+                '0x'
+              ],
+              version: '0x0',
+              witnesses: []
+            },
+            tx_status: {
+              block_hash: '0x0c6379436b821d3174cb99a7792d14895c8e7797748a97c9f23e1471e9db864a',
+              status: 'committed'
+            }
+          }
+        ]
+        mock_transaction.resolves(transactions)
+        mock_getblockNumberByBlockHash
+          .withArgs("0xdc2afe16fe64dfaa410b0929a398ebd9ddeeae9bb33fccc1846611cf6f6af841")
+          .resolves(600330)
+          .withArgs("0x6e378ba6ebe2334fd5d20f36ea79a6db4ea3073269cf50370b085656afb7c2cf")
+          .resolves(600325)
+          .withArgs("0x0c6379436b821d3174cb99a7792d14895c8e7797748a97c9f23e1471e9db864a")
+          .resolves(600325)
+          .withArgs("0x0c6379436b821d3174cb99a7792d14895c8e7797748a97c9f23e1471e9db864a")
+          .resolves(600325);
       })
 
       it('should return bid orders and ask orders', async () => {
         await controller.getCurrentPrice(req, res, next);
         res.status.should.have.been.calledWith(200);
-        res.json.should.have.been.calledWith("15000000000");
+        res.json.should.have.been.calledWith("600000000000000000000");
       })
     })
 
     describe('when orders are not found', () => {
       beforeEach(() => {
-        mock_last_match_orders.resolves(null);
+        mock_transaction.resolves([]);
       })
 
       it('should return bid orders and ask orders', async () => {

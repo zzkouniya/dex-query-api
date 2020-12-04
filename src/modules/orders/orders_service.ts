@@ -3,9 +3,9 @@ import BigNumber from "bignumber.js";
 
 import { modules } from "../../ioc";
 import { contracts } from "../../config";
-import { CkbUtils, DexOrderCellFormat } from "../../component";
+import { CkbUtils, DexOrderCellFormat, DexOrderData } from "../../component";
 import BestPriceModel from "./best_price_model";
-import { Cell, HashType } from '@ckb-lumos/base';
+import { Cell, HashType, TransactionWithStatus } from '@ckb-lumos/base';
 import { DexRepository } from '../repository/dex_repository';
 import CkbRepository from '../repository/ckb_repository';
 
@@ -106,6 +106,102 @@ export default class OrdersService {
 
   }
 
+  async getCurrentPrice2(type: { code_hash: string, args: string, hash_type: HashType }): Promise<string> {
+    const txs = await this.repository.collectTransactions({
+      type,
+      lock: {
+        script: {
+          code_hash: contracts.orderLock.codeHash,
+          hash_type: contracts.orderLock.hashType,
+          args: "0x",
+        },
+        argsLen: 'any'
+      },
+      order: "desc",
+    });
+    
+    const filterDexOrder = txs.filter(x => x.transaction.outputs_data.find(y => y.length === CkbUtils.getRequiredDataLength()))
+
+    const txsByBlockNumber: {blockNumber: number, tx: TransactionWithStatus}[] = []
+    for(let i = 0; i < filterDexOrder.length; i++) {
+      const blockNumber = await this.repository.getblockNumberByBlockHash(filterDexOrder[i].tx_status.block_hash);
+
+      txsByBlockNumber.push({
+        blockNumber: blockNumber,
+        tx: filterDexOrder[i]
+      })
+    }
+
+    const sortTxs = txsByBlockNumber.sort((t1, t2) => t1.blockNumber - t2.blockNumber).reverse().map(x => x.tx);    
+
+    const groupByTxHash: Map<string, TransactionWithStatus> = new Map();
+    for (const tx of sortTxs) {
+      groupByTxHash.set(tx.transaction.hash, tx);
+
+    }
+
+    const inputWithTx: Map<string, TransactionWithStatus> = new Map()
+    for (const tx of sortTxs) {
+      for (const input of tx.transaction.inputs) {
+        const preTx = groupByTxHash.get(input.previous_output.tx_hash);
+        if(preTx) {
+          const i = parseInt(input.previous_output.index, 16);
+          const index = `${input.previous_output.tx_hash}:${i}`;
+          inputWithTx.set(index, preTx);
+        }
+      }
+    }
+    
+    const bid_orders: Array<DexOrderData> = [];
+    const ask_orders: Array<DexOrderData> = [];
+    for (const tx of sortTxs) {
+      const inputs = []
+      for (const input of tx.transaction.inputs) {
+        const i = parseInt(input.previous_output.index, 16);    
+        const index = `${input.previous_output.tx_hash}:${i}`;
+        const preTx = inputWithTx.get(index);
+        if(preTx) {
+          inputs.push(preTx.transaction.outputs[i]);
+        }
+
+      }
+
+      if(inputs.length === 0) {
+        continue;
+      }
+      
+      let isOrderCell = false;
+      for (const cell of inputs) {
+        if(CkbUtils.isOrder(type, cell)) {
+          isOrderCell = true;
+          break;
+        }
+      }
+      
+      if(isOrderCell) {          
+        tx.transaction.outputs_data
+          .filter(x => x.length === CkbUtils.getRequiredDataLength())
+          .map(x => CkbUtils.parseOrderData(x))
+          .forEach(x => (x.isBid ? bid_orders : ask_orders).push(x));
+
+        if (ask_orders.length && bid_orders.length) {
+          break;
+        }
+    
+      }
+      
+    }
+    
+    if(bid_orders.length == 0 && ask_orders.length == 0) {
+      return "";
+    }
+    
+    const bid_price = new BigNumber(bid_orders.sort((o1, o2) => Number(o1.price - o2.price))[0].price.toString());
+    const ask_price = new BigNumber(ask_orders.sort((o1, o2) => Number(o2.price - o1.price))[0].price.toString());
+    
+    return (bid_price.plus(ask_price)).dividedBy(2).toString(10);
+  }
+
   async getCurrentPrice(type: { code_hash: string, args: string, hash_type: HashType }): Promise<string> {
     const orders = await this.repository.getLastMatchOrders(type);
     if (!orders) {
@@ -113,6 +209,7 @@ export default class OrdersService {
     }
     const bid_price = new BigNumber(orders.bid_orders.sort((o1, o2) => Number(o1.price - o2.price))[0].price.toString());
     const ask_price = new BigNumber(orders.ask_orders.sort((o1, o2) => Number(o2.price - o1.price))[0].price.toString());
+
     return (bid_price.plus(ask_price)).dividedBy(2).toString();
   }
 

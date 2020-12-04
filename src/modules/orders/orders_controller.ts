@@ -128,7 +128,7 @@ export default class OrderController {
       type_args: args,
     } = req.query as Record<string, string>;
     try {
-      const price = await this.orderService.getCurrentPrice({ code_hash, hash_type: <HashType>hash_type, args })
+      const price = await this.orderService.getCurrentPrice2({ code_hash, hash_type: <HashType>hash_type, args })
       res.status(200).json(price);
     } catch (err) {
       console.error(err);
