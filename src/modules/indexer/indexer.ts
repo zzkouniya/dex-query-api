@@ -76,29 +76,35 @@ export default class IndexerWrapper implements IndexerService {
     );
 
     for await (const { tx_status, transaction } of transactionCollector.collect() as any) {
+
       if (tx_status.status === 'committed') {
         const bid_orders: Array<DexOrderData> = [];
         const ask_orders: Array<DexOrderData> = [];
-        const { outputs, outputs_data } = transaction as Transaction;
-        await Promise.all(outputs.map(async (output, idx) => {
-          if (CkbUtils.isOrder(type, output)) {
-            try {
-              const order = CkbUtils.parseOrderData(outputs_data[idx]);
-              if (order.orderAmount === 0n) {
-                // TODO: use order history to verify if the order is a REAL ONE
-                // const historyService = container.get<OrdersHistoryService>(modules[OrdersHistoryService.name])
-                // const history = await historyService.getOrderHistory(
-                //   output.type.code_hash,
-                //   output.type.hash_type,
-                //   output.type.args,
-                //   output.lock.args);
-                (order.isBid ? bid_orders : ask_orders).push(order);
-              }
-            } catch {
-              // ignore
-            }
+        const { inputs, outputs, outputs_data } = transaction as Transaction;
+        
+        if(!outputs.find(x => CkbUtils.isOrder(type, x))) {
+          continue;
+        }
+        
+        const requests = [];
+        for (const input of inputs) {
+          requests.push(["getTransaction", input.previous_output.tx_hash]);
+        }
+        const inputTxs = await this.ckbService.getTransactions(requests);
+
+        if(!inputTxs.find(x => x.ckbTransactionWithStatus.transaction.outputsData.find(y => y.length === CkbUtils.getRequiredDataLength()))) {
+          continue;
+        }
+
+        for (const data of outputs_data) {
+          if(data.length !== CkbUtils.getRequiredDataLength()) {
+            continue;
           }
-        }))
+          const orderCell = CkbUtils.parseOrderData(data);
+          (orderCell.isBid ? bid_orders : ask_orders).push(orderCell);
+          
+        }
+
         if (ask_orders.length && bid_orders.length) {
           return { ask_orders, bid_orders };
         }
