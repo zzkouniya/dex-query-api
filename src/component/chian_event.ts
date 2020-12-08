@@ -3,6 +3,7 @@ import http from "http";
 import { container, modules } from '../ioc';
 import IndexerWrapper from '../modules/indexer/indexer';
 import { QueryOptions } from 'winston';
+import { Mutex } from 'async-mutex';
 
 export class EventContext {
     private static io: Server;
@@ -42,6 +43,7 @@ export class CkbBalanceEvent implements DexEvent {
     private eventKey: QueryOptions;
     private socket: Socket;
     private blockNumber = 0;
+    private mutex = new Mutex();
   
     constructor(
       indexer: IndexerWrapper,
@@ -51,12 +53,27 @@ export class CkbBalanceEvent implements DexEvent {
       this.indexer = indexer;
       this.eventKey = eventKey;
       this.socket = socket;
+      this.indexer.tip().then(res => {
+        this.blockNumber = res;
+      });
+      
     }
 
+
+
     async sendChange(): Promise<void> {
-      const blockNumber = await this.indexer.tip();
-      console.log(blockNumber);    
-      this.socket.emit("order-change", blockNumber);  
+      // link https://github.com/DirtyHairy/async-mutex
+      const release = await this.mutex.acquire();
+      try {
+        const blockNumber = await this.indexer.tip();
+        if(this.blockNumber === blockNumber) {
+          return;
+        }
+        
+        this.socket.emit("order-change", blockNumber);  
+      } finally {
+        release();
+      }
     }
 
     async subscribe(): Promise<void> {

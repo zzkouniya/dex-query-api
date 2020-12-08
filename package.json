@@ -56,11 +56,12 @@
   },
   "dependencies": {
     "@ckb-lumos/base": "^0.13.3",
-    "@ckb-lumos/indexer": "^0.13.3",
+    "@ckb-lumos/indexer": "^0.14.1",
     "@nervosnetwork/ckb-sdk-core": "^0.37.0",
     "@types/cors": "^2.8.8",
     "@types/morgan": "^1.9.2",
     "@types/socket.io": "^2.1.11",
+    "async-mutex": "^0.2.6",
     "bignumber.js": "^9.0.1",
     "cors": "^2.8.5",
     "dotenv": "^8.2.0",
