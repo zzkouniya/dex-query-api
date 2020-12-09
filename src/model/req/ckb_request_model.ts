@@ -70,6 +70,12 @@ export default class CkbRequestModel {
     return this.type_code_hash && this.type_hash_type && this.type_args;
   }
 
+  validTypeScriptParams(): boolean {
+    if(!this.type_code_hash && (this.type_hash_type || this.type_args)) return true;
+    if(!this.type_hash_type && (this.type_code_hash || this.type_args)) return true;
+    if((this.type_code_hash || this.type_hash_type) && !this.type_args) return true;
+  }
+
   lockScript(): Script {
     const lockScript: Script = {
       code_hash: this.lock_code_hash,
