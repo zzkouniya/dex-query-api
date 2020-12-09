@@ -106,6 +106,11 @@ export default class CkbTransactionWithStatusModelWrapper {
       BigInt(0)
     );
 
+    console.log(inputAmount);
+    console.log(outputAmount);
+    
+    
+
     return inputAmount - outputAmount;
   }
 
