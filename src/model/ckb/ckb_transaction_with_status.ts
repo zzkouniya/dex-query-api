@@ -79,8 +79,8 @@ export default class CkbTransactionWithStatusModelWrapper {
       );
 
     const fee = this.getFee(inputTransactions);
-
-    return outputAmount - (inputAmount + fee);
+ 
+    return outputAmount - (inputAmount - fee);
   }
 
   public getFee(
