@@ -46,7 +46,6 @@ export const ckbTx: CkbTransactionWithStatusModel = {
   
 }
 
-
 export const preCkbTx: CkbTransactionWithStatusModel = {
   transaction: {
     cellDeps: [],
@@ -204,3 +203,76 @@ export const preSudtTx: CkbTransactionWithStatusModel = {
     status: 'committed'
   }
 }
+
+export const sudtTxList = 
+  {
+    transaction: {
+      cell_deps: [],
+      hash: 'hash1',
+      header_deps: [],
+      inputs: [
+        {
+          previous_output: {
+            index: '0x0',
+            tx_hash: 'hash0'
+          },
+          since: '0x0'
+        },
+        {
+          previous_output: {
+            index: '0x1',
+            tx_hash: 'hash0'
+          },
+          since: '0x0'
+        }
+      ],
+      outputs: [ 
+        {
+          lock: {
+            "args": "0x252dae0a4b9d9b80f504f6418acd2d364c0c59cd",
+            "codeHash": "0x58c5f491aba6d61678b7cf7edf4910b1f5e00ec0cde2f42e0abb4fd9aff25a62",
+            "hashType": "type"
+          },
+          type: {
+            "args": "0x6fe3733cd9df22d05b8a70f7b505d0fb67fb58fb88693217135ff5079713e902",
+            "codeHash": "0xc5e5dcf215925f7ef4dfaf5f4b4f105bc321c02776d6e7d52a1db3fcd9d011a4",
+            "hashType": "type"
+          },
+          capacity: `0x${BigInt(18700000000n).toString(16)}`
+        },
+        {
+          lock: {
+            "args": "0x988485609e16d5d5c62be0a4ae12b665fefcb448",
+            "codeHash": "0x58c5f491aba6d61678b7cf7edf4910b1f5e00ec0cde2f42e0abb4fd9aff25a63",
+            "hashType": "type"
+          },
+          type: {
+            "args": "0x6fe3733cd9df22d05b8a70f7b505d0fb67fb58fb88693217135ff5079713e902",
+            "codeHash": "0xc5e5dcf215925f7ef4dfaf5f4b4f105bc321c02776d6e7d52a1db3fcd9d011a4",
+            "hashType": "type"
+          },
+          capacity: `0x${BigInt(18700000000n).toString(16)}`
+        },
+        {
+          lock: {
+            codeHash: '0x58c5f491aba6d61678b7cf7edf4910b1f5e00ec0cde2f42e0abb4fd9aff25a63',
+            hashType: 'type',
+            args: '0x988485609e16d5d5c62be0a4ae12b665fefcb448'
+          },
+          type: null,
+          capacity: `0x${BigInt(1999999995000n).toString(16)}`
+        }
+      ],
+      outputs_data: [ 
+        CkbUtils.formatOrderData(4000000000n, BigInt(1), BigInt(1), false), 
+        CkbUtils.formatOrderData(6000000000n, BigInt(1), BigInt(1), false),
+        '0x' 
+      ],
+      version: '0x0',
+      witnesses: []
+    },
+    tx_status: {
+      block_hash: 'block1',
+      status: 'committed'
+    }
+  }

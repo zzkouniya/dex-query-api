@@ -38,7 +38,7 @@ export default class TxService {
       const txsWithStatus = await this.repository.collectTransactions(
         queryOptions
       );
-      
+
       const requests = [];
       for (const tx of txsWithStatus) {
         const { inputs } = tx.transaction;
