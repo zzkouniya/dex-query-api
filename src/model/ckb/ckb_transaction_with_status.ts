@@ -77,10 +77,8 @@ export default class CkbTransactionWithStatusModelWrapper {
         (total, cell) => total + BigInt(cell.capacity),
         BigInt(0)
       );
-
-    const fee = this.getFee(inputTransactions);
  
-    return outputAmount - (inputAmount - fee);
+    return outputAmount - inputAmount;
   }
 
   public getFee(
