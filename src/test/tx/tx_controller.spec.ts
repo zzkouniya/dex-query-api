@@ -188,7 +188,7 @@ describe('Tx controller', () => {
           res.json.should.have.been.calledWith({
             status: 'committed',
             transaction_fee: '1',
-            amount: '-200',
+            amount: '-201',
             to: '0x252dae0a4b9d9b80f504f6418acd2d364c0c59cd',
             from: '0x988485609e16d5d5c62be0a4ae12b665fefcb448',
             hash: 'hash1',
