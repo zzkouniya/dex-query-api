@@ -29,7 +29,7 @@ export default class TxController {
   }
 
   @ApiOperationGet({
-    path: "sudt-transactions",
+    path: "transactions",
     description: "Get sudt transactions",
     summary: "Get sudt transactions",
     parameters: {
@@ -37,19 +37,19 @@ export default class TxController {
         type_code_hash: {
           name: "type_code_hash",
           type: "string",
-          required: true,
+          required: false,
           description: "",
         },
         type_hash_type: {
           name: "type_hash_type",
           type: "string",
-          required: true,
+          required: false,
           description: "",
         },
         type_args: {
           name: "type_args",
           type: "string",
-          required: true,
+          required: false,
           description: "",
         },
         lock_code_hash: {
@@ -106,7 +106,7 @@ export default class TxController {
     try {
       const txs = await this.txService.getSudtTransactions(reqParam);
 
-      res.status(200).json(txs);
+      res.status(200).json(txs.sort((t1, t2) => parseInt(t1.timestamp) - parseInt(t2.timestamp)).reverse());
     } catch (err) {
       console.error(err);
       res.status(500).send();
