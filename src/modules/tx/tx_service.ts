@@ -19,8 +19,9 @@ export default class TxService {
   ) {}
 
   async getSudtTransactions(reqParam: CkbRequestModel): Promise<Array<{
-    hash: string
-    income: string
+    hash: string,
+    income: string,
+    timestamp: string
   }>> {
     const queryOptions: QueryOptions = {};
 
@@ -71,29 +72,44 @@ export default class TxService {
           const tx = inputTxsMap.get(tx_hash);
           if (tx) {
             const cell = tx.ckbTransactionWithStatus.transaction.outputs[inputIndex];
-            if (
-              cell &&
-              this.isSameTypeScript(cell.lock, <Script>queryOptions.lock) &&
-              this.isSameTypeScript(cell.type, <Script>queryOptions.type)
-            ) {
-              const data = tx.ckbTransactionWithStatus.transaction.outputsData[inputIndex];
-              const amount = CkbUtils.parseAmountFromLeHex(data);
-              inputSum += amount;
+            if(reqParam.isValidTypeScript()) {
+              if (
+                cell &&
+                this.isSameTypeScript(cell.lock, <Script>queryOptions.lock) &&
+                this.isSameTypeScript(cell.type, <Script>queryOptions.type)
+              ) {
+                const data = tx.ckbTransactionWithStatus.transaction.outputsData[inputIndex];
+                const amount = CkbUtils.parseAmountFromLeHex(data);
+                inputSum += amount;
+              }
+            } else {
+              if(this.isSameTypeScript(cell.lock, <Script>queryOptions.lock)) {
+                inputSum += BigInt(parseInt(cell.capacity));
+              }
             }
+            
           }
         }
 
         for (let j = 0; j < outputs.length; j++) {
           const output = outputs[j];
-          if (
-            this.isSameTypeScript(output.type, <Script>queryOptions.type) &&
-            this.isSameTypeScript(output.lock, <Script>queryOptions.lock)
-          ) {
-            const amount = CkbUtils.parseAmountFromLeHex(outputs_data[j]);        
-            outputSum += amount;
+          if(reqParam.isValidTypeScript()) {
+            if (
+              this.isSameTypeScript(output.type, <Script>queryOptions.type) &&
+              this.isSameTypeScript(output.lock, <Script>queryOptions.lock)
+            ) {
+              const amount = CkbUtils.parseAmountFromLeHex(outputs_data[j]);        
+              outputSum += amount;
+            }
+          } else {
+            if(this.isSameTypeScript(output.lock, <Script>queryOptions.lock)) {
+              outputSum += BigInt(parseInt(output.capacity, 16));
+            }
+            
           }
-        }
 
+        }
+        
         const income = outputSum - inputSum;        
 
         if (income.toString() !== "0") {
