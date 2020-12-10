@@ -116,7 +116,7 @@ export default class OrdersHistoryCalculate {
       try {
         turnoverRate = new BigNumber(tradedAmount.toString()).multipliedBy(100).div(firstOrderCellData.orderAmount.toString()).div(100);
         if(turnoverRate.toFixed(3, 1) === '0.999') {
-          turnoverRate = turnoverRate.toFixed(0);
+          turnoverRate = 1;
         } else {
           turnoverRate = turnoverRate.toFixed(2, 1)
         }
