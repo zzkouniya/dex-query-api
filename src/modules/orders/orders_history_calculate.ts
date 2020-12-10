@@ -115,7 +115,7 @@ export default class OrdersHistoryCalculate {
       let turnoverRate;
       try {
         turnoverRate = new BigNumber(tradedAmount.toString()).multipliedBy(100).div(firstOrderCellData.orderAmount.toString()).div(100);
-        if(turnoverRate.toFixed(3, 1) === '0.999') {
+        if(Number(turnoverRate.toFixed(3, 1)) >= 0.999) {
           turnoverRate = 1;
         } else {
           turnoverRate = turnoverRate.toFixed(2, 1)
@@ -149,7 +149,7 @@ export default class OrdersHistoryCalculate {
       const isLive = !this.txsByInputOutPoint.get(inputOutPoint);
 
       let status;
-      if (orderHistory.turnover_rate === '1.00') {
+      if (orderHistory.turnover_rate === 1) {
         status = "completed";
         if (!isLive) {
           status = "claimed";
