@@ -50,10 +50,8 @@ export default class CellsSerive {
 
 
   async cacheCells(cells: OutPoint[]): Promise<void> {
-    cells.forEach(x => {
-      console.log(x.tx_hash.concat(":").concat(x.index));
-      
-      this.cache.set(x.tx_hash.concat(":").concat(x.index))
+    cells.forEach(x => {   
+      this.cache.set(this.getCacheKey(x));
     })
   }
 
@@ -105,7 +103,7 @@ export default class CellsSerive {
         continue;
       }
 
-      if(await this.cache.exists(cell.out_point.tx_hash.concat(":").concat(cell.out_point.index))) {
+      if(await this.cache.exists(this.getCacheKey(cell.out_point))) {
         continue;
       }
 
@@ -145,7 +143,7 @@ export default class CellsSerive {
         continue;
       }
 
-      if(await this.cache.exists(cell.out_point.tx_hash.concat(":").concat(cell.out_point.index))) {
+      if(await this.cache.exists(this.getCacheKey(cell.out_point))) {
         continue;
       }
 
@@ -172,4 +170,7 @@ export default class CellsSerive {
     );
   }
 
+  private getCacheKey(outPoint: OutPoint): string {
+    return outPoint.tx_hash.concat(":").concat(outPoint.index);
+  }
 }
