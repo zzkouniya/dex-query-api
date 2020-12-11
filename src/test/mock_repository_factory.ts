@@ -1,6 +1,6 @@
-import { Cell, Script, TransactionWithStatus } from '@ckb-lumos/base';
+import { Cell, QueryOptions, Script, TransactionWithStatus } from '@ckb-lumos/base';
+import { TransactionCollector } from '@ckb-lumos/indexer';
 import sinon from 'sinon';
-import { QueryOptions } from 'winston';
 import { DexOrderData } from '../component';
 import CkbTransactionWithStatusModelWrapper from '../model/ckb/ckb_transaction_with_status';
 import { ckb_methons } from '../modules/ckb/ckb_service';
@@ -15,6 +15,10 @@ export class MockRepositoryFactory {
 }
 
 export class MockRepository implements DexRepository {
+  getCollectTransactions(queryOptions: QueryOptions): TransactionCollector {
+    console.log(queryOptions + " is mock");
+    return null;
+  }
 
   tip(): Promise<number> {
     return null;
@@ -57,11 +61,11 @@ export class MockRepository implements DexRepository {
     return sinon.stub(this, 'tip');  
   }
 
-  mockGetCollectCells(): sinon.SinonStub<any[], any> | sinon.SinonStub<unknown[], unknown> {
+  mockCollectCells(): sinon.SinonStub<any[], any> | sinon.SinonStub<unknown[], unknown> {
     return sinon.stub(this, 'collectCells');  
   }
 
-  mockGetCollectTransactions(): sinon.SinonStub<any[], any> | sinon.SinonStub<unknown[], unknown> {
+  mockCollectTransactions(): sinon.SinonStub<any[], any> | sinon.SinonStub<unknown[], unknown> {
     return sinon.stub(this, 'collectTransactions');  
   }
 
@@ -83,5 +87,9 @@ export class MockRepository implements DexRepository {
 
   mockGetBlockTimestampByHash(): sinon.SinonStub<any[], any> | sinon.SinonStub<unknown[], unknown> {
     return sinon.stub(this, 'getBlockTimestampByHash');  
+  }
+
+  mockGetCollectTransactions(): sinon.SinonStub<any[], any> | sinon.SinonStub<unknown[], unknown> {
+    return sinon.stub(this, 'getCollectTransactions');  
   }
 }

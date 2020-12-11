@@ -28,6 +28,15 @@ export default class IndexerWrapper implements IndexerService {
       console.log("indexer tip block", parseInt(block_number, 16));
     }, 5000);
   }
+  getCollectTransactions(queryOptions: QueryOptions): TransactionCollector {
+    const transactionCollector = new TransactionCollector(
+      this.indexer,
+      queryOptions
+    );
+
+    return transactionCollector;
+
+  }
 
   async tip(): Promise<number> {
     const { block_number } = await this.indexer.tip();
@@ -75,6 +84,7 @@ export default class IndexerWrapper implements IndexerService {
       },
     );
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     for await (const { tx_status, transaction } of transactionCollector.collect() as any) {
 
       if (tx_status.status === 'committed') {

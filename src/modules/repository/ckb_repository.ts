@@ -8,6 +8,7 @@ import CkbService from '../ckb/ckb_service';
 import { DexOrderData } from '../../component';
 import { ckb_methons } from '../ckb/ckb_service';
 import CkbTransactionWithStatusModelWrapper from '../../model/ckb/ckb_transaction_with_status';
+import { TransactionCollector } from '@ckb-lumos/indexer';
 
 @injectable()
 export default class CkbRepository implements DexRepository {
@@ -18,6 +19,10 @@ export default class CkbRepository implements DexRepository {
     @inject(new LazyServiceIdentifer(() => modules[CkbService.name]))
     private ckbService: CkbService
   ) {}
+  
+  getCollectTransactions(queryOptions: QueryOptions): TransactionCollector {
+    return this.indexer.getCollectTransactions(queryOptions);
+  }
 
   async tip(): Promise<number> {
     const block_number = await this.indexer.tip();

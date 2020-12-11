@@ -16,6 +16,7 @@ import { Cell, QueryOptions, TransactionWithStatus } from '@ckb-lumos/base';
 import { IndexerService } from '../modules/indexer/indexer_service';
 import CellsSerive from '../modules/cells/cells_service';
 import CellsController from '../modules/cells/cells_controller';
+import { TransactionCollector } from '@ckb-lumos/indexer';
 
 describe('Cells controller', () => {
   let req;
@@ -77,21 +78,26 @@ describe('Cells controller', () => {
 
   beforeEach(() => {
     class MockIndex implements IndexerService {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      getCollectTransactions(queryOptions: QueryOptions): TransactionCollector {
+        return null;
+      }
 
       tip(): Promise<number> {
         return null;
       }
 
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       collectCells(queryOptions: QueryOptions): Promise<Cell[]> {
-        console.log(queryOptions + " is mock");
         return null;
       }
+
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       collectTransactions(queryOptions: QueryOptions): Promise<TransactionWithStatus[]> {
-        console.log(queryOptions + " is mock");
         return null;
       }
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       getLastMatchOrders(type) {
-        console.log(type + " is mock");
         return null;
       }
   

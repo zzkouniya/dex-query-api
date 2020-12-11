@@ -17,6 +17,7 @@ import { IndexerService } from '../modules/indexer/indexer_service';
 import BalanceService from '../modules/balance/balance_service';
 import BalanceController from '../modules/balance/balance_controller';
 import { contracts } from "../config";
+import { TransactionCollector } from '@ckb-lumos/indexer';
 
 describe('Balance controller', () => {
   let req;
@@ -25,14 +26,6 @@ describe('Balance controller', () => {
   let controller;
   let mock_cells;
 
-  // const stubbedConfig = {
-  //   contracts: {
-  //     orderLock: {
-  //       code_hash: contracts.orderLock.codeHash,
-  //       hash_type: contracts.orderLock.hashType,
-  //     },
-  //   },
-  // };
 
   const generateCell = (capacity, data, lock, type, txHash = '0x1') => {
     const cell: Cell = {
@@ -97,19 +90,25 @@ describe('Balance controller', () => {
 
   beforeEach(() => {
     class MockIndex implements IndexerService {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      getCollectTransactions(queryOptions: QueryOptions): TransactionCollector {
+        return null;
+      }
       tip(): Promise<number> {
         return null;
       }
-      collectCells(queryOptions: QueryOptions): Promise<Cell[]> {
-        console.log(queryOptions + " is mock");      
+
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      collectCells(queryOptions: QueryOptions): Promise<Cell[]> { 
         return null;
       }
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       collectTransactions(queryOptions: QueryOptions): Promise<TransactionWithStatus[]> {
-        console.log(queryOptions + " is mock");
         return null;
       }
+
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       getLastMatchOrders(type) {
-        console.log(type + " is mock");
         return null;
       }
   

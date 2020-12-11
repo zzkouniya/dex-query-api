@@ -64,7 +64,7 @@ describe('Tx controller', () => {
             .withArgs("block1")
             .resolves(1);
   
-          mock_repository.mockGetCollectTransactions()
+          mock_repository.mockCollectTransactions()
             .resolves([sudtTxList]);
           mock_repository.mockGetTransactions()
             .resolves([new CkbTransactionWithStatusModelWrapper(preSudtTx)]);

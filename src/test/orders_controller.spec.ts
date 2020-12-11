@@ -16,10 +16,7 @@ import OrdersHistoryService from '../modules/orders/orders_history_service';
 import OrderController from '../modules/orders/orders_controller';
 
 import { contracts } from "../config";
-import { QueryOptions, Cell, TransactionWithStatus } from '@ckb-lumos/base';
-import { DexRepository } from '../modules/repository/dex_repository';
-import CkbTransactionWithStatusModelWrapper from '../model/ckb/ckb_transaction_with_status';
-import { ckb_methons } from '../modules/ckb/ckb_service';
+import { MockRepository, MockRepositoryFactory } from './mock_repository_factory';
 
 
 describe('Orders controller', () => {
@@ -28,9 +25,7 @@ describe('Orders controller', () => {
   let next;
   let controller;
   let orders;
-  let mock_cell;
-  let mock_transaction;
-  let mock_last_match_orders;
+  let mock_repository: MockRepository;
 
   beforeEach(() => {
     orders = [
@@ -140,53 +135,11 @@ describe('Orders controller', () => {
       },
     ];
 
-    class MockRepository implements DexRepository {
+    mock_repository = MockRepositoryFactory.getInstance();
 
-      tip(): Promise<number> {
-        return null;
-      }
-      collectCells(queryOptions: QueryOptions): Promise<Cell[]> {
-        console.log(queryOptions + " is mock");
-        return null;
-      }
-      collectTransactions(queryOptions: QueryOptions): Promise<TransactionWithStatus[]> {
-        console.log(queryOptions + " is mock");
-        return null;
-      }
-      getLastMatchOrders(type) {
-        console.log(type + " is mock");
-        return null;
-      }
 
-      getTransactions(ckbReqParams: [method: ckb_methons, ...rest: []][]): Promise<Array<CkbTransactionWithStatusModelWrapper>> {
-        console.log(ckbReqParams + " is mock");
-        return null;
-      }
-
-      getTransactionByHash(txHash: string): Promise<CkbTransactionWithStatusModelWrapper> {
-        console.log(txHash + " is mock");
-        return null;
-      }
-  
-      getblockNumberByBlockHash(blockHash: string): Promise<number> {
-        console.log(blockHash + " is mock");
-        return null;
-      }
-  
-      async getBlockTimestampByHash(blockHash: string): Promise<string> {
-        console.log(blockHash + " is mock");
-        return "111";
-      }
-
-    }
-
-    const mock: MockRepository = new MockRepository();
-    mock_cell = sinon.stub(mock, 'collectCells');  
-    mock_transaction = sinon.stub(mock, 'collectTransactions');  
-    mock_last_match_orders = sinon.stub(mock, 'getLastMatchOrders');
-    
-    const service = new OrdersService(mock);
-    const historyService = new OrdersHistoryService(mock);
+    const service = new OrdersService(mock_repository);
+    const historyService = new OrdersHistoryService(mock_repository);
     controller = new OrderController(service, historyService);
 
     req = mockReq();
@@ -197,7 +150,7 @@ describe('Orders controller', () => {
   describe('#getBestPrice()', () => {
     describe('query best ask price', () => {
       beforeEach(async () => {
-        mock_cell.resolves(orders);
+        mock_repository.mockCollectCells().resolves(orders);
 
         req.query.is_bid = false;
         await controller.getBestPrice(req, res, next);
@@ -210,7 +163,7 @@ describe('Orders controller', () => {
     });
     describe('query best bid price', () => {
       beforeEach(async () => {
-        mock_cell.resolves(orders);
+        mock_repository.mockCollectCells().resolves(orders);
 
         req.query.is_bid = true;
         await controller.getBestPrice(req, res, next);
@@ -258,7 +211,7 @@ describe('Orders controller', () => {
         },
       ];
       beforeEach(async () => {
-        mock_cell.resolves(fakeOrders);
+        mock_repository.mockCollectCells().resolves(fakeOrders);
 
         req.query.is_bid = false;
         await controller.getBestPrice(req, res, next);
@@ -304,7 +257,7 @@ describe('Orders controller', () => {
           },
         ];
         beforeEach(async () => {
-          mock_cell.resolves(fakeOrders);
+          mock_repository.mockCollectCells().resolves(fakeOrders);
 
           req.query.is_bid = true;
           await controller.getBestPrice(req, res, next);
@@ -343,7 +296,7 @@ describe('Orders controller', () => {
           },
         ];
         beforeEach(async () => {
-          mock_cell.resolves(fakeOrders);
+          mock_repository.mockCollectCells().resolves(fakeOrders);
 
           req.query.is_bid = false;
           await controller.getBestPrice(req, res, next);
@@ -459,7 +412,7 @@ describe('Orders controller', () => {
         });
         describe('when order cell is live', () => {
           beforeEach(async () => {
-            mock_transaction.resolves(transactions);
+            mock_repository.mockCollectTransactions().resolves(transactions);
             await controller.getOrderHistory(req, res, next);
           });
           it('returns order history', () => {
@@ -518,7 +471,7 @@ describe('Orders controller', () => {
                   status: 'committed'
                 }
               });
-              mock_transaction.resolves(transactions);
+              mock_repository.mockCollectTransactions().resolves(transactions);
               await controller.getOrderHistory(req, res, next);
             });
             it('returns order history', () => {
@@ -678,7 +631,7 @@ describe('Orders controller', () => {
           });
           describe('when order cell is live', () => {
             beforeEach(async () => {
-              mock_transaction.resolves(transactions);
+              mock_repository.mockCollectTransactions().resolves(transactions);
               await controller.getOrderHistory(req, res, next);
             });
             it('returns order history', () => {
@@ -843,7 +796,7 @@ describe('Orders controller', () => {
             req.query.type_args = typeScript.args;
             req.query.order_lock_args = orderLockArgs;
 
-            mock_transaction.resolves(transactions);
+            mock_repository.mockCollectTransactions().resolves(transactions);
             await controller.getOrderHistory(req, res, next);
           });
           it('returns order history', () => {
@@ -955,7 +908,7 @@ describe('Orders controller', () => {
         req.query.type_hash_type = typeScript.hash_type;
         req.query.type_args = typeScript.args;
         req.query.order_lock_args = orderLockArgs;
-        mock_transaction.resolves(transactions);
+        mock_repository.mockCollectTransactions().resolves(transactions);
 
         await controller.getOrderHistory(req, res, next);
       });
@@ -1019,7 +972,7 @@ describe('Orders controller', () => {
         req.query.type_hash_type = typeScript.hash_type;
         req.query.type_args = typeScript.args;
         req.query.order_lock_args = orderLockArgs;
-        mock_transaction.resolves(transactions);
+        mock_repository.mockCollectTransactions().resolves(transactions);
 
         await controller.getOrderHistory(req, res, next);
       });
@@ -1058,7 +1011,7 @@ describe('Orders controller', () => {
       req.query.type_code_hash = TYPE_SCRIPT.code_hash
       req.query.type_hash_type = TYPE_SCRIPT.hash_type
       req.query.type_args = TYPE_SCRIPT.args;
-      mock_cell.resolves(orders)
+      mock_repository.mockCollectCells().resolves(orders)
     })
 
     it('should return bid orders and ask orders', async () => {
@@ -1089,7 +1042,7 @@ describe('Orders controller', () => {
 
     describe('when orders are found', () => {
       beforeEach(() => {
-        mock_last_match_orders.resolves({
+        mock_repository.mockGetLastMatchOrders().resolves({
           ask_orders: [
             { sUDTAmount: 9775000006n, orderAmount: 0n, price: 20000000000n, isBid: false },
             { sUDTAmount: 9775000006n, orderAmount: 0n, price: 10000000000n, isBid: false }
@@ -1110,7 +1063,7 @@ describe('Orders controller', () => {
 
     describe('when orders are not found', () => {
       beforeEach(() => {
-        mock_last_match_orders.resolves(null);
+        mock_repository.mockGetLastMatchOrders().resolves(null);
       })
 
       it('should return bid orders and ask orders', async () => {
