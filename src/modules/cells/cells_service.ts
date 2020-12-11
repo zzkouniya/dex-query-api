@@ -6,15 +6,16 @@ import { CkbUtils } from "../../component";
 import CellsAmountRequestModel from "./cells_amount_request_model";
 import { IndexerService } from '../indexer/indexer_service';
 import { OutPoint } from '../orders/orders_history_model';
-import CellCache from '../cache/cells_cache';
+import RedisCache from '../cache/redis_cache';
+import { DexCache } from '../cache/dex_cache';
 
 @injectable()
 export default class CellsSerive {
   constructor(
     @inject(new LazyServiceIdentifer(() => modules[IndexerWrapper.name]))
     private indexer: IndexerService,
-    @inject(new LazyServiceIdentifer(() => modules[CellCache.name]))
-    private cache: CellCache,
+    @inject(new LazyServiceIdentifer(() => modules[RedisCache.name]))
+    private cache: DexCache,
   ) {}
 
   async getLiveCells(reqParam: CellsAmountRequestModel): Promise<Array<Cell>> {

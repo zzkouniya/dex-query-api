@@ -10,12 +10,13 @@ import sinonStubPromise from "sinon-stub-promise";
 sinonStubPromise(sinon);
 
 import { mockReq, mockRes } from "sinon-express-mock";
-import { CkbUtils } from "../component/formatter";
+import { CkbUtils } from "../../component/formatter";
 import { Cell, QueryOptions, TransactionWithStatus } from '@ckb-lumos/base';
 
-import { IndexerService } from '../modules/indexer/indexer_service';
-import CellsSerive from '../modules/cells/cells_service';
-import CellsController from '../modules/cells/cells_controller';
+import { IndexerService } from '../../modules/indexer/indexer_service';
+import CellsSerive from '../../modules/cells/cells_service';
+import CellsController from '../../modules/cells/cells_controller';
+import { MockCache, MockCacheFactory } from '../mock_cache_factory';
 
 describe('Cells controller', () => {
   let req;
@@ -23,6 +24,7 @@ describe('Cells controller', () => {
   let next;
   let controller;
   let mock_cells;
+  let mock_cache: MockCache;
 
   const generateCell = (capacity, data, lock, type, txHash = '0x1', index = '0x0') => {
     const cell: Cell = {
@@ -96,10 +98,12 @@ describe('Cells controller', () => {
       }
   
     }
+
+    mock_cache = MockCacheFactory.getInstance();
   
     const mock: MockIndex = new MockIndex();
     mock_cells = sinon.stub(mock, 'collectCells');  
-    const service = new CellsSerive(mock, null);
+    const service = new CellsSerive(mock, mock_cache);
     controller = new CellsController(service);
     req = mockReq();
     res = mockRes();
@@ -378,6 +382,46 @@ describe('Cells controller', () => {
         });
       });
     });
+
+    describe('using cache', () => {
+      describe('filter cell in cache', () => {
+        beforeEach(async () => {
+          req.body = {
+            lock_code_hash: lock.code_hash,
+            lock_hash_type: lock.hash_type,
+            lock_args: lock.args,
+            ckb_amount: '1'
+          };
+        
+          mock_cells.resolves(clone([
+            generateCell(30, null, lock, null, "hash1", "0x0"),
+            generateCell(10, null, lock, null, "hash2", "0x0"),
+            generateCell(20, null, lock, null, "hash3", "0x0"),
+          ]));
+
+          mock_cache.mockExists().withArgs("hash2:0x0").resolves(true);
+
+          await controller.postLiveCellsForAmount(req, res, next);
+        });
+        it('throws error', async () => {
+          res.status.should.have.been.calledWith(200);
+          res.json.should.have.been.calledWith([{
+            block_hash: "0xfda1e2e23f258cf92e3496a0c2c684db38e57d6f85467fdd2976f0e29cb8ef40",
+            block_number: "0xf",
+            cell_output: {
+              capacity: "0x14",
+              lock: {
+                args: "0x2946e43211d00ab3791ab1d8b598c99643c39649",
+                code_hash: "0x04878826e4bf143a93eb33cb298a46f96e4014533d98865983e048712da65160",
+                hash_type: "data"
+              }
+            },
+            data: "0x",
+            out_point: { index: "0x0", tx_hash: "hash3" }
+          }]);
+        });
+      });
+    })
 
     describe('failure cases', () => {
       describe('when both ckb_amount and sudt_amount query parameters are specified', () => {

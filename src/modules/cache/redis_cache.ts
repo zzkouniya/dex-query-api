@@ -1,9 +1,10 @@
 import { injectable } from 'inversify';
 import redis from 'redis';
 import { redisConfiguration } from "../../config"
+import { DexCache } from './dex_cache';
 
 @injectable()
-export default class CellCache {
+export default class RedisCache implements DexCache {
     private client: redis.RedisClient;
     constructor() {
       this.client = redis.createClient(<number>redisConfiguration.port, redisConfiguration.address);
