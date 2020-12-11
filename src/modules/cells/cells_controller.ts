@@ -11,6 +11,7 @@ import * as express from "express";
 import { DexLogger } from "../../component";
 import CellsService from "./cells_service";
 import CellsAmountRequestModel from "./cells_amount_request_model";
+import { OutPoint } from '@ckb-lumos/base';
 
 @ApiPath({
   path: "/",
@@ -262,6 +263,37 @@ export default class CellsController {
       console.error(err);
       res.status(500).send();
     }
+  }
+
+  @ApiOperationPost({
+    path: "spent-cells",
+    description: "Cache spent cells",
+    summary: "Cache spent cells",
+    parameters: {
+      body: {
+        description: "Cache spent cells",
+        required: true,
+      },
+    },
+    responses: {
+      200: {
+        description: "Success",
+        type: SwaggerDefinitionConstant.Response.Type.ARRAY,
+        // model: "BalanceCkbModel",
+      },
+      400: { description: "Parameters fail" },
+    },
+  })
+  @httpPost("spent-cells")
+  async cacheCells(
+    req: express.Request,
+    res: express.Response
+  ): Promise<void> {
+    const spentCells: OutPoint[] = req.body.spent_cells;
+
+    this.cellsService.cacheCells(spentCells);
+
+    res.status(200);
   }
 
   private isValidScript(codeHash: string, hashType: string, args: string) {

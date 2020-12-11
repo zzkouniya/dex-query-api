@@ -54,10 +54,10 @@ export default class CellsAmountRequestModel {
   })
   sudt_amount?: string;
 
-  @ApiModelProperty({
-    description: "spent_cells",
-    required: true,
-  })
+  // @ApiModelProperty({
+  //   description: "spent_cells",
+  //   required: true,
+  // })
   spent_cells?: Array<OutPoint>;
 
 }

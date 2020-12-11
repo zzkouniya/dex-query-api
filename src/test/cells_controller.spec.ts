@@ -99,7 +99,7 @@ describe('Cells controller', () => {
   
     const mock: MockIndex = new MockIndex();
     mock_cells = sinon.stub(mock, 'collectCells');  
-    const service = new CellsSerive(mock);
+    const service = new CellsSerive(mock, null);
     controller = new CellsController(service);
     req = mockReq();
     res = mockRes();

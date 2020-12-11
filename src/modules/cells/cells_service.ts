@@ -6,12 +6,15 @@ import { CkbUtils } from "../../component";
 import CellsAmountRequestModel from "./cells_amount_request_model";
 import { IndexerService } from '../indexer/indexer_service';
 import { OutPoint } from '../orders/orders_history_model';
+import CellCache from '../cache/cells_cache';
 
 @injectable()
 export default class CellsSerive {
   constructor(
     @inject(new LazyServiceIdentifer(() => modules[IndexerWrapper.name]))
-    private indexer: IndexerService
+    private indexer: IndexerService,
+    @inject(new LazyServiceIdentifer(() => modules[CellCache.name]))
+    private cache: CellCache,
   ) {}
 
   async getLiveCells(reqParam: CellsAmountRequestModel): Promise<Array<Cell>> {
@@ -30,11 +33,11 @@ export default class CellsSerive {
 
     if (reqParam.ckb_amount) {
       const ckb = BigInt(reqParam.ckb_amount);
-      cells = this.collectCellsByCKBAmount(cells, ckb, reqParam.spent_cells);
+      cells = await this.collectCellsByCKBAmount(cells, ckb, reqParam.spent_cells);
     }
     if (reqParam.sudt_amount) {
       const sudt = BigInt(reqParam.sudt_amount);
-      cells = this.collectCellsBySudtAmount(cells, sudt, reqParam.spent_cells);
+      cells = await this.collectCellsBySudtAmount(cells, sudt, reqParam.spent_cells);
     }
 
     if (!cells.length) {
@@ -42,6 +45,15 @@ export default class CellsSerive {
     }
 
     return cells;
+  }
+
+
+  async cacheCells(cells: OutPoint[]): Promise<void> {
+    cells.forEach(x => {
+      console.log(x.tx_hash.concat(":").concat(x.index));
+      
+      this.cache.set(x.tx_hash.concat(":").concat(x.index))
+    })
   }
 
   private buildQueryParams(reqParam: CellsAmountRequestModel): QueryOptions {
@@ -75,7 +87,7 @@ export default class CellsSerive {
     return queryOptions;
   }
 
-  private collectCellsBySudtAmount(cells: Cell[], amount: bigint, spentCells: Array<OutPoint>) {    
+  private async collectCellsBySudtAmount(cells: Cell[], amount: bigint, spentCells: Array<OutPoint>) {    
     
     cells.sort((a, b) => {      
       const aSudtAmount = CkbUtils.readBigUInt128LE(a.data);
@@ -89,6 +101,10 @@ export default class CellsSerive {
     let summedAmount = BigInt(0);
     for (const cell of cells) {
       if (Array.isArray(spentCells) && spentCells.some((spentCell) => this.isSameCell(cell, spentCell))) {
+        continue;
+      }
+
+      if(await this.cache.exists(cell.out_point.tx_hash.concat(":").concat(cell.out_point.index))) {
         continue;
       }
 
@@ -110,7 +126,7 @@ export default class CellsSerive {
     return collectedCells;
   }
 
-  private collectCellsByCKBAmount(cells: Cell[], amount: bigint, spentCells: Array<OutPoint>) {
+  private async collectCellsByCKBAmount(cells: Cell[], amount: bigint, spentCells: Array<OutPoint>) {
     const filtered = cells.filter((cell) => cell.data === "0x");
 
     filtered.sort((a, b) => {
@@ -124,12 +140,14 @@ export default class CellsSerive {
     const collectedCells = [];
     let summedAmount = BigInt(0);
     for (const cell of filtered) {
-      if (
-        Array.isArray(spentCells) &&
-        spentCells.some((spentCell) => this.isSameCell(cell, spentCell))
-      ) {
+      if (Array.isArray(spentCells) && spentCells.some((spentCell) => this.isSameCell(cell, spentCell))) {
         continue;
       }
+
+      if(await this.cache.exists(cell.out_point.tx_hash.concat(":").concat(cell.out_point.index))) {
+        continue;
+      }
+
       summedAmount += BigInt(cell.cell_output.capacity);
       collectedCells.push(cell);
 
