@@ -1,23 +1,21 @@
 import { inject, injectable, LazyServiceIdentifer } from "inversify";
 import { QueryOptions, Script } from "@ckb-lumos/base";
 
-import IndexerWrapper from "../indexer/indexer";
 import { modules } from "../../ioc";
 import CkbRequestModel from "../../model/req/ckb_request_model";
 import { CkbUtils } from "../../component";
 
-import CkbService from "../ckb/ckb_service";
 import CkbCellScriptModel from "../../model/ckb/ckb_cell_script";
 import TransactionDetailsModel from './transaction_details_model';
+import CkbRepository from '../repository/ckb_repository';
+import { DexRepository } from '../repository/dex_repository';
 
 @injectable()
 export default class TxService {
 
   constructor(
-    @inject(new LazyServiceIdentifer(() => modules[IndexerWrapper.name]))
-    private indexer: IndexerWrapper,
-    @inject(new LazyServiceIdentifer(() => modules[CkbService.name]))
-    private ckbService: CkbService
+    @inject(new LazyServiceIdentifer(() => modules[CkbRepository.name]))
+    private repository: DexRepository
   ) {}
 
   async getSudtTransactions(reqParam: CkbRequestModel): Promise<Array<{
@@ -37,10 +35,10 @@ export default class TxService {
     const txs = [];
 
     try {
-      const txsWithStatus = await this.indexer.collectTransactions(
+      const txsWithStatus = await this.repository.collectTransactions(
         queryOptions
       );
-      
+
       const requests = [];
       for (const tx of txsWithStatus) {
         const { inputs } = tx.transaction;
@@ -48,7 +46,7 @@ export default class TxService {
           requests.push(["getTransaction", input.previous_output.tx_hash]);
         }
       }
-      const inputTxs = await this.ckbService.getTransactions(requests);
+      const inputTxs = await this.repository.getTransactions(requests);
       
       const inputTxsMap = new Map();
       for (const tx of inputTxs) {
@@ -100,7 +98,7 @@ export default class TxService {
 
         if (income.toString() !== "0") {
           const blockHash: string = txWithStatus.tx_status.block_hash;          
-          const timestamp = await this.ckbService.getBlockTimestampByHash(blockHash);
+          const timestamp = await this.repository.getBlockTimestampByHash(blockHash);
         
           txs.push({
             hash,
@@ -122,10 +120,9 @@ export default class TxService {
   ): Promise<TransactionDetailsModel> {
 
     try {
-
-      const tx = await this.ckbService.getTransactionByHash(txHash);
-      if (!tx) {
-        throw { error: "The transaction does not exist!" };
+      const tx = await this.repository.getTransactionByHash(txHash);      
+      if (!tx) {      
+        return null;
       }
 
       const requests = [];
@@ -134,7 +131,7 @@ export default class TxService {
         requests.push(["getTransaction", input.previousOutput.txHash]);
       }
 
-      const inputTransactions = await this.ckbService.getTransactions(requests);
+      const inputTransactions = await this.repository.getTransactions(requests);
     
       const fee = tx.getFee(inputTransactions);
       let amount: bigint;
@@ -155,7 +152,7 @@ export default class TxService {
         amount = tx.getCkbAmountByScript(inputTransactions, lock);
       }
 
-      const blockNumber = await this.ckbService.getblockNumberByBlockHash(tx.ckbTransactionWithStatus.txStatus.blockHash);
+      const blockNumber = await this.repository.getblockNumberByBlockHash(tx.ckbTransactionWithStatus.txStatus.blockHash);
 
       const from = tx.getFromAddress(lock);
       const to = tx.getToAddress(lock);

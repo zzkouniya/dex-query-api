@@ -25,6 +25,10 @@ export default class CkbService {
     const inputTxs = await this.ckbNode.rpc
       .createBatchRequest([["getTransaction", txHash]])
       .exec();
+      
+    if(!inputTxs) {
+      return null;
+    }
 
     return new CkbTransactionWithStatusModelWrapper(inputTxs[0]);
   }

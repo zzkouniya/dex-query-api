@@ -95,9 +95,9 @@ export default class TxController {
       <string>req.query.lock_args
     );
 
-    if (!reqParam.isValidLockScript() && !reqParam.isValidTypeScript()) {
+    if (!reqParam.isValidLockScript() || !reqParam.isValidTypeScript()) {
       res.status(400).json({
-        error: "requires either lock or type script specified as parameters",
+        error: "requires either lock and type script specified as parameters",
       });
 
       return;
@@ -185,18 +185,30 @@ export default class TxController {
       <string>req.query.lock_hash_type,
       <string>req.query.lock_args
     );
-
-    if (!reqParam.isValidLockScript() && !reqParam.isValidTypeScript()) {
+    
+    if (!reqParam.isValidLockScript()) {
       res.status(400).json({
-        error: "requires either lock or type script specified as parameters",
+        error: "requires lock script to be specified as parameters",
+      });
+      return;
+    }
+    
+    if (reqParam.validTypeScriptParams()) {
+      res.status(400).json({
+        error: "requires type script to be specified as parameters",
       });
       return;
     }
     
     try {
-      const result = await this.txService.getTransactionDetailsByHash(reqParam, <string>req.query.tx_hash);
-
-      res.status(200).json(result);
+      const txDetail = await this.txService.getTransactionDetailsByHash(reqParam, <string>req.query.tx_hash);
+      
+      if(txDetail === null) {
+        res.status(400).json({ error: "The transaction does not exist!" });
+        return;
+      }
+      
+      res.status(200).json(txDetail);
     } catch (err) {
       console.error(err);
       res.status(500).send();
