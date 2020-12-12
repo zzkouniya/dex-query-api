@@ -15,10 +15,6 @@ export class MockRepositoryFactory {
 }
 
 export class MockRepository implements DexRepository {
-  getCollectTransactions(queryOptions: QueryOptions): TransactionCollector {
-    console.log(queryOptions + " is mock");
-    return null;
-  }
 
   tip(): Promise<number> {
     return null;
@@ -89,7 +85,4 @@ export class MockRepository implements DexRepository {
     return sinon.stub(this, 'getBlockTimestampByHash');  
   }
 
-  mockGetCollectTransactions(): sinon.SinonStub<any[], any> | sinon.SinonStub<unknown[], unknown> {
-    return sinon.stub(this, 'getCollectTransactions');  
-  }
 }

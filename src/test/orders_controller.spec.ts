@@ -137,7 +137,6 @@ describe('Orders controller', () => {
 
     mock_repository = MockRepositoryFactory.getInstance();
 
-
     const service = new OrdersService(mock_repository);
     const historyService = new OrdersHistoryService(mock_repository);
     controller = new OrderController(service, historyService);

@@ -5,9 +5,11 @@ import { modules } from "../../ioc";
 import { contracts } from "../../config";
 import { CkbUtils, DexOrderCellFormat } from "../../component";
 import BestPriceModel from "./best_price_model";
-import { Cell, HashType } from '@ckb-lumos/base';
+import { Cell, HashType, Script } from '@ckb-lumos/base';
 import { DexRepository } from '../repository/dex_repository';
 import CkbRepository from '../repository/ckb_repository';
+import { DexOrderChainFactory } from '../../model/orders/dex_order_chain_factory';
+
 
 @injectable()
 export default class OrdersService {
@@ -25,24 +27,43 @@ export default class OrdersService {
     bid_orders: {receive: string, price: string}[],
     ask_orders: {receive: string, price: string}[]
   }> {
+    
+    const lock: Script = {
+      code_hash: contracts.orderLock.codeHash,
+      hash_type: contracts.orderLock.hashType,
+      args: "0x",
+    }
 
-    const orderCells = await this.repository.collectCells({
-      type: {
-        code_hash: type_code_hash,
-        hash_type: <HashType>type_hash_type,
-        args: type_args,
-      },
+    const type: Script = {
+      code_hash: type_code_hash,
+      hash_type: <HashType>type_hash_type,
+      args: type_args,
+    }
+
+    const orderTxs = await this.repository.collectTransactions({
+      type: type,
       lock: {
-        script: {
-          code_hash: contracts.orderLock.codeHash,
-          hash_type: contracts.orderLock.hashType,
-          args: "0x",
-        },
+        script: lock,
         argsLen: 'any',
       },
-      order: "desc"
     });
 
+    const factory: DexOrderChainFactory = new DexOrderChainFactory();
+    const orders = factory.getOrderChains(lock, type, orderTxs);
+    const liveCells = orders.filter(x => x.getLiveCell() != null).map(x => {
+      const c = x.getLiveCell();
+      const cell: Cell = {
+        cell_output: {
+          lock: c.cell.lock,
+          type: c.cell.type,
+          capacity: c.cell.capacity
+        },
+        data: c.data
+      }
+      return cell;
+    });
+
+    const orderCells = liveCells;
     const dexOrdersBid = this.filterDexOrder(orderCells, true)
 
     const groupbyPriceBid: Map<string, DexOrderCellFormat[]> = new Map();

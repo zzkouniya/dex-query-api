@@ -28,15 +28,6 @@ export default class IndexerWrapper implements IndexerService {
       console.log("indexer tip block", parseInt(block_number, 16));
     }, 5000);
   }
-  getCollectTransactions(queryOptions: QueryOptions): TransactionCollector {
-    const transactionCollector = new TransactionCollector(
-      this.indexer,
-      queryOptions
-    );
-
-    return transactionCollector;
-
-  }
 
   async tip(): Promise<number> {
     const { block_number } = await this.indexer.tip();

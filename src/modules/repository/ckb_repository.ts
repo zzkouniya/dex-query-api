@@ -19,10 +19,6 @@ export default class CkbRepository implements DexRepository {
     @inject(new LazyServiceIdentifer(() => modules[CkbService.name]))
     private ckbService: CkbService
   ) {}
-  
-  getCollectTransactions(queryOptions: QueryOptions): TransactionCollector {
-    return this.indexer.getCollectTransactions(queryOptions);
-  }
 
   async tip(): Promise<number> {
     const block_number = await this.indexer.tip();

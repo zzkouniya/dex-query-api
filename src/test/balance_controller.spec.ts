@@ -90,10 +90,7 @@ describe('Balance controller', () => {
 
   beforeEach(() => {
     class MockIndex implements IndexerService {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      getCollectTransactions(queryOptions: QueryOptions): TransactionCollector {
-        return null;
-      }
+
       tip(): Promise<number> {
         return null;
       }

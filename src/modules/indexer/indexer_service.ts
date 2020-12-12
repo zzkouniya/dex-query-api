@@ -7,9 +7,7 @@ export interface IndexerService {
     collectCells(queryOptions: QueryOptions): Promise<Array<Cell>>;
 
     collectTransactions(queryOptions: QueryOptions): Promise<Array<TransactionWithStatus>>;
-
-    getCollectTransactions(queryOptions: QueryOptions): TransactionCollector;
-
+    
     getLastMatchOrders(
         type: Script
     ): Promise<Record<'ask_orders' | 'bid_orders', Array<DexOrderData> | null>>
