@@ -62,9 +62,6 @@ export default class OrdersService {
       return cell;
     });
 
-    console.log(CkbUtils.parseOrderData("0x690000000c0000005900000049000000490000001000000030000000310000009bd7e06f3ecf4be0f2fcd2188b23f1b9fcc88e5d4b65a8637b17723bbda3cce80114000000470dcdc5e44064909650113a274b3b36aecb6dc700000000000000000000000000000000"));
-    
-
     const orderCells = liveCells;
 
     const dexOrdersBid = this.filterDexOrder(orderCells, true)     
