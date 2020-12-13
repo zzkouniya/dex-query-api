@@ -1,5 +1,4 @@
 import { Cell, QueryOptions, Script, TransactionWithStatus } from '@ckb-lumos/base';
-import { TransactionCollector } from '@ckb-lumos/indexer';
 import sinon from 'sinon';
 import { DexOrderData } from '../component';
 import CkbTransactionWithStatusModelWrapper from '../model/ckb/ckb_transaction_with_status';

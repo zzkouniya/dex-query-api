@@ -17,7 +17,6 @@ import { IndexerService } from '../modules/indexer/indexer_service';
 import BalanceService from '../modules/balance/balance_service';
 import BalanceController from '../modules/balance/balance_controller';
 import { contracts } from "../config";
-import { TransactionCollector } from '@ckb-lumos/indexer';
 
 describe('Balance controller', () => {
   let req;

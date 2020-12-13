@@ -21,8 +21,7 @@ export default class OrdersService {
   async getOrders(
     type_code_hash: string,
     type_hash_type: string,
-    type_args: string,
-    decimal: string,
+    type_args: string
   ): Promise<{
     bid_orders: {receive: string, price: string}[],
     ask_orders: {receive: string, price: string}[]
@@ -50,7 +49,7 @@ export default class OrdersService {
 
     const factory: DexOrderChainFactory = new DexOrderChainFactory();
     const orders = factory.getOrderChains(lock, type, orderTxs);
-    const liveCells = orders.filter(x => x.getLiveCell() != null).map(x => {
+    const liveCells = orders.filter(x => x.getLiveCell() != null && Number(x.getTurnoverRate().toFixed(3, 1)) < 0.999).map(x => {
       const c = x.getLiveCell();
       const cell: Cell = {
         cell_output: {
@@ -63,28 +62,14 @@ export default class OrdersService {
       return cell;
     });
 
+    console.log(CkbUtils.parseOrderData("0x690000000c0000005900000049000000490000001000000030000000310000009bd7e06f3ecf4be0f2fcd2188b23f1b9fcc88e5d4b65a8637b17723bbda3cce80114000000470dcdc5e44064909650113a274b3b36aecb6dc700000000000000000000000000000000"));
+    
+
     const orderCells = liveCells;
-    const dexOrdersBid = this.filterDexOrder(orderCells, true)
 
-    const groupbyPriceBid: Map<string, DexOrderCellFormat[]> = new Map();
-    this.groupbyPrice(dexOrdersBid).forEach((value, key) => {
-      const price = new BigNumber(key)
-        .div(10 ** 20) // 10 * 10 && 20
-        .times(new BigNumber(10).pow(parseInt(decimal) - 8)) // decimal === sudt decimal
-      
-      const orderAmount = value.map(x => x.orderAmount).reduce((a1, a2) => a1 + a2);
-      const receive = new BigNumber(orderAmount).div(new BigNumber(10).pow(decimal));
-      const pay = price.minus(receive.toFixed(4));
+    const dexOrdersBid = this.filterDexOrder(orderCells, true)     
 
-      if(receive.toFixed(4) === '0.0000' || pay.toFixed(4) === '0.0000') {        
-        return;  
-      } 
-
-      groupbyPriceBid.set(key, value);
-
-    });
-
-
+    const groupbyPriceBid: Map<string, DexOrderCellFormat[]> = this.groupbyPrice(dexOrdersBid);
     const bidOrderPriceMergeKeys: Set<string> = new Set()
     const bidOrderPriceKeys: string[] = []
     dexOrdersBid.forEach(x => {    
@@ -115,26 +100,8 @@ export default class OrdersService {
 
     const dexOrdersAsk = this.filterDexOrder(orderCells, false)
       .sort((c1, c2) => parseInt(c1.price) - parseInt(c2.price))    
-
-    const groupbyPriceAsk: Map<string, DexOrderCellFormat[]> = new Map();
-    this.groupbyPrice(dexOrdersAsk).forEach((value, key) => {
-      const price = new BigNumber(key)
-        .div(10 ** 20) // 10 * 10 && 20
-        .times(new BigNumber(10).pow(parseInt(decimal) - 8)) // decimal === sudt decimal
-      
-      const orderAmount = value.map(x => x.orderAmount).reduce((a1, a2) => a1 + a2);
-      const receive = new BigNumber(orderAmount).div(10 ** 8)
-      const pay = receive.div(price);
-
-      if(receive.toFixed(4) === '0.0000' || pay.toFixed(4) === '0.0000') {        
-        return;  
-      } 
-
-      groupbyPriceAsk.set(key, value);
-
-    });
+    const groupbyPriceAsk: Map<string, DexOrderCellFormat[]> = this.groupbyPrice(dexOrdersAsk);
     
-
     const askOrderPriceMergeKeys: Set<string> = new Set()
     const askOrderPriceKeys: string[] = []
     dexOrdersAsk.forEach(x => {

@@ -16,17 +16,13 @@ export class DexOrderChain {
     return CkbUtils.parseOrderData(this._data);
   }
 
-  getTurnoverRate(): string{
+  getTurnoverRate(): BigNumber{
     try {
       const turnoverRate = new BigNumber(this.getTradedAmount().toString()).multipliedBy(100).div(this.getTopOrder().getOrderData().orderAmount.toString()).div(100);
-      if(Number(turnoverRate.toFixed(3, 1)) >= 0.999) {
-        return "1";
-      } else {
-        return turnoverRate.toFixed(2, 1)
-      }
+      return turnoverRate;
     } catch (error) {
       console.error(error);
-      return "0";
+      return new BigNumber(0);
     }
   }
 

@@ -8,7 +8,6 @@ import CkbService from '../ckb/ckb_service';
 import { DexOrderData } from '../../component';
 import { ckb_methons } from '../ckb/ckb_service';
 import CkbTransactionWithStatusModelWrapper from '../../model/ckb/ckb_transaction_with_status';
-import { TransactionCollector } from '@ckb-lumos/indexer';
 
 @injectable()
 export default class CkbRepository implements DexRepository {

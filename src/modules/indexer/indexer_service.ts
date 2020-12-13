@@ -1,5 +1,4 @@
 import { Cell, QueryOptions, Script, TransactionWithStatus } from '@ckb-lumos/base';
-import { TransactionCollector } from '@ckb-lumos/indexer';
 import { DexOrderData } from '../../component'
 
 export interface IndexerService {

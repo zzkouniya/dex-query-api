@@ -16,7 +16,6 @@ import { Cell, QueryOptions, TransactionWithStatus } from '@ckb-lumos/base';
 import { IndexerService } from '../modules/indexer/indexer_service';
 import CellsSerive from '../modules/cells/cells_service';
 import CellsController from '../modules/cells/cells_controller';
-import { TransactionCollector } from '@ckb-lumos/indexer';
 
 describe('Cells controller', () => {
   let req;
