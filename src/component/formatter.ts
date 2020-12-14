@@ -62,10 +62,6 @@ export class CkbUtils {
     return (buf.readBigUInt64LE(8) << BigInt(64)) + buf.readBigUInt64LE(0);
   }
 
-  static getRequiredDataLength(): number {
-    return 100;
-  } 
-
   static formatOrderCells(orderCells: Cell[]): Array<DexOrderCellFormat> {
     const formattedOrderCells = orderCells.map((orderCell) => {
       const parsedOrderData = this.parseOrderData(orderCell.data);
@@ -132,9 +128,15 @@ export class CkbUtils {
       && output.type.args === type.args
   }
 
-  static roundHalfUp(price: string): string  {
-    
+  static roundHalfUp(price: string): string {
     return new BigNumber(price).toFormat(BigNumber.ROUND_HALF_UP);
-    
+  }
+
+  static getRequiredDataLength(): number {
+    return 100;
+  } 
+
+  static getOrderCellCapacitySize(): bigint {
+    return 18700000000n
   }
 }
