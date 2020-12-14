@@ -69,6 +69,8 @@ export class CkbBalanceEvent implements DexEvent {
         if(this.blockNumber === blockNumber) {
           return;
         }
+
+        this.blockNumber = blockNumber;
         
         this.socket.emit("order-change", blockNumber);  
       } finally {
