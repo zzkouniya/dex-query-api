@@ -1002,27 +1002,53 @@ describe('Orders controller', () => {
   });
 
   describe('#getOrders()', () => {
-    beforeEach(() => {
-      const TYPE_SCRIPT = {
-        code_hash: '0xc5e5dcf215925f7ef4dfaf5f4b4f105bc321c02776d6e7d52a1db3fcd9d011a4',
-        hash_type: 'type',
-        args: '0xe7dd2956717c180e727cc0948cdc3275f247c18b7592b39adcebc0d0e1a906bb'
-      }
-      req.query.type_code_hash = TYPE_SCRIPT.code_hash
-      req.query.type_hash_type = TYPE_SCRIPT.hash_type
-      req.query.type_args = TYPE_SCRIPT.args;
-      
-      mock_repository.mockCollectTransactions().resolves(dexOrderTransactions);
-    })
+    describe('valid requests', () => {
+      describe('get orders', () => {
+        beforeEach(() => {
+          const TYPE_SCRIPT = {
+            code_hash: '0xc5e5dcf215925f7ef4dfaf5f4b4f105bc321c02776d6e7d52a1db3fcd9d011a4',
+            hash_type: 'type',
+            args: '0xe7dd2956717c180e727cc0948cdc3275f247c18b7592b39adcebc0d0e1a906bb'
+          }
+          req.query.type_code_hash = TYPE_SCRIPT.code_hash
+          req.query.type_hash_type = TYPE_SCRIPT.hash_type
+          req.query.type_args = TYPE_SCRIPT.args;
+          
+          mock_repository.mockCollectTransactions().resolves(dexOrderTransactions);
+        })
+        it('should return bid orders and ask orders', async () => {
+          await controller.getOrders(req, res, next);
+          res.status.should.have.been.calledWith(200);
+          res.json.should.have.been.calledWith({
+            ask_orders: [{ price: "100000000000000", receive: "236944947979" }, { price: "98760000000000", receive: "296280000" }, { price: "43210000000000", receive: "1" }],
+            bid_orders: [{ price: "100000000000000", receive: "506879" }, { price: "40000000000000", receive: "250000000000000000" }]
+          });
+        }) 
+      }); 
 
-    it('should return bid orders and ask orders', async () => {
-      await controller.getOrders(req, res, next);
-      res.status.should.have.been.calledWith(200);
-      res.json.should.have.been.calledWith({
-        ask_orders: [{ price: "100000000000000", receive: "236944947979" }, { price: "98760000000000", receive: "296280000" }, { price: "43210000000000", receive: "1" }],
-        bid_orders: [{ price: "100000000000000", receive: "506879" }, { price: "40000000000000", receive: "250000000000000000" }]
-      });
-    })
+      describe('lumos query when the transaction is empty', () => {
+        beforeEach(() => {
+          const TYPE_SCRIPT = {
+            code_hash: '0xc5e5dcf215925f7ef4dfaf5f4b4f105bc321c02776d6e7d52a1db3fcd9d011a4',
+            hash_type: 'type',
+            args: '0xe7dd2956717c180e727cc0948cdc3275f247c18b7592b39adcebc0d0e1a906bb'
+          }
+          req.query.type_code_hash = TYPE_SCRIPT.code_hash
+          req.query.type_hash_type = TYPE_SCRIPT.hash_type
+          req.query.type_args = TYPE_SCRIPT.args;
+          
+          mock_repository.mockCollectTransactions().resolves([]);
+        })
+        it('should return bid orders and ask orders', async () => {
+          await controller.getOrders(req, res, next);
+          res.status.should.have.been.calledWith(200);
+          res.json.should.have.been.calledWith({
+            ask_orders: [],
+            bid_orders: []
+          });
+        }) 
+      }); 
+    });
   })
 
   describe('#getCurrentPrice', () => {

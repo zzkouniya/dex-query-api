@@ -47,6 +47,13 @@ export default class OrdersService {
       },
     });
 
+    if(orderTxs.length === 0) {
+      return {
+        bid_orders: [],
+        ask_orders: []
+      }
+    }
+
     const factory: DexOrderChainFactory = new DexOrderChainFactory();
     const orders = factory.getOrderChains(lock, type, orderTxs);
     const liveCells = orders.filter(x => x.getLiveCell() != null && Number(x.getTurnoverRate().toFixed(3, 1)) < 0.999).map(x => {
