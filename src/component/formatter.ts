@@ -1,4 +1,5 @@
 import { Cell, HexString, Output } from "@ckb-lumos/base";
+import BigNumber from 'bignumber.js';
 import { contracts } from '../config';
 
 export interface DexOrderData {
@@ -23,13 +24,14 @@ export class CkbUtils {
 
     let price: bigint;
     try {
-      const priceBuf: Buffer = Buffer.from(hex.slice(66, 82), "hex");
-      price = priceBuf.readBigInt64LE();
+      price = this.parseAmountFromLeHex(hex.slice(66, 98));
+      // const priceBuf: Buffer = Buffer.from(hex.slice(66, 98), "hex");
+      // price = priceBuf.readBigInt64LE();
     } catch (error) {
       price = null;
     }
 
-    const isBid = hex.slice(82, 84) === "00";
+    const isBid = hex.slice(98, this.getRequiredDataLength()) === "00";
 
     const orderData: DexOrderData = {
       sUDTAmount,
@@ -105,7 +107,7 @@ export class CkbUtils {
       ""
     );
 
-    const priceBuf = Buffer.alloc(8);
+    const priceBuf = Buffer.alloc(16);
     priceBuf.writeBigUInt64LE(price);
     const priceHex = `${priceBuf.toString("hex")}`;
 
@@ -124,5 +126,17 @@ export class CkbUtils {
       && output.type.code_hash === type.code_hash
       && output.type.hash_type === type.hash_type
       && output.type.args === type.args
+  }
+
+  static roundHalfUp(price: string): string {
+    return new BigNumber(price).toFormat(BigNumber.ROUND_HALF_UP);
+  }
+
+  static getRequiredDataLength(): number {
+    return 100;
+  } 
+
+  static getOrderCellCapacitySize(): bigint {
+    return 18700000000n
   }
 }
