@@ -1,4 +1,5 @@
 import { CkbUtils } from "../../component";
+import CkbCellModel from './ckb_cell';
 import CkbCellScriptModel from "./ckb_cell_script";
 import CkbTransactionModel from "./ckb_transaction";
 import CkbTransactionStatusModel from "./ckb_transaction_status";
@@ -77,10 +78,8 @@ export default class CkbTransactionWithStatusModelWrapper {
         (total, cell) => total + BigInt(cell.capacity),
         BigInt(0)
       );
-
-    const fee = this.getFee(inputTransactions);
-
-    return outputAmount - (inputAmount + fee);
+ 
+    return outputAmount - inputAmount;
   }
 
   public getFee(
@@ -109,22 +108,39 @@ export default class CkbTransactionWithStatusModelWrapper {
     return inputAmount - outputAmount;
   }
 
-  getFromAddress(lock: CkbCellScriptModel): string {
-    
-    const cells = this.ckbTransactionWithStatus.transaction.outputs.find(x => this.isSameTypeScript(x.lock, lock));
 
-    return cells.lock.args;
-  }
+  getToAddress(inputTransactions: Array<CkbTransactionWithStatusModelWrapper>): string {
 
-  getToAddress(lock: CkbCellScriptModel): string {
-    
-    const cells = this.ckbTransactionWithStatus.transaction.outputs.find(x => !this.isSameTypeScript(x.lock, lock));
-    if(!cells) {
-      return lock.args;
+    const inputAddr = this.getAllInputAddress(inputTransactions);    
+    const outputAddr = this.getAllOutputAddress();
+
+    if(outputAddr.length === 1) {
+      return outputAddr[0];
     }
 
-    return cells.lock.args;
+    if(inputAddr.length === 1) {
+      return outputAddr.find(x => x != inputAddr[0]);
+    }
+
   }
+
+  getFromAddress(inputTransactions: Array<CkbTransactionWithStatusModelWrapper>): string {
+
+    const inputAddr = this.getAllInputAddress(inputTransactions);    
+    const outputAddr = this.getAllOutputAddress();
+
+    if(inputAddr.length === 1) {
+      return inputAddr[0];
+    }
+
+    if(outputAddr.length === 1) {
+      return inputAddr.find(x => x != outputAddr[0]);
+    }
+
+
+  }
+
+
 
   private groupByInnputTransaction(
     inputTransactions: Array<CkbTransactionWithStatusModelWrapper>
@@ -163,6 +179,46 @@ export default class CkbTransactionWithStatusModelWrapper {
       hash_type: script.hash_type || script.hashType,
       args: script.args,
     };
+  }
+
+  private getAllInputAddress(inputTransactions: Array<CkbTransactionWithStatusModelWrapper>): string[] {
+
+    const inputCellsInfo: Map<string, CkbCellModel> = new Map()
+  
+    inputTransactions.forEach(x => {
+      x.ckbTransactionWithStatus.transaction.outputs.forEach((value, index) => {
+        inputCellsInfo.set(x.ckbTransactionWithStatus.transaction.hash.concat(":").concat(index.toString()), value)
+      })
+    })
+
+    const addr = new Set();
+    const inputAddress = [] 
+    this.ckbTransactionWithStatus.transaction.inputs.forEach(x => {
+      const index = x.previousOutput.txHash.concat(":").concat(parseInt(x.previousOutput.index, 16).toString());      
+      const cell = inputCellsInfo.get(index);
+      
+      if(!addr.has(cell.lock.args)) {
+        addr.add(cell.lock.args);
+        inputAddress.push(cell.lock.args);
+      }
+    })
+
+    return inputAddress;
+  }
+
+  private getAllOutputAddress(): string[] {
+
+    const addr = new Set();
+    const outputAddress = [] 
+    this.ckbTransactionWithStatus.transaction.outputs.forEach(x => {
+      if(!addr.has(x.lock.args)) {
+        addr.add(x.lock.args);
+        outputAddress.push(x.lock.args);
+      } 
+    });
+
+    return outputAddress;
+    
   }
 
 }
