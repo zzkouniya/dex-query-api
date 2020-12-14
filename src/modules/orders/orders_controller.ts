@@ -54,6 +54,12 @@ export default class OrderController {
           required: true,
           description: "",
         },
+        decimal: {
+          name: "decimal",
+          type: "string",
+          required: true,
+          description: "",
+        },
       },
     },
     responses: {
@@ -70,37 +76,15 @@ export default class OrderController {
     const {
       type_code_hash,
       type_hash_type,
-      type_args,
+      type_args
     } = req.query;
     try {
       const orders = await this.orderService.getOrders(
         <string>type_code_hash,
         <string>type_hash_type,
-        <string>type_args,
+        <string>type_args
       );
-      const bid_orders: Array<Record<'order_amount'|'sudt_amount'|'price',string>> = []
-      const ask_orders: Array<Record<'order_amount'|'sudt_amount'|'price',string>>= []
-      orders
-        .forEach(({ isBid, sUDTAmount: sudt_amount, orderAmount: order_amount, price }) => {
-          if (order_amount === '0') {
-            return
-          }
-          const order = { sudt_amount, order_amount, price }
-          if (isBid) {
-            bid_orders.push(order)
-          } else {
-            ask_orders.push(order)
-          }
-        })
-
-        
-      console.log(CkbUtils.parseOrderData("0x000000000000000000000000000000000000e8890423c78a000000000000000000e876481700000000"));
-        
-        
-      res.status(200).json({
-        bid_orders: bid_orders.slice(0, 5),
-        ask_orders: ask_orders.slice(0, 5),
-      });
+      res.status(200).json(orders)
     } catch (err) {
       console.error(err);
       res.status(500).send();

@@ -25,14 +25,6 @@ describe('Balance controller', () => {
   let controller;
   let mock_cells;
 
-  // const stubbedConfig = {
-  //   contracts: {
-  //     orderLock: {
-  //       code_hash: contracts.orderLock.codeHash,
-  //       hash_type: contracts.orderLock.hashType,
-  //     },
-  //   },
-  // };
 
   const generateCell = (capacity, data, lock, type, txHash = '0x1') => {
     const cell: Cell = {
@@ -97,16 +89,22 @@ describe('Balance controller', () => {
 
   beforeEach(() => {
     class MockIndex implements IndexerService {
-      collectCells(queryOptions: QueryOptions): Promise<Cell[]> {
-        console.log(queryOptions + " is mock");      
+
+      tip(): Promise<number> {
         return null;
       }
+
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      collectCells(queryOptions: QueryOptions): Promise<Cell[]> { 
+        return null;
+      }
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       collectTransactions(queryOptions: QueryOptions): Promise<TransactionWithStatus[]> {
-        console.log(queryOptions + " is mock");
         return null;
       }
+
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       getLastMatchOrders(type) {
-        console.log(type + " is mock");
         return null;
       }
   

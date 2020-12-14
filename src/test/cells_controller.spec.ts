@@ -77,16 +77,22 @@ describe('Cells controller', () => {
 
   beforeEach(() => {
     class MockIndex implements IndexerService {
+
+      tip(): Promise<number> {
+        return null;
+      }
+
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       collectCells(queryOptions: QueryOptions): Promise<Cell[]> {
-        console.log(queryOptions + " is mock");
         return null;
       }
+
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       collectTransactions(queryOptions: QueryOptions): Promise<TransactionWithStatus[]> {
-        console.log(queryOptions + " is mock");
         return null;
       }
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       getLastMatchOrders(type) {
-        console.log(type + " is mock");
         return null;
       }
   

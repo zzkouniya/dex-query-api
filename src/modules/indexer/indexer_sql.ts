@@ -53,6 +53,9 @@ export default class SqlIndexerWrapper implements IndexerService {
 
     
   }
+  tip(): Promise<number> {
+    throw new Error("Method not implemented.");
+  }
 
   async collectCells(queryOptons: QueryOptions): Promise<Array<Cell>> {  
       

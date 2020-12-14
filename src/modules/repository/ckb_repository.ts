@@ -17,8 +17,11 @@ export default class CkbRepository implements DexRepository {
     private indexer: IndexerService,
     @inject(new LazyServiceIdentifer(() => modules[CkbService.name]))
     private ckbService: CkbService
-  ) {
-        
+  ) {}
+
+  async tip(): Promise<number> {
+    const block_number = await this.indexer.tip();
+    return block_number;
   }
 
   async collectCells(queryOptions: QueryOptions): Promise<Array<Cell>> {
