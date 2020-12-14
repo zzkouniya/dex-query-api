@@ -1,4 +1,5 @@
 import { Input, OutPoint, Output, Script, Transaction } from "@ckb-lumos/base";
+import BigNumber from 'bignumber.js';
 
 import {
   CkbUtils,
@@ -113,7 +114,12 @@ export default class OrdersHistoryCalculate {
         firstOrderCellData.orderAmount - lastOrderCellData.orderAmount;
       let turnoverRate;
       try {
-        turnoverRate = Number((tradedAmount * 100n) / firstOrderCellData.orderAmount) / 100;
+        turnoverRate = new BigNumber(tradedAmount.toString()).multipliedBy(100).div(firstOrderCellData.orderAmount.toString()).div(100);
+        if(Number(turnoverRate.toFixed(3, 1)) >= 0.999) {
+          turnoverRate = 1;
+        } else {
+          turnoverRate = turnoverRate.toFixed(2, 1)
+        }
       } catch (error) {
         console.error("zero order amount for the  first order cell");
         turnoverRate = 0;
@@ -235,6 +241,7 @@ export default class OrdersHistoryCalculate {
       return [...prevOrderCells, currentOutput];
     }
 
+    // input 所在的位置
     const nextGroupedOrderCellIndex = this.determineGroupedOrderCellIndex(nextTransaction.inputs, inputOutPoint);
 
     const nextGroupedOrderCells = this.groupOrderCells(

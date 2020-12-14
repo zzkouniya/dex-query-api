@@ -79,6 +79,7 @@ export default class BalanceService {
     };
 
     const cells = await this.indexer.collectCells(queryOptions);
+
     const balance = cells.reduce((total, cell) => {
       try {
         return total + CkbUtils.readBigUInt128LE(cell.data);
