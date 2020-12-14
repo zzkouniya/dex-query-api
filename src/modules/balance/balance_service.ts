@@ -14,7 +14,7 @@ export default class BalanceService {
   private logger: DexLogger;
   constructor(
     @inject(new LazyServiceIdentifer(() => modules[SqlIndexerWrapper.name]))
-    private indexer: IndexerService
+    private indexer: SqlIndexerWrapper
   ) {
     this.logger = new DexLogger(BalanceService.name);
   }
@@ -22,6 +22,8 @@ export default class BalanceService {
   async getCKBBalance(
     reqParms: CkbRequestModel
   ): Promise<BalanceCkbModel> {
+
+    this.indexer.getTx("0x8084c71e6ff455c947578dba7e5334654b61fc4751fa249f512e73c52250ee68");
     
     const queryLock: Script = reqParms.lockScript();
     const cells = await this.indexer.collectCells({

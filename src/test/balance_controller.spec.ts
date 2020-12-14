@@ -112,8 +112,8 @@ describe('Balance controller', () => {
   
     const mock: MockIndex = new MockIndex();
     mock_cells = sinon.stub(mock, 'collectCells');  
-    const service = new BalanceService(mock);
-    controller = new BalanceController(service);
+    // const service = new BalanceService(mock);
+    // controller = new BalanceController(service);
     
     // const test = sinon.stub(mock, 'collectCells');  
     

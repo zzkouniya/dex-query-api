@@ -49,10 +49,17 @@ export default class SqlIndexerWrapper implements IndexerService {
         console.log("indexer tip block", parseInt(block_number, 16));
       }, 5000);
     }, 10000);
+  }
 
 
+  getTx(hash: string): void {
+    const query = this.knex("transaction_digests").where("transaction_digests.tx_hash", "=", hash);
+    const items = query.select();
+    console.log(query);
     
   }
+
+  
   tip(): Promise<number> {
     throw new Error("Method not implemented.");
   }
@@ -63,8 +70,6 @@ export default class SqlIndexerWrapper implements IndexerService {
 
     const cells = [];
     for await (const cell of cellCollector.collect()) cells.push(cell);
-    
-
     return cells;
   }
 
