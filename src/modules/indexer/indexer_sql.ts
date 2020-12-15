@@ -5,7 +5,8 @@ import { indexer_config, contracts } from "../../config";
 import { DexOrderData, CkbUtils } from '../../component';
 import { IndexerService } from './indexer_service';
 import knex from "knex";
-import { CellCollector, Indexer } from '@ckb-lumos/sql-indexer';
+import { CellCollector, Indexer, TransactionCollector } from '@ckb-lumos/sql-indexer';
+import { Reader } from "ckb-js-toolkit";
 
 
 @injectable()
@@ -34,7 +35,8 @@ export default class SqlIndexerWrapper implements IndexerService {
         user : 'root',
         password : '123456',
         database : 'ckb'
-      }
+      },
+      // debug: true
     })
               
     knex2.migrate.up();   
@@ -52,10 +54,10 @@ export default class SqlIndexerWrapper implements IndexerService {
   }
 
 
-  getTx(hash: string): void {
-    const query = this.knex("transaction_digests").where("transaction_digests.tx_hash", "=", hash);
-    const items = query.select();
-    console.log(query);
+  async getTx(hash: string): Promise<void> {
+    const query = this.knex("transaction_digests").where("transaction_digests.tx_hash", "=", Buffer.from(new Reader(hash).toArrayBuffer()))
+    const items = await query.select();
+    console.log(items);
     
   }
 
@@ -75,15 +77,15 @@ export default class SqlIndexerWrapper implements IndexerService {
 
   async collectTransactions(queryOptions: QueryOptions): Promise<Array<TransactionWithStatus>> {
 
-    // const transactionCollector = new TransactionCollector(
-    //   this.knex,
-    //   queryOptions
-    // );
+    const transactionCollector = new TransactionCollector(
+      this.indexer,
+      queryOptions
+    );
 
-    // const txs = [];
-    // for await (const tx of transactionCollector.collect()) txs.push(tx);
+    const txs = [];
+    for await (const tx of transactionCollector.collect()) txs.push(tx);
 
-    // return txs;
+    return txs;
     return null;
   }
 
