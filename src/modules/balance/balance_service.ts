@@ -5,7 +5,6 @@ import { contracts } from "../../config";
 import { CkbUtils, DexLogger } from "../../component";
 import BalanceCkbModel from "./balance_ckb_model";
 import BalanceSudtModel from "./balance_sudt_model";
-import { IndexerService } from '../indexer/indexer_service';
 import CkbRequestModel from '../../model/req/ckb_request_model';
 import SqlIndexerWrapper from '../indexer/indexer_sql';
 
@@ -22,8 +21,6 @@ export default class BalanceService {
   async getCKBBalance(
     reqParms: CkbRequestModel
   ): Promise<BalanceCkbModel> {
-
-    this.indexer.getTx("0x8084c71e6ff455c947578dba7e5334654b61fc4751fa249f512e73c52250ee68");
     
     const queryLock: Script = reqParms.lockScript();
     const cells = await this.indexer.collectCells({
