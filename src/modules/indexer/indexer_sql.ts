@@ -7,6 +7,7 @@ import { IndexerService } from './indexer_service';
 import knex from "knex";
 import { CellCollector, Indexer } from '@ckb-lumos/sql-indexer';
 import { Reader } from "ckb-js-toolkit";
+import { TransactionCollector } from "../../component/transactio_collector";
 
 
 @injectable()
@@ -61,6 +62,14 @@ export default class SqlIndexerWrapper implements IndexerService {
     
   }
 
+  async test(queryOptons: QueryOptions): Promise<void> {
+    const tx: TransactionCollector = new TransactionCollector(this.knex, queryOptons);
+
+    const cells = [];
+    for await (const cell of tx.collect()) cells.push(cell);
+    console.log(cells);
+    
+  }
   
   tip(): Promise<number> {
     throw new Error("Method not implemented.");

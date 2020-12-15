@@ -10,11 +10,12 @@ import * as express from "express";
 import { DexLogger } from "../../component";
 import SqlIndexerWrapper from '../indexer/indexer_sql';
 import CkbRequestModel from "../../model/req/ckb_request_model";
+import { QueryOptions, Script } from "@ckb-lumos/base";
 
 
 @ApiPath({
   path: "/",
-  name: "Balance",
+  name: "test",
   security: { basicAuth: [] },
 })
 
@@ -76,10 +77,27 @@ export default class DemoController {
         <string>req.query.lock_hash_type,
         <string>req.query.lock_args,
       );
+
+      const query: QueryOptions = {
+        lock: reqParms.lockScript()
+      }
+
+      console.log(query);
+      
+
+      // if(query.lock as Script) {
+      //   console.log(1);
+      // }
+      
+      
   
       try {
-        const a = this.indexer.getTx("0x8084c71e6ff455c947578dba7e5334654b61fc4751fa249f512e73c52250ee68");
-        res.status(200).json(a);
+        // const a = this.indexer.getTx("0x8084c71e6ff455c947578dba7e5334654b61fc4751fa249f512e73c52250ee68");
+
+        this.indexer.test(query);
+
+
+        res.status(200).json("ok");
       } catch (err) {
         this.logger.error(err);
         res.status(500).send();
