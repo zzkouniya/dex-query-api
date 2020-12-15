@@ -227,8 +227,6 @@ export default class OrdersService {
       if (!isBid) {
         const costAmount = orderAmount * PRICE_RATIO
         if (costAmount + (costAmount * FEE) / (FEE + FEE_RATIO) > sUDTAmount * price) {
-          console.log(CkbUtils.parseOrderData(live.data));
-          
           return false;
         }
         if ((orderAmount * PRICE_RATIO) / price === BigInt(0)) {
