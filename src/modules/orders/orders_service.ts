@@ -12,6 +12,7 @@ import { DexOrderChainFactory } from '../../model/orders/dex_order_chain_factory
 import { DexOrderChain } from "../../model/orders/dex_order_chain";
 
 
+
 @injectable()
 export default class OrdersService {
   constructor(
