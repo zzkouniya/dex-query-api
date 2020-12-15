@@ -1,8 +1,10 @@
 import { inject, injectable, LazyServiceIdentifer } from "inversify";
 import { QueryOptions, Script } from "@ckb-lumos/base";
+
 import { modules } from "../../ioc";
 import CkbRequestModel from "../../model/req/ckb_request_model";
 import { CkbUtils } from "../../component";
+
 import CkbCellScriptModel from "../../model/ckb/ckb_cell_script";
 import TransactionDetailsModel from './transaction_details_model';
 import CkbRepository from '../repository/ckb_repository';

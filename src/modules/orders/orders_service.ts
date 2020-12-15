@@ -9,6 +9,8 @@ import { Cell, HashType, Script } from '@ckb-lumos/base';
 import { DexRepository } from '../repository/dex_repository';
 import CkbRepository from '../repository/ckb_repository';
 import { DexOrderChainFactory } from '../../model/orders/dex_order_chain_factory';
+import { DexOrderChain } from "../../model/orders/dex_order_chain";
+
 
 
 @injectable()
@@ -56,18 +58,19 @@ export default class OrdersService {
 
     const factory: DexOrderChainFactory = new DexOrderChainFactory();
     const orders = factory.getOrderChains(lock, type, orderTxs);
-    const liveCells = orders.filter(x => x.getLiveCell() != null && Number(x.getTurnoverRate().toFixed(3, 1)) < 0.999).map(x => {
-      const c = x.getLiveCell();
-      const cell: Cell = {
-        cell_output: {
-          lock: c.cell.lock,
-          type: c.cell.type,
-          capacity: c.cell.capacity
-        },
-        data: c.data
-      }
-      return cell;
-    });
+    const liveCells = orders.filter(x => x.getLiveCell() != null && Number(x.getTurnoverRate().toFixed(3, 1)) < 0.999 && this.isMakerCellValid(x))
+      .map(x => {
+        const c = x.getLiveCell();
+        const cell: Cell = {
+          cell_output: {
+            lock: c.cell.lock,
+            type: c.cell.type,
+            capacity: c.cell.capacity
+          },
+          data: c.data
+        }
+        return cell;
+      });
 
     const orderCells = liveCells;
 
@@ -91,7 +94,7 @@ export default class OrdersService {
     const bid_orders = 
     bidOrderPriceKeys.sort((c1, c2) => parseInt(c1) - parseInt(c2))
       .reverse()
-      .slice(0, bidOrderPriceKeys.length > 7 ? 7 : bidOrderPriceKeys.length).map(x => {
+      .slice(0, bidOrderPriceKeys.length > CkbUtils.getOrdersLimit() ? CkbUtils.getOrdersLimit() : bidOrderPriceKeys.length).map(x => {
         let order_amount = BigInt(0); 
         groupbyPriceBid.get(x).forEach(x => order_amount += BigInt(x.orderAmount))
   
@@ -122,8 +125,7 @@ export default class OrdersService {
   
     const ask_orders =
     askOrderPriceKeys.sort((c1, c2) => parseInt(c1) - parseInt(c2))
-      .reverse()
-      .slice(0, askOrderPriceKeys.length > 7 ? 7 : askOrderPriceKeys.length).map(x => {
+      .slice(0, askOrderPriceKeys.length > CkbUtils.getOrdersLimit() ? CkbUtils.getOrdersLimit() : askOrderPriceKeys.length).map(x => {
         let order_amount = BigInt(0); 
         groupbyPriceAsk.get(x).forEach(x => order_amount += BigInt(x.orderAmount))
 
@@ -132,8 +134,8 @@ export default class OrdersService {
           price: x
         }
 
-      }) 
-    
+      }).reverse();
+
     return {
       bid_orders,
       ask_orders
@@ -194,6 +196,49 @@ export default class OrdersService {
     };
 
     return result;
+  }
+
+  isMakerCellValid(order: DexOrderChain): boolean {
+    const FEE = BigInt(3);
+    const FEE_RATIO = BigInt(1_000);
+    const PRICE_RATIO = BigInt(10 ** 20);
+
+    const live = order.getLiveCell();
+    try {
+      if (live.data.length !== CkbUtils.getRequiredDataLength()) {
+        return false;
+      }
+
+      const output = live.cell;
+      const { price, orderAmount, sUDTAmount, isBid } = CkbUtils.parseOrderData(live.data);
+      const freeCapacity = BigInt(parseInt(output.capacity, 16)) - CkbUtils.getOrderCellCapacitySize();
+  
+      if (isBid) {
+        const costAmount = orderAmount * price
+        if (costAmount + (costAmount * FEE) / (FEE + FEE_RATIO) > freeCapacity * PRICE_RATIO) {
+          return false;
+        }
+        if ((orderAmount * price) / PRICE_RATIO === BigInt(0)) {
+          return false;
+        }
+
+        return true
+      }
+
+      if (!isBid) {
+        const costAmount = orderAmount * PRICE_RATIO
+        if (costAmount + (costAmount * FEE) / (FEE + FEE_RATIO) > sUDTAmount * price) {
+          return false;
+        }
+        if ((orderAmount * PRICE_RATIO) / price === BigInt(0)) {
+          return false;
+        }
+        return true
+      }
+      return false;
+    } catch (err) {      
+      return false
+    }
   }
 
   isInvalidOrderCell(cell: DexOrderCellFormat): boolean {
