@@ -5,7 +5,7 @@ import { indexer_config, contracts } from "../../config";
 import { DexOrderData, CkbUtils } from '../../component';
 import { IndexerService } from './indexer_service';
 import knex from "knex";
-import { CellCollector, Indexer, TransactionCollector } from '@ckb-lumos/sql-indexer';
+import { CellCollector, Indexer } from '@ckb-lumos/sql-indexer';
 import { Reader } from "ckb-js-toolkit";
 
 
@@ -77,15 +77,15 @@ export default class SqlIndexerWrapper implements IndexerService {
 
   async collectTransactions(queryOptions: QueryOptions): Promise<Array<TransactionWithStatus>> {
 
-    const transactionCollector = new TransactionCollector(
-      this.indexer,
-      queryOptions
-    );
+    // const transactionCollector = new TransactionCollector(
+    //   this.indexer,
+    //   queryOptions
+    // );
 
-    const txs = [];
-    for await (const tx of transactionCollector.collect()) txs.push(tx);
+    // const txs = [];
+    // for await (const tx of transactionCollector.collect()) txs.push(tx);
 
-    return txs;
+    // return txs;
     return null;
   }
 
