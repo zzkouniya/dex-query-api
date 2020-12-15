@@ -131,8 +131,8 @@ export default class OrdersService {
           price: x
         }
 
-      }) 
-    
+      }).reverse();
+
     return {
       bid_orders,
       ask_orders
