@@ -50,11 +50,11 @@ export default class OrdersHistoryService {
         status: o.status,
         last_order_cell_outpoint: {
           tx_hash: lastOrderCell.outpoint.tx_hash,
-          index: `0x${lastOrderCell.outpoint.index}`,
+          index: `0x${parseInt(lastOrderCell.outpoint.index).toString(16)}`,
         },
         order_cells: order_cells.map(orderCell => ({
           tx_hash: orderCell.outpoint.tx_hash,
-          index: orderCell.outpoint.index,
+          index: `0x${parseInt(orderCell.outpoint.index).toString(16)}`,
         }))
       };
       if (lastOrderCell.nextTxHash) {
