@@ -23,7 +23,8 @@ export default class OrdersService {
   async getOrders(
     type_code_hash: string,
     type_hash_type: string,
-    type_args: string
+    type_args: string,
+    decimal: string
   ): Promise<{
     bid_orders: {receive: string, price: string}[],
     ask_orders: {receive: string, price: string}[]
@@ -75,63 +76,37 @@ export default class OrdersService {
     const orderCells = liveCells;
 
     const dexOrdersBid = this.filterDexOrder(orderCells, true)     
-
-    const groupbyPriceBid: Map<string, DexOrderCellFormat[]> = this.groupbyPrice(dexOrdersBid);
-    const bidOrderPriceMergeKeys: Set<string> = new Set()
-    const bidOrderPriceKeys: string[] = []
-    dexOrdersBid.forEach(x => {    
-      if(!groupbyPriceBid.has(x.price)) {
-        return;
-      }
-      const key = CkbUtils.roundHalfUp(x.price).toString();
-      
-      if(!bidOrderPriceMergeKeys.has(key))  {
-        bidOrderPriceKeys.push(x.price);
-        bidOrderPriceMergeKeys.add(key)
-      }
-    }) 
-
+    const groupbyPriceBid: Map<string, DexOrderCellFormat[]> = this.groupbyPrice(dexOrdersBid, decimal);
+    const bidOrderPriceKeys = Array.from(groupbyPriceBid.keys());
     const bid_orders = 
-    bidOrderPriceKeys.sort((c1, c2) => parseInt(c1) - parseInt(c2))
+    bidOrderPriceKeys.sort((c1, c2) => new BigNumber(c1).minus(new BigNumber(c2)).toNumber())
       .reverse()
       .slice(0, bidOrderPriceKeys.length > CkbUtils.getOrdersLimit() ? CkbUtils.getOrdersLimit() : bidOrderPriceKeys.length).map(x => {
-        let order_amount = BigInt(0); 
-        groupbyPriceBid.get(x).forEach(x => order_amount += BigInt(x.orderAmount))
-  
+        let order_amount = BigInt(0);
+        const group = groupbyPriceBid.get(x);
+        group.forEach(x => {order_amount += BigInt(x.orderAmount)})
+        
         return {
           receive: order_amount.toString(),
-          price: x
+          price: group[0].price
         }
 
       }) 
 
-    const dexOrdersAsk = this.filterDexOrder(orderCells, false)
-      .sort((c1, c2) => parseInt(c1.price) - parseInt(c2.price))    
-    const groupbyPriceAsk: Map<string, DexOrderCellFormat[]> = this.groupbyPrice(dexOrdersAsk);
-    
-    const askOrderPriceMergeKeys: Set<string> = new Set()
-    const askOrderPriceKeys: string[] = []
-    dexOrdersAsk.forEach(x => {
-      if(!groupbyPriceAsk.has(x.price)) {
-        return;
-      }
 
-      const key = CkbUtils.roundHalfUp(x.price).toString();
-      if(!askOrderPriceMergeKeys.has(key))  {
-        askOrderPriceKeys.push(x.price);
-        askOrderPriceMergeKeys.add(key)
-      }
-    }) 
-  
+    const dexOrdersAsk = this.filterDexOrder(orderCells, false)
+    const groupbyPriceAsk: Map<string, DexOrderCellFormat[]> = this.groupbyPrice(dexOrdersAsk, decimal);
+    const askOrderPriceKeys = Array.from(groupbyPriceAsk.keys());  
     const ask_orders =
-    askOrderPriceKeys.sort((c1, c2) => parseInt(c1) - parseInt(c2))
+    askOrderPriceKeys.sort((c1, c2) => new BigNumber(c1).minus(new BigNumber(c2)).toNumber())
       .slice(0, askOrderPriceKeys.length > CkbUtils.getOrdersLimit() ? CkbUtils.getOrdersLimit() : askOrderPriceKeys.length).map(x => {
         let order_amount = BigInt(0); 
-        groupbyPriceAsk.get(x).forEach(x => order_amount += BigInt(x.orderAmount))
+        const group = groupbyPriceAsk.get(x);
+        group.forEach(x => order_amount += BigInt(x.orderAmount))
 
         return {
           receive: order_amount.toString(),
-          price: x
+          price: group[0].price
         }
 
       }).reverse();
@@ -276,7 +251,7 @@ export default class OrdersService {
     }
   }
 
-  filterDexOrder(dexOrders: Cell[], isBid: boolean): DexOrderCellFormat[] {
+  private filterDexOrder(dexOrders: Cell[], isBid: boolean): DexOrderCellFormat[] {
     const REQUIRED_DATA_LENGTH = CkbUtils.getRequiredDataLength();
     return CkbUtils.formatOrderCells(dexOrders
       .filter(o => o.data.length === REQUIRED_DATA_LENGTH))
@@ -284,20 +259,28 @@ export default class OrdersService {
       .filter(x => x.orderAmount !== '0')
   }
 
-  groupbyPrice(dexOrders: DexOrderCellFormat[]): Map<string, DexOrderCellFormat[]> {
+  private groupbyPrice(dexOrders: DexOrderCellFormat[], decimal: string): Map<string, DexOrderCellFormat[]> {
     const groupbyPrice: Map<string, DexOrderCellFormat[]> = new Map()
     for(let i = 0; i < dexOrders.length; i++) {
       const dexOrder = dexOrders[i];
-      let priceArr = groupbyPrice.get(dexOrder.price);
+      const key = this.getRoundHalfUpPrice(dexOrder.price, decimal);
+      let priceArr = groupbyPrice.get(key);
       if(!priceArr) {
         priceArr = []
-        groupbyPrice.set(dexOrder.price, priceArr);
+        groupbyPrice.set(key, priceArr);
       }
 
       priceArr.push(dexOrder);
     }
 
     return groupbyPrice;
+  }
+
+  private getRoundHalfUpPrice(price: string, decimal: string) {
+    const reg = new RegExp( ',' , "g" )
+    const key = CkbUtils.roundHalfUp(CkbUtils.priceUnitConversion(price, decimal)).replace(reg, "");
+
+    return key;
   }
 }
 
