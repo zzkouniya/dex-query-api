@@ -277,9 +277,8 @@ export default class OrdersService {
   }
 
   private getRoundHalfUpPrice(price: string, decimal: string) {
-    const reg = new RegExp( ',' , "g" )
-    const key = CkbUtils.roundHalfUp(CkbUtils.priceUnitConversion(price, decimal)).replace(reg, "");
-
+    const key = CkbUtils.roundHalfUp(CkbUtils.priceUnitConversion(price, decimal));
+    
     return key;
   }
 }

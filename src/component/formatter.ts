@@ -133,7 +133,7 @@ export class CkbUtils {
     const intVal = amount.integerValue().toString();
 
     if (intVal.length > 2) {
-      return amount.toFormat(2, BigNumber.ROUND_HALF_UP)
+      return amount.toFixed(2, BigNumber.ROUND_HALF_UP)
     }  
 
     if (intVal.length === 0) {
