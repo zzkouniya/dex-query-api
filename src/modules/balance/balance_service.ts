@@ -25,7 +25,7 @@ export default class BalanceService {
     const queryLock: Script = reqParms.lockScript();
     const cells = await this.indexer.collectCells({
       lock: queryLock,
-    });  
+    });
 
     const normalCells = cells.filter(
       (cell: Cell) => cell.data === "0x" && !cell.cell_output.type);

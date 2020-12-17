@@ -81,16 +81,6 @@ export default class DemoController {
       const query: QueryOptions = {
         lock: reqParms.lockScript()
       }
-
-      console.log(query);
-      
-
-      // if(query.lock as Script) {
-      //   console.log(1);
-      // }
-      
-      
-  
       try {
         // const a = this.indexer.getTx("0x8084c71e6ff455c947578dba7e5334654b61fc4751fa249f512e73c52250ee68");
 

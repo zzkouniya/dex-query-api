@@ -1,11 +1,13 @@
-import { QueryOptions, Script, ScriptWrapper, utils } from "@ckb-lumos/base";
-import { RPC, Reader, validators } from "ckb-js-toolkit";
+import { QueryOptions, Script, ScriptWrapper, utils, Cell, TxStatus, TransactionWithStatus } from "@ckb-lumos/base";
+import { Reader, RPC, validators } from "ckb-js-toolkit";
 import knex from "knex";
 
 export class TransactionCollector {
   constructor(
     private knex: knex,
-    private queryOptions: QueryOptions
+    private queryOptions: QueryOptions,
+    private rpc: RPC,
+    private includeStatus = true
   ) {
 
     if(!queryOptions.argsLen) {
@@ -69,7 +71,7 @@ export class TransactionCollector {
   
   }
 
-  _assembleQuery(order = true) {
+  assembleQuery(order = true) {
     let query = this.knex("cells");
     if (order) {
       query = query.orderBy([
@@ -139,13 +141,9 @@ export class TransactionCollector {
     return query;
   }
 
-  // async count() {
-  //   return parseInt((await this._assembleQuery(false)).length);
-  // }
-
-  async *collect() {
+  async collectCells(): Promise<Cell[]> {
     // TODO: optimize this with streams
-    const items = await this._assembleQuery()
+    const items = await this.assembleQuery()
       .innerJoin(
         "block_digests",
         "cells.block_number",
@@ -173,42 +171,92 @@ export class TransactionCollector {
         this.knex.ref("type_scripts.hash_type").as("type_script_hash_type"),
         this.knex.ref("type_scripts.args").as("type_script_args")
       );
-    for (const item of items) {
-      yield {
-        cell_output: {
-          capacity: dbBigIntToHex(item.capacity),
-          lock: dbItemToScript(
-            item.lock_script_code_hash,
-            item.lock_script_hash_type,
-            item.lock_script_args
-          ),
-          type: dbItemToScript(
-            item.type_script_code_hash,
-            item.type_script_hash_type,
-            item.type_script_args
-          ),
-        },
-        out_point: {
-          tx_hash: nodeBufferToHex(item.tx_hash),
-          index: dbBigIntToHex(item.index),
-        },
-        block_hash: nodeBufferToHex(item.block_hash),
-        block_number: dbBigIntToHex(item.block_number),
-        data: nodeBufferToHex(item.data),
-      };
+
+    const cells: Cell[] = []
+    for (const item of items) cells.push({
+      cell_output: {
+        capacity: dbBigIntToHex(item.capacity),
+        lock: dbItemToScript(
+          item.lock_script_code_hash,
+          item.lock_script_hash_type,
+          item.lock_script_args
+        ),
+        type: dbItemToScript(
+          item.type_script_code_hash,
+          item.type_script_hash_type,
+          item.type_script_args
+        ),
+      },
+      out_point: {
+        tx_hash: nodeBufferToHex(item.tx_hash),
+        index: dbBigIntToHex(item.index),
+      },
+      block_hash: nodeBufferToHex(item.block_hash),
+      block_number: dbBigIntToHex(item.block_number),
+      data: nodeBufferToHex(item.data),
+    });
+
+    return cells;
+  }
+
+  async *collect() {
+  
+    const outputs = await this.collectCells();
+     
+    // const txHashs = new Set();
+    // const queryHash = [];
+    // const groupByTxHash: Map<string, Cell[]> = new Map();
+    // for (const cell of cells) {
+    //   const hash = new Reader(cell.out_point.tx_hash).serializeJson();
+
+    //   if(!txHashs.has(hash)) {
+    //     txHashs.add(hash);
+    //     queryHash.push(hash)
+    //   }
+    
+    //   let outputs = groupByTxHash.get(hash);
+    //   if(!outputs) {
+    //     outputs = [];
+    //     groupByTxHash.set(hash, outputs);
+    //   }
+    //   outputs.push(cell)
+    // }
+
+    const inputTxs = [];
+    for (let i = 0; i < outputs.length; i++) {
+      const cell = outputs[i];
+      const hash = hexToNodeBuffer(cell.out_point.tx_hash);
+      const index = parseInt(cell.out_point.index, 16);
+
+      const tx = await this.knex("transaction_inputs").where("transaction_inputs.previous_tx_hash", "=", hash).andWhere("transaction_inputs.previous_index", "=", index)
+        .leftJoin(
+          "transaction_digests",
+          "transaction_inputs.transaction_digest_id",
+          "transaction_digests.id"
+        ).select("transaction_digests.*");
+      inputTxs.push(tx[0]);
     }
+
+    console.log(inputTxs.length);
+    console.log(outputs.length);
+    
+
+    for (const output of outputs) {
+      const hash = new Reader(output.out_point.tx_hash).serializeJson();
+      const tx = await this.rpc.get_transaction(hash);
+      // if (!this.skipMissing && !tx) {
+      //   throw new Error(`Transaction ${h} is missing!`);
+      // }
+      if (this.includeStatus) {
+        yield tx;
+      } else {
+        yield tx.transaction;
+      }
+      
+    }
+
   }
 }
-
-
-function defaultLogger(level, message) {
-  console.log(`[${level}] ${message}`);
-}
-
-function hexToDbBigInt(hex) {
-  return BigInt(hex).toString();
-}
-
 function dbBigIntToHex(i) {
   return "0x" + BigInt(i).toString(16);
 }
@@ -223,7 +271,7 @@ function hexToNodeBuffer(b) {
   return Buffer.from(new Reader(b).toArrayBuffer());
 }
 
-function dbItemToScript(code_hash, hash_type, args) {
+function dbItemToScript(code_hash, hash_type, args): Script {
   if (code_hash === null) {
     return undefined;
   } else {
@@ -233,24 +281,4 @@ function dbItemToScript(code_hash, hash_type, args) {
       args: nodeBufferToHex(args),
     };
   }
-}
-
-async function ensureScriptInserted(trx, script, hasReturning) {
-  const data = {
-    code_hash: hexToNodeBuffer(script.code_hash),
-    hash_type: script.hash_type === "type" ? 1 : 0,
-    args: hexToNodeBuffer(script.args),
-  };
-  let ids = await trx("scripts").where(data).select("id");
-  if (ids.length === 0) {
-    ids = await trx("scripts").insert([data], hasReturning ? ["id"] : null);
-  }
-  if (ids.length === 0) {
-    throw new Error("Insertion failure!");
-  }
-  let id = ids[0];
-  if (id instanceof Object) {
-    id = id.id;
-  }
-  return id;
 }

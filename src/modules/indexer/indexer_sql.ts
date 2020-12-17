@@ -1,8 +1,8 @@
 import { Cell, QueryOptions, TransactionWithStatus, Transaction } from "@ckb-lumos/base";
 
 import { injectable } from "inversify";
-import { indexer_config, contracts } from "../../config";
-import { DexOrderData, CkbUtils } from '../../component';
+import { indexer_config } from "../../config";
+import { DexOrderData } from '../../component';
 import { IndexerService } from './indexer_service';
 import knex from "knex";
 import { CellCollector, Indexer } from '@ckb-lumos/sql-indexer';
@@ -43,8 +43,8 @@ export default class SqlIndexerWrapper implements IndexerService {
     knex2.migrate.up();   
     this.knex = knex2;
       
+    this.indexer = new Indexer(indexer_config.nodeUrl, this.knex);
     setTimeout(() => {
-      this.indexer = new Indexer(indexer_config.nodeUrl, this.knex);
       this.indexer.startForever();
   
       setInterval(async () => {
@@ -63,12 +63,12 @@ export default class SqlIndexerWrapper implements IndexerService {
   }
 
   async test(queryOptons: QueryOptions): Promise<void> {
-    const tx: TransactionCollector = new TransactionCollector(this.knex, queryOptons);
-
-    const cells = [];
-    for await (const cell of tx.collect()) cells.push(cell);
-    console.log(cells);
+    const tx: TransactionCollector = new TransactionCollector(this.knex, queryOptons, this.indexer.rpc);
     
+    const txs = [];
+
+    for await (const cell of tx.collect()) txs.push(cell);
+      
   }
   
   tip(): Promise<number> {
