@@ -1,8 +1,8 @@
 import { Cell, QueryOptions, TransactionWithStatus, Transaction } from "@ckb-lumos/base";
 
 import { injectable } from "inversify";
-import { indexer_config } from "../../config";
-import { DexOrderData } from '../../component';
+import { contracts, indexer_config } from "../../config";
+import { CkbUtils, DexOrderData } from '../../component';
 import { IndexerService } from './indexer_service';
 import knex from "knex";
 import { CellCollector, Indexer } from '@ckb-lumos/sql-indexer';
@@ -18,18 +18,6 @@ export default class SqlIndexerWrapper implements IndexerService {
   constructor() {
 
     const knex2 = knex({
-      // postProcessResponse: (result, queryContext) => {
-      // // TODO: add special case for raw results (depends on dialect)
-      //   console.log(queryContext);
-                  
-      //   if (Array.isArray(result)) {
-      //     console.log(result);
-      //     return result
-      //   } else {
-      //     console.log(result);
-      //     return result
-      //   }
-      // },
       client: 'mysql',
       connection: {
         host : '127.0.0.1',
@@ -63,11 +51,13 @@ export default class SqlIndexerWrapper implements IndexerService {
   }
 
   async test(queryOptons: QueryOptions): Promise<void> {
-    const tx: TransactionCollector = new TransactionCollector(this.knex, queryOptons, this.indexer.rpc);
+    const collector: TransactionCollector = new TransactionCollector(this.knex, queryOptons, this.indexer['rpc']);
     
     const txs = [];
+    for await (const tx of collector.collect()) txs.push(tx);
 
-    for await (const cell of tx.collect()) txs.push(cell);
+    console.log(txs.length);
+    
       
   }
   
@@ -86,67 +76,72 @@ export default class SqlIndexerWrapper implements IndexerService {
 
   async collectTransactions(queryOptions: QueryOptions): Promise<Array<TransactionWithStatus>> {
 
-    // const transactionCollector = new TransactionCollector(
-    //   this.indexer,
-    //   queryOptions
-    // );
+    const transactionCollector = new TransactionCollector(
+      this.knex,
+      queryOptions,
+      this.indexer['rpc']
+    );
+    
 
-    // const txs = [];
-    // for await (const tx of transactionCollector.collect()) txs.push(tx);
+    const txs = [];
+    for await (const tx of transactionCollector.collect()) {
+      txs.push(tx);
+    } 
 
-    // return txs;
-    return null;
+    return txs;
   }
 
   async getLastMatchOrders(
     type: { code_hash: string, args: string, hash_type: 'data' | 'type' }
   ): Promise<Record<'ask_orders' | 'bid_orders', Array<DexOrderData>> | null> {
     
-    // const transactionCollector = new TransactionCollector(
-    //   this.indexer,
-    //   {
-    //     type,
-    //     lock: {
-    //       script: {
-    //         code_hash: contracts.orderLock.codeHash,
-    //         hash_type: contracts.orderLock.hashType,
-    //         args: "0x",
-    //       },
-    //       argsLen: 'any'
-    //     },
-    //     order: "desc",
-    //   },
-    // );
+    const transactionCollector = new TransactionCollector(
+      this.knex,
+      {
+        type,
+        lock: {
+          script: {
+            code_hash: contracts.orderLock.codeHash,
+            hash_type: contracts.orderLock.hashType,
+            args: "0x",
+          },
+          argsLen: 'any'
+        },
+        order: "desc",
+      },
+      this.indexer['rpc']
+    );
 
-    // for await (const { tx_status, transaction } of transactionCollector.collect() as any) {
-    //   if (tx_status.status === 'committed') {
-    //     const bid_orders: Array<DexOrderData> = [];
-    //     const ask_orders: Array<DexOrderData> = [];
-    //     const { outputs, outputs_data } = transaction as Transaction;
-    //     await Promise.all(outputs.map(async (output, idx) => {
-    //       if (CkbUtils.isOrder(type, output)) {
-    //         try {
-    //           const order = CkbUtils.parseOrderData(outputs_data[idx]);
-    //           if (order.orderAmount === 0n) {
-    //           // TODO: use order history to verify if the order is a REAL ONE
-    //           // const historyService = container.get<OrdersHistoryService>(modules[OrdersHistoryService.name])
-    //           // const history = await historyService.getOrderHistory(
-    //           //   output.type.code_hash,
-    //           //   output.type.hash_type,
-    //           //   output.type.args,
-    //           //   output.lock.args);
-    //             (order.isBid ? bid_orders : ask_orders).push(order);
-    //           }
-    //         } catch {
-    //         // ignore
-    //         }
-    //       }
-    //     }))
-    //     if (ask_orders.length && bid_orders.length) {
-    //       return { ask_orders, bid_orders };
-    //     }
-    //   }
-    // }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    for await (const { tx_status, transaction } of transactionCollector.collect() as any) {
+      if (tx_status.status === 'committed') {
+        const bid_orders: Array<DexOrderData> = [];
+        const ask_orders: Array<DexOrderData> = [];
+        const { outputs, outputs_data } = transaction as Transaction;
+        await Promise.all(outputs.map(async (output, idx) => {
+          if (CkbUtils.isOrder(type, output)) {
+            try {
+              const order = CkbUtils.parseOrderData(outputs_data[idx]);
+              if (order.orderAmount === 0n) {
+              // TODO: use order history to verify if the order is a REAL ONE
+              // const historyService = container.get<OrdersHistoryService>(modules[OrdersHistoryService.name])
+              // const history = await historyService.getOrderHistory(
+              //   output.type.code_hash,
+              //   output.type.hash_type,
+              //   output.type.args,
+              //   output.lock.args);
+                (order.isBid ? bid_orders : ask_orders).push(order);
+              }
+            } catch {
+            // ignore
+            }
+          }
+        }))
+        if (ask_orders.length && bid_orders.length) {
+          return { ask_orders, bid_orders };
+        }
+      }
+    }
     return null;
   }
 

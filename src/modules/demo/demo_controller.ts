@@ -10,7 +10,7 @@ import * as express from "express";
 import { DexLogger } from "../../component";
 import SqlIndexerWrapper from '../indexer/indexer_sql';
 import CkbRequestModel from "../../model/req/ckb_request_model";
-import { QueryOptions, Script } from "@ckb-lumos/base";
+import { QueryOptions } from "@ckb-lumos/base";
 
 
 @ApiPath({

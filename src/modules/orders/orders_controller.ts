@@ -8,7 +8,7 @@ import {
 import * as express from "express";
 
 import { modules } from "../../ioc";
-import { CkbUtils, DexLogger } from "../../component";
+import { DexLogger } from "../../component";
 import OrderService from "./orders_service";
 import OrdersHistoryService from "./orders_history_service";
 import { HashType } from '@ckb-lumos/base';

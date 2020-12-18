@@ -1,5 +1,5 @@
 import { inject, injectable, LazyServiceIdentifer } from "inversify";
-import { QueryOptions, Script } from "@ckb-lumos/base";
+import { QueryOptions, Script, ScriptWrapper } from "@ckb-lumos/base";
 
 import { modules } from "../../ioc";
 import CkbRequestModel from "../../model/req/ckb_request_model";
@@ -39,7 +39,7 @@ export default class TxService {
       const txsWithStatus = await this.repository.collectTransactions(
         queryOptions
       );
-
+      
       if(txsWithStatus.length === 0) {
         return []
       }
@@ -86,7 +86,7 @@ export default class TxService {
                 const amount = CkbUtils.parseAmountFromLeHex(data);
                 inputSum += amount;
               }
-            } else {
+            } else {              
               if(this.isSameTypeScript(cell.lock, <Script>queryOptions.lock)) {
                 inputSum += BigInt(parseInt(cell.capacity));
               }
@@ -114,7 +114,7 @@ export default class TxService {
 
         }
         
-        const income = outputSum - inputSum;        
+        const income = outputSum - inputSum; 
 
         if (income.toString() !== "0") {
           const blockHash: string = txWithStatus.tx_status.block_hash;          
@@ -194,12 +194,13 @@ export default class TxService {
     }
   }
 
-  isSameTypeScript(script1: Script | CkbCellScriptModel, script2: Script): boolean {
+  isSameTypeScript(script1: Script | CkbCellScriptModel | ScriptWrapper, script2: Script): boolean {
     if (!script1 || !script2) {
       return false;
     }
     const s1 = this.normalizeScript(script1);
     const s2 = this.normalizeScript(script2);
+    
     return (
       s1.code_hash === s2.code_hash &&
       s1.hash_type === s2.hash_type &&
@@ -207,7 +208,7 @@ export default class TxService {
     );
   }
 
-  normalizeScript(script: Script | CkbCellScriptModel): {
+  normalizeScript(script: Script | CkbCellScriptModel | ScriptWrapper): {
     code_hash: string,
     hash_type: string,
     args: string
@@ -220,12 +221,22 @@ export default class TxService {
         hash_type: s.hash_type,
         args: script.args,
       }
-    } 
+    }
 
+    if("script" in script) {
+      const s = <ScriptWrapper>script;
+      return {
+        code_hash: s.script.code_hash,
+        hash_type: s.script.hash_type,
+        args: s.script.args,
+      };
+    }
+
+    const s = <CkbCellScriptModel>script;
     return {
-      code_hash: script.codeHash,
-      hash_type: script.hashType,
-      args: script.args,
+      code_hash: s.codeHash,
+      hash_type: s.hashType,
+      args: s.args,
     };
   }
 }

@@ -48,13 +48,16 @@ export default class OrdersService {
         argsLen: 'any',
       },
     });
-
+  
     if(orderTxs.length === 0) {
       return {
         bid_orders: [],
         ask_orders: []
       }
     }
+
+
+    
 
     const factory: DexOrderChainFactory = new DexOrderChainFactory();
     const orders = factory.getOrderChains(lock, type, orderTxs);
