@@ -988,9 +988,10 @@ describe('Orders controller', () => {
             hash_type: 'type',
             args: '0xe7dd2956717c180e727cc0948cdc3275f247c18b7592b39adcebc0d0e1a906bb'
           }
-          req.query.type_code_hash = TYPE_SCRIPT.code_hash
-          req.query.type_hash_type = TYPE_SCRIPT.hash_type
+          req.query.type_code_hash = TYPE_SCRIPT.code_hash;
+          req.query.type_hash_type = TYPE_SCRIPT.hash_type;
           req.query.type_args = TYPE_SCRIPT.args;
+          req.query.decimal = "18";
           
           mock_repository.mockCollectTransactions().resolves(dexOrderTransactions);
         })

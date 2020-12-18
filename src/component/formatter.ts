@@ -129,7 +129,27 @@ export class CkbUtils {
   }
 
   static roundHalfUp(price: string): string {
-    return new BigNumber(price).toFormat(BigNumber.ROUND_HALF_UP);
+    const amount = new BigNumber(price);
+    const intVal = amount.integerValue().toString();
+
+    if (intVal.length > 2) {
+      return amount.toFixed(2, BigNumber.ROUND_HALF_UP)
+    }  
+
+    if (intVal.length === 0) {
+      const decimal = amount.decimalPlaces()
+      if (decimal <= 4) {
+        return amount.toFixed(4, BigNumber.ROUND_HALF_UP)
+      }
+  
+      if (decimal >= 8) {
+        return amount.toFixed(8, BigNumber.ROUND_HALF_UP)
+      }
+  
+      return amount.toFixed(decimal)
+    }
+  
+    return amount.toFixed(4, BigNumber.ROUND_HALF_UP)
   }
 
   static getRequiredDataLength(): number {
@@ -142,5 +162,11 @@ export class CkbUtils {
 
   static getOrdersLimit(): number {
     return 7;
+  }
+
+  static priceUnitConversion(price: string, decimal: string): string {
+    return new BigNumber(price)
+      .div(10 ** 20) // 10 * 10 && 20
+      .times(new BigNumber(10).pow(parseInt(decimal) - 8)).toString()
   }
 }
