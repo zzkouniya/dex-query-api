@@ -4,43 +4,59 @@ import { contracts } from '../config';
 
 export interface DexOrderData {
   sUDTAmount: bigint;
+  version: bigint;
   orderAmount: bigint;
-  price: bigint;
-  isBid: boolean;
+  effect: bigint,
+  exponent: number,
+  isBid: boolean,
+  price: number
 }
 
 export interface DexOrderCellFormat {
   sUDTAmount: string;
+  version: string;
   orderAmount: string;
-  price: string;
-  isBid: boolean;
-  rawData: Cell;
+  effect: string,
+  exponent: string,
+  isBid: boolean,
+  price: number,
+  rawData: Cell
 }
 
 export class CkbUtils {
   static parseOrderData(hex: HexString): DexOrderData {
     const sUDTAmount = this.parseAmountFromLeHex(hex.slice(0, 34));
-    const orderAmount = this.parseAmountFromLeHex(hex.slice(34, 66));
 
-    let price: bigint;
-    try {
-      price = this.parseAmountFromLeHex(hex.slice(66, 98));
-      // const priceBuf: Buffer = Buffer.from(hex.slice(66, 98), "hex");
-      // price = priceBuf.readBigInt64LE();
-    } catch (error) {
-      price = null;
-    }
+    const versionBuf: Buffer = Buffer.from(hex.slice(34, 50), "hex");
+    const version = versionBuf.readBigUInt64LE();
+    
+    const orderAmount = this.parseAmountFromLeHex(hex.slice(50, 82));
+  
+    const effectBuf: Buffer = Buffer.from(hex.slice(82, 98), "hex");
+    const effect = effectBuf.readBigUInt64LE();
+  
+    const exponentBuf: Buffer = Buffer.from(hex.slice(98, 100), "hex");
+    const exponent = exponentBuf.readInt8();
+  
+    const isBid = hex.slice(100, 102) === "00";
 
-    const isBid = hex.slice(98, this.getRequiredDataLength()) === "00";
-
-    const orderData: DexOrderData = {
+    const price = this.getPrice(effect, exponent);
+  
+    const orderData = {
       sUDTAmount,
+      version,
       orderAmount,
-      price,
+      effect,
+      exponent,
       isBid,
+      price
     };
-
+  
     return orderData;
+  }
+
+  static getPrice(effect: bigint, exponent: number): number {
+    return Number(`${effect}e${exponent}`);
   }
 
   static parseAmountFromLeHex(leHex: HexString): bigint {
@@ -66,11 +82,15 @@ export class CkbUtils {
     const formattedOrderCells = orderCells.map((orderCell) => {
       const parsedOrderData = this.parseOrderData(orderCell.data);
 
+      const price = this.getPrice(parsedOrderData.effect, parsedOrderData.exponent);
       const result: DexOrderCellFormat = {
         sUDTAmount: parsedOrderData.sUDTAmount.toString(),
+        version: parsedOrderData.version.toString(),
         orderAmount: parsedOrderData.orderAmount.toString(),
-        price: parsedOrderData.price.toString(),
+        effect: parsedOrderData.effect.toString(),
+        exponent: parsedOrderData.exponent.toString(),
         isBid: parsedOrderData.isBid,
+        price: price,
         rawData: orderCell,
       };
 
@@ -96,26 +116,35 @@ export class CkbUtils {
     return `0x${buf.toString("hex")}`;
   }
 
-  static formatOrderData(currentAmount: bigint, orderAmount: bigint, price: bigint, isBid: boolean): string {
+  static formatOrderData(currentAmount: bigint, version: bigint, orderAmount: bigint, effect: bigint, exponent: number, isBid: boolean): string {
     const udtAmountHex = this.formatBigUInt128LE(currentAmount);
     if (isBid === undefined) {
       return udtAmountHex;
     }
+
+    const versionBuf = Buffer.alloc(8);
+    versionBuf.writeBigUInt64LE(version);
+    const versionHex = `${versionBuf.toString("hex")}`;
+  
 
     const orderAmountHex = this.formatBigUInt128LE(orderAmount).replace(
       "0x",
       ""
     );
 
-    const priceBuf = Buffer.alloc(16);
-    priceBuf.writeBigUInt64LE(price);
-    const priceHex = `${priceBuf.toString("hex")}`;
+    const effectBuf = Buffer.alloc(8);
+    effectBuf.writeBigUInt64LE(effect);
+    const effectHex = `${effectBuf.toString("hex")}`;
+
+    const exponentBuf = Buffer.alloc(1);
+    exponentBuf.writeInt8(exponent)
+    const exponentHex = `${exponentBuf.toString("hex")}`;
 
     const bidOrAskBuf = Buffer.alloc(1);
     bidOrAskBuf.writeInt8(isBid ? 0 : 1);
     const isBidHex = `${bidOrAskBuf.toString("hex")}`;
 
-    const dataHex = udtAmountHex + orderAmountHex + priceHex + isBidHex;
+    const dataHex = udtAmountHex + versionHex + orderAmountHex + effectHex + exponentHex + isBidHex;
     return dataHex;
   }
 
@@ -129,31 +158,11 @@ export class CkbUtils {
   }
 
   static roundHalfUp(price: string): string {
-    const amount = new BigNumber(price);
-    const intVal = amount.integerValue().toString();
-
-    if (intVal.length > 2) {
-      return amount.toFixed(2, BigNumber.ROUND_HALF_UP)
-    }  
-
-    if (intVal.length === 0) {
-      const decimal = amount.decimalPlaces()
-      if (decimal <= 4) {
-        return amount.toFixed(4, BigNumber.ROUND_HALF_UP)
-      }
-  
-      if (decimal >= 8) {
-        return amount.toFixed(8, BigNumber.ROUND_HALF_UP)
-      }
-  
-      return amount.toFixed(decimal)
-    }
-  
-    return amount.toFixed(4, BigNumber.ROUND_HALF_UP)
+    return new BigNumber(price).toFormat(BigNumber.ROUND_HALF_UP);
   }
 
   static getRequiredDataLength(): number {
-    return 100;
+    return 102;
   } 
 
   static getOrderCellCapacitySize(): bigint {
@@ -164,9 +173,4 @@ export class CkbUtils {
     return 7;
   }
 
-  static priceUnitConversion(price: string, decimal: string): string {
-    return new BigNumber(price)
-      .div(10 ** 20) // 10 * 10 && 20
-      .times(new BigNumber(10).pow(parseInt(decimal) - 8)).toString()
-  }
 }

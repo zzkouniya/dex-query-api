@@ -58,8 +58,8 @@ export const dexOrderTransactions = [
         type: null
       } ],
       outputs_data: [
-        CkbUtils.formatOrderData(300900000000000000n, 300000000000n, 100000000000000n, false),
-        CkbUtils.formatOrderData(57836558651830568n, 38821799640843962n, 38821799640843962n, false),
+        CkbUtils.formatOrderData(300900000000000000n, 1n, 300000000000n, 100000000000000n, 0, false),
+        CkbUtils.formatOrderData(57836558651830568n, 1n, 38821799640843962n, 38821799640843962n, 0, false),
         '0x'
       ],
       version: '0x0',
@@ -156,10 +156,10 @@ export const dexOrderTransactions = [
         }
       ],
       outputs_data: [
-        CkbUtils.formatOrderData(370199999998479n, 0n, 0n, false),
-        CkbUtils.formatOrderData(39774017177571400n, 1n, 43210000000000n, false),
-        CkbUtils.formatOrderData(123399999999493121n, 506879n, 100000000000000n, true),
-        CkbUtils.formatOrderData(237655782822937000n, 236944947979n, 100000000000000n, false)
+        CkbUtils.formatOrderData(370199999998479n, 1n, 0n, 0n, 0, false),
+        CkbUtils.formatOrderData(39774017177571400n, 1n, 1n, 43210000000000n, 0, false),
+        CkbUtils.formatOrderData(123399999999493121n, 1n, 506879n, 100000000000000n, 0, true),
+        CkbUtils.formatOrderData(237655782822937000n, 1n, 236944947979n, 100000000000000n, 0, false)
       ],
       version: '0x0',
       witnesses: []
@@ -228,8 +228,8 @@ export const dexOrderTransactions = [
         }
       ],
       outputs_data: [
-        CkbUtils.formatOrderData(300900000000000n, 296280000n, 98760000000000n, false),
-        CkbUtils.formatOrderData(57836558651830568n, 38821799640843962n, 38821799640843962n, false),
+        CkbUtils.formatOrderData(300900000000000n, 1n, 296280000n, 98760000000000n, 0, false),
+        CkbUtils.formatOrderData(57836558651830568n, 1n, 38821799640843962n, 38821799640843962n, 0, false),
         '0x'
       ],
       version: '0x0',
@@ -279,7 +279,7 @@ export const dexOrderTransactions = [
         }
       ],
       outputs_data: [
-        CkbUtils.formatOrderData(0n, 250000000000000000n, 40000000000000n, true),
+        CkbUtils.formatOrderData(0n, 1n, 250000000000000000n, 40000000000000n, 0, true),
         '0x'
       ],
       version: '0x0',

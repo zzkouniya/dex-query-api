@@ -33,7 +33,8 @@ describe('Orders controller', () => {
       {
         sUDTAmount: '5000000000',
         orderAmount: '15000000000',
-        price: '50000000000',
+        effect: 5,
+        exponent: 10,
         isBid: true,
         cell_output: {
           capacity: `0x${BigInt(200000000000).toString(16)}`,
@@ -54,12 +55,13 @@ describe('Orders controller', () => {
         },
         block_hash: '0xfda1e2e23f258cf92e3496a0c2c684db38e57d6f85467fdd2976f0e29cb8ef40',
         block_number: '0xf',
-        data: CkbUtils.formatOrderData(5000000000n, 15000000000n, 50000000000n, true),
+        data: CkbUtils.formatOrderData(5000000000n, 1n, 15000000000n, 50000000000n, 0, true),
       },
       {
         sUDTAmount: '5000000000',
         orderAmount: '15000000000',
-        price: '70000000000',
+        effect: 7,
+        exponent: 10,
         isBid: true,
         cell_output: {
           capacity: `0x${BigInt(200000000000).toString(16)}`,
@@ -80,12 +82,13 @@ describe('Orders controller', () => {
         },
         block_hash: '0x2b17c782478f908110b1f653a1d3d322c39ac620d5f951d160977b02c2bcc9ce',
         block_number: '0x13',
-        data: CkbUtils.formatOrderData(5000000000n, 15000000000n, 70000000000n, true),
+        data: CkbUtils.formatOrderData(5000000000n, 1n, 15000000000n, 70000000000n, 0, true),
       },
       {
         sUDTAmount: '50000000000',
         orderAmount: '100000000000',
-        price: '50000000000',
+        effect: 5,
+        exponent: 10,
         isBid: false,
         cell_output: {
           capacity: `0x${BigInt(80000000000).toString(16)}`,
@@ -106,12 +109,13 @@ describe('Orders controller', () => {
         },
         block_hash: '0xcfeafc49705d16bcf0c85d71715f8e18fe2ab26f827cde5e4537d5a318b642cf',
         block_number: '0x17',
-        data: CkbUtils.formatOrderData(50000000000n, 100000000000n, 50000000000n, false),
+        data: CkbUtils.formatOrderData(50000000000n, 1n, 100000000000n, 50000000000n, 0, false),
       },
       {
         sUDTAmount: '50000000000',
         orderAmount: '100000000000',
-        price: '55000000000',
+        effect: 55,
+        exponent: 9,
         isBid: false,
         cell_output: {
           capacity: `0x${BigInt(80000000000).toString(16)}`,
@@ -132,7 +136,7 @@ describe('Orders controller', () => {
         },
         block_hash: '0x301326140a7ccf7735dc88deec20da679eb19a344321d849376b01a07a0c6a19',
         block_number: '0x1b',
-        data: CkbUtils.formatOrderData(50000000000n, 100000000000n, 55000000000n, false),
+        data: CkbUtils.formatOrderData(50000000000n, 1n, 100000000000n, 55000000000n, 0, false),
       },
     ];
 
@@ -145,168 +149,6 @@ describe('Orders controller', () => {
     req = mockReq();
     res = mockRes();
     next = sinon.spy();
-  });
-
-  describe('#getBestPrice()', () => {
-    describe('query best ask price', () => {
-      beforeEach(async () => {
-        mock_repository.mockCollectCells().resolves(orders);
-
-        req.query.is_bid = false;
-        await controller.getBestPrice(req, res, next);
-      });
-
-      it('returns highest bid price', () => {
-        res.status.should.have.been.calledWith(200);
-        res.json.should.have.been.calledWith({ price: '70000000000' });
-      });
-    });
-    describe('query best bid price', () => {
-      beforeEach(async () => {
-        mock_repository.mockCollectCells().resolves(orders);
-
-        req.query.is_bid = true;
-        await controller.getBestPrice(req, res, next);
-      });
-
-      it('returns lowest ask price', () => {
-        res.status.should.have.been.calledWith(200);
-        res.json.should.have.been.calledWith({ price: '50000000000' });
-      });
-    });
-    describe('with order live cells having zero order amount', () => {
-      const fakeOrders = [
-        {
-          cell_output: {
-            capacity: `0x${BigInt(CkbUtils.getOrderCellCapacitySize()).toString(16)}`,
-            lock: {
-              code_hash: '0x04878826e4bf143a93eb33cb298a46f96e4014533d98865983e048712da65160',
-              hash_type: 'data',
-              args: `0x${'0'.repeat(64)}`,
-            },
-          },
-          data: CkbUtils.formatOrderData(BigInt(1), BigInt(0), BigInt(20), true),
-        },
-        {
-          cell_output: {
-            capacity: `0x${BigInt(18700000001n).toString(16)}`,
-            lock: {
-              code_hash: '0x04878826e4bf143a93eb33cb298a46f96e4014533d98865983e048712da65160',
-              hash_type: 'data',
-              args: `0x${'0'.repeat(64)}`,
-            },
-          },
-          data: CkbUtils.formatOrderData(BigInt(1), BigInt(1), BigInt(10), true),
-        },
-        {
-          cell_output: {
-            capacity: `0x${BigInt(CkbUtils.getOrderCellCapacitySize()).toString(16)}`,
-            lock: {
-              code_hash: '0x04878826e4bf143a93eb33cb298a46f96e4014533d98865983e048712da65160',
-              hash_type: 'data',
-              args: `0x${'0'.repeat(64)}`,
-            },
-          },
-          data: CkbUtils.formatOrderData(BigInt(1), BigInt(1), BigInt(15), false),
-        },
-      ];
-      beforeEach(async () => {
-        mock_repository.mockCollectCells().resolves(fakeOrders);
-
-        req.query.is_bid = false;
-        await controller.getBestPrice(req, res, next);
-      });
-      it('returns the price from the order cell having non-zero order amount', () => {
-        res.status.should.have.been.calledWith(200);
-        res.json.should.have.been.calledWith({ price: '10' });
-      });
-    });
-    describe('with insufficient sudt amount or capacity', () => {
-      const orderLock = {
-        code_hash: '0x04878826e4bf143a93eb33cb298a46f96e4014533d98865983e048712da65160',
-        hash_type: 'data',
-        args: `0x${'0'.repeat(64)}`,
-      };
-
-      describe('when query for best price for bid order', () => {
-        const insufficientCapacity = BigInt(CkbUtils.getOrderCellCapacitySize());
-        const sufficientCapacity = BigInt(CkbUtils.getOrderCellCapacitySize());
-        const validOrderData = CkbUtils.formatOrderData(BigInt(25075 * 10 ** 5), BigInt(5 * 10 ** 9), BigInt(2 * 10 ** 10), false);
-        const invalidOrderData = CkbUtils.formatOrderData(BigInt(2 * 10 ** 10), BigInt(4 * 10 ** 9), BigInt(2 * 10 ** 9), false);
-        const fakeOrders = [
-          {
-            cell_output: {
-              capacity: `0x${insufficientCapacity.toString(16)}`,
-              lock: orderLock,
-            },
-            data: validOrderData,
-          },
-          {
-            cell_output: {
-              capacity: `0x${sufficientCapacity.toString(16)}`,
-              lock: orderLock,
-            },
-            data: validOrderData,
-          },
-          {
-            cell_output: {
-              capacity: `0x${sufficientCapacity.toString(16)}`,
-              lock: orderLock,
-            },
-            data: invalidOrderData,
-          },
-        ];
-        beforeEach(async () => {
-          mock_repository.mockCollectCells().resolves(fakeOrders);
-
-          req.query.is_bid = true;
-          await controller.getBestPrice(req, res, next);
-        });
-        it('returns the price from the order cell having non-zero order amount', () => {
-          res.status.should.have.been.calledWith(200);
-          res.json.should.have.been.calledWith({ price: '20000000000' });
-        });
-      });
-      describe('when query for best price for ask order', () => {
-        const orderAmount = BigInt(5 * 10 ** 9);
-        const price = 2n;
-        const sufficientCapacity = (BigInt(orderAmount * price) * BigInt(1003)) / BigInt(1000) + CkbUtils.getOrderCellCapacitySize();
-        const insufficientCapacity = sufficientCapacity - 2n;
-        const fakeOrders = [
-          {
-            cell_output: {
-              capacity: `0x${sufficientCapacity.toString(16)}`,
-              lock: orderLock,
-            },
-            data: CkbUtils.formatOrderData(BigInt(0), orderAmount, BigInt(1 * 10 ** 10), true),
-          },
-          {
-            cell_output: {
-              capacity: `0x${sufficientCapacity.toString(16)}`,
-              lock: orderLock,
-            },
-            data: CkbUtils.formatOrderData(BigInt(0), orderAmount, BigInt(2 * 10 ** 10), true),
-          },
-          {
-            cell_output: {
-              capacity: `0x${insufficientCapacity.toString(16)}`,
-              lock: orderLock,
-            },
-            data: CkbUtils.formatOrderData(BigInt(0), orderAmount, BigInt(2 * 10 ** 10), true),
-          },
-        ];
-        beforeEach(async () => {
-          mock_repository.mockCollectCells().resolves(fakeOrders);
-
-          req.query.is_bid = false;
-          await controller.getBestPrice(req, res, next);
-        });
-        it('returns the price from the order cell having non-zero order amount', () => {
-          res.status.should.have.been.calledWith(200);
-          res.json.should.have.been.calledWith({ price: '20000000000' });
-        });
-      });
-    });
   });
 
   describe('#getOrdersHistory()', () => {
@@ -331,7 +173,7 @@ describe('Orders controller', () => {
         args: orderLockArgs,
       },
       type: typeScript,
-      data: CkbUtils.formatOrderData(1n, 1n, price, true)
+      data: CkbUtils.formatOrderData(1n, 1n, 1n, price, 0, true)
     }
     const orderCell2 = {
       capacity: '0x0',
@@ -340,7 +182,7 @@ describe('Orders controller', () => {
         args: orderLockArgs,
       },
       type: typeScript,
-      data: CkbUtils.formatOrderData(2n, 0n, price, true)
+      data: CkbUtils.formatOrderData(2n, 1n, 0n, price, 0, true)
     }
 
     describe('completed order', () => {
@@ -504,7 +346,7 @@ describe('Orders controller', () => {
             args: orderLockArgs,
           },
           type: typeScript,
-          data: CkbUtils.formatOrderData(1n, 1n, price, true)
+          data: CkbUtils.formatOrderData(1n, 1n, 1n, price, 0, true)
         }
         const orderCell1_2 = {
           capacity: '0x1',
@@ -513,7 +355,7 @@ describe('Orders controller', () => {
             args: orderLockArgs,
           },
           type: typeScript,
-          data: CkbUtils.formatOrderData(2n, 0n, price, true)
+          data: CkbUtils.formatOrderData(2n, 1n, 0n, price, 0, true)
         }
         const orderCell2_1 = {
           capacity: '0x4',
@@ -522,7 +364,7 @@ describe('Orders controller', () => {
             args: orderLockArgs,
           },
           type: typeScript,
-          data: CkbUtils.formatOrderData(10n, 10n, price, true)
+          data: CkbUtils.formatOrderData(10n, 1n, 10n, price, 0, true)
         }
         const orderCell2_2 = {
           capacity: '0x1',
@@ -531,7 +373,7 @@ describe('Orders controller', () => {
             args: orderLockArgs,
           },
           type: typeScript,
-          data: CkbUtils.formatOrderData(20n, 0n, price, true)
+          data: CkbUtils.formatOrderData(20n, 1n, 0n, price, 0, true)
         }
         describe('with one input transaction to one output transaction', () => {
           beforeEach(async () => {
@@ -988,10 +830,9 @@ describe('Orders controller', () => {
             hash_type: 'type',
             args: '0xe7dd2956717c180e727cc0948cdc3275f247c18b7592b39adcebc0d0e1a906bb'
           }
-          req.query.type_code_hash = TYPE_SCRIPT.code_hash;
-          req.query.type_hash_type = TYPE_SCRIPT.hash_type;
+          req.query.type_code_hash = TYPE_SCRIPT.code_hash
+          req.query.type_hash_type = TYPE_SCRIPT.hash_type
           req.query.type_args = TYPE_SCRIPT.args;
-          req.query.decimal = "18";
           
           mock_repository.mockCollectTransactions().resolves(dexOrderTransactions);
         })

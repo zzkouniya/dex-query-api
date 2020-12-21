@@ -76,15 +76,13 @@ export default class OrderController {
     const {
       type_code_hash,
       type_hash_type,
-      type_args,
-      decimal
+      type_args
     } = req.query;
     try {
       const orders = await this.orderService.getOrders(
         <string>type_code_hash,
         <string>type_hash_type,
-        <string>type_args,
-        <string>decimal
+        <string>type_args
       );
       res.status(200).json(orders)
 
@@ -141,69 +139,6 @@ export default class OrderController {
     } catch (err) {
       console.error(err);
       res.status(500).send();
-    }
-  }
-
-  @ApiOperationGet({
-    path: "best-price",
-    description: "Get best price",
-    summary: "Get best price",
-    parameters: {
-      query: {
-        type_code_hash: {
-          name: "type_code_hash",
-          type: "string",
-          required: true,
-          description: "",
-        },
-        type_hash_type: {
-          name: "type_hash_type",
-          type: "string",
-          required: true,
-          description: "",
-        },
-        type_args: {
-          name: "type_args",
-          type: "string",
-          required: true,
-          description: "",
-        },
-        is_bid: {
-          name: "is_bid",
-          type: "string",
-          required: true,
-          description: "",
-        },
-      },
-    },
-    responses: {
-      200: {
-        description: "Success",
-        type: SwaggerDefinitionConstant.Response.Type.OBJECT,
-        // model: "BestPriceModel",
-      },
-      400: { description: "Parameters fail" },
-    },
-  })
-  @httpGet("best-price")
-  async getBestPrice(
-    req: express.Request,
-    res: express.Response
-  ): Promise<void> {
-    const { type_code_hash, type_hash_type, type_args, is_bid } = req.query;
-
-    try {
-      const result = await this.orderService.getBestPrice(
-        <string>type_code_hash,
-        <string>type_hash_type,
-        <string>type_args,
-        <boolean>(<unknown>is_bid)
-      );
-
-      res.status(200).json(result);
-    } catch (err) {
-      console.error(err);
-      res.status(500).send(err);
     }
   }
 
