@@ -9,7 +9,7 @@ import { contracts } from "../../config";
 import CellsAmountRequestModel from "../cells/cells_amount_request_model";
 import { OutPoint as LumosOutPoint } from '@ckb-lumos/base';
 import PlaceOrder from "./place_order";
-import { Address, AddressType, Transaction } from "@lay2/pw-core";
+import PWCore, { Address, AddressType, EthProvider, PwCollector, Transaction } from "@lay2/pw-core";
 import PlaceBidOrder from "./place_bid_order";
 import PlaceAskOrder from "./place_ask_order";
 
