@@ -166,7 +166,7 @@ export class CkbUtils {
   } 
 
   static getOrderCellCapacitySize(): bigint {
-    return 18700000000n
+    return 18100000000n
   }
 
   static getOrdersLimit(): number {
