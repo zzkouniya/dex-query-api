@@ -72,9 +72,6 @@ export default class OrdersService {
       });
 
     const orderCells = liveCells;
-    console.log(orderCells);
-    
-
     const dexOrdersBid = this.filterDexOrder(orderCells, true)     
 
     const groupbyPriceBid: Map<string, DexOrderCellFormat[]> = this.groupbyPrice(dexOrdersBid);
@@ -169,13 +166,16 @@ export default class OrdersService {
       const output = live.cell;
       const { price, orderAmount, sUDTAmount, isBid } = CkbUtils.parseOrderData(live.data);
       const freeCapacity = BigInt(parseInt(output.capacity, 16)) - CkbUtils.getOrderCellCapacitySize();
-      const priceBigInt = BigInt(price);
+      const priceBigNumber = new BigNumber(price);
       if (isBid) {
-        const costAmount = orderAmount * priceBigInt
-        if (costAmount + (costAmount * FEE) / (FEE + FEE_RATIO) > freeCapacity) {
+        
+        const costAmount = new BigNumber(orderAmount.toString()).multipliedBy(priceBigNumber);
+        const fee = costAmount.multipliedBy(FEE.toString()).div((FEE + FEE_RATIO).toString());    
+
+        if (costAmount.minus(fee).gt(freeCapacity.toString())) {
           return false;
         }
-        if ((orderAmount * priceBigInt) === BigInt(0)) {
+        if (costAmount.eq(0)) {
           return false;
         }
 
@@ -183,11 +183,13 @@ export default class OrdersService {
       }
 
       if (!isBid) {
-        const costAmount = orderAmount 
-        if (costAmount + (costAmount * FEE) / (FEE + FEE_RATIO) > sUDTAmount * priceBigInt) {
+        const costAmount = new BigNumber(orderAmount.toString());
+        const fee = costAmount.multipliedBy(FEE.toString()).div((FEE + FEE_RATIO).toString());
+        const receive = new BigNumber(sUDTAmount.toString()).multipliedBy(priceBigNumber);
+        if (costAmount.minus(fee).gt(receive)) {
           return false;
         }
-        if (orderAmount / priceBigInt === BigInt(0)) {
+        if (new BigNumber(orderAmount.toString()).div(priceBigNumber).eq(0)) {
           return false;
         }
         return true

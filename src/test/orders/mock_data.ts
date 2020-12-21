@@ -256,7 +256,7 @@ export const dexOrderTransactions = [
       ],
       outputs: [
         {
-          capacity: `0x${119000000000n.toString(16)}`,
+          capacity: `0x${11900000000000n.toString(16)}`,
           lock: {
             args: '0xa02332efd9363b1dbc87458c4064602aee5c61a3167d281fba50abc64466f614',
             code_hash: '0x279bee9fa98959029766c0e0ce19cd91b7180fd15b600a9e95140149b524c53b',
@@ -279,7 +279,7 @@ export const dexOrderTransactions = [
         }
       ],
       outputs_data: [
-        CkbUtils.formatOrderData(0n, 1n, 250000000000000000n, 40000000000000n, 0, true),
+        CkbUtils.formatOrderData(0n, 1n, 2500000n, 400000n, 0, true),
         '0x'
       ],
       version: '0x0',
