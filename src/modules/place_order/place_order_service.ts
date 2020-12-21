@@ -1,5 +1,4 @@
 import { inject, injectable, LazyServiceIdentifer } from "inversify";
-import IndexerWrapper from "../indexer/indexer";
 import { modules } from "../../ioc";
 
 import CellsSerive from "../cells/cells_service";
@@ -9,7 +8,7 @@ import { contracts } from "../../config";
 import CellsAmountRequestModel from "../cells/cells_amount_request_model";
 import { OutPoint as LumosOutPoint } from '@ckb-lumos/base';
 import PlaceOrder from "./place_order";
-import PWCore, { Address, AddressType, CellDep, DepType, EthProvider, HashType, OutPoint, PwCollector, Script, Transaction } from "@lay2/pw-core";
+import PWCore, { Address, AddressType, CellDep, DepType, HashType, OutPoint, Script, Transaction } from "@lay2/pw-core";
 import PlaceBidOrder from "./place_bid_order";
 import PlaceAskOrder from "./place_ask_order";
 
