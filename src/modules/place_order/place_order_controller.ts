@@ -1,8 +1,7 @@
-import { controller, httpGet, httpPost } from "inversify-express-utils";
+import { controller, httpPost } from "inversify-express-utils";
 import { modules } from "../../ioc";
 import { inject, LazyServiceIdentifer } from "inversify";
 import {
-  ApiOperationGet,
   ApiOperationPost,
   ApiPath,
   SwaggerDefinitionConstant,
@@ -10,7 +9,6 @@ import {
 import * as express from "express";
 import { DexLogger } from "../../component";
 import PlaceOrderService from "./place_order_service";
-import PWCore from "@lay2/pw-core";
 
 @ApiPath({
   path: "/",
@@ -51,7 +49,7 @@ export default class PlaceOrderController {
   async getLiveCells(
     req: express.Request,
     res: express.Response
-  ) {
+  ): Promise<void> {
     try {
       const tx = await this.placeOrderService.placeOrder({
         pay: req.body.pay,

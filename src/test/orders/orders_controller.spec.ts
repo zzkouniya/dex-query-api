@@ -25,121 +25,9 @@ describe('Orders controller', () => {
   let res;
   let next;
   let controller;
-  let orders;
   let mock_repository: MockRepository;
 
   beforeEach(() => {
-    orders = [
-      {
-        sUDTAmount: '5000000000',
-        orderAmount: '15000000000',
-        effect: 5,
-        exponent: 10,
-        isBid: true,
-        cell_output: {
-          capacity: `0x${BigInt(200000000000).toString(16)}`,
-          lock: {
-            code_hash: '0x04878826e4bf143a93eb33cb298a46f96e4014533d98865983e048712da65160',
-            hash_type: 'data',
-            args: `0x${'0'.repeat(64)}`,
-          },
-          type: {
-            code_hash: '0xc68fb287d8c04fd354f8332c3d81ca827deea2a92f12526e2f35be37968f6740',
-            hash_type: 'type',
-            args: '0xbe7e812b85b692515a21ea3d5aed0ad37dccb3fcd86e9b8d6a30ac24808db1f7',
-          },
-        },
-        out_point: {
-          tx_hash: '0x2d662063751dd2b1bcc87a486e0186d489b6f8d20f9987978bdf3911b3de526d',
-          index: '0x0',
-        },
-        block_hash: '0xfda1e2e23f258cf92e3496a0c2c684db38e57d6f85467fdd2976f0e29cb8ef40',
-        block_number: '0xf',
-        data: CkbUtils.formatOrderData(5000000000n, 1n, 15000000000n, 50000000000n, 0, true),
-      },
-      {
-        sUDTAmount: '5000000000',
-        orderAmount: '15000000000',
-        effect: 7,
-        exponent: 10,
-        isBid: true,
-        cell_output: {
-          capacity: `0x${BigInt(200000000000).toString(16)}`,
-          lock: {
-            code_hash: '0x04878826e4bf143a93eb33cb298a46f96e4014533d98865983e048712da65160',
-            hash_type: 'data',
-            args: `0x${'0'.repeat(64)}`,
-          },
-          type: {
-            code_hash: '0xc68fb287d8c04fd354f8332c3d81ca827deea2a92f12526e2f35be37968f6740',
-            hash_type: 'type',
-            args: '0xbe7e812b85b692515a21ea3d5aed0ad37dccb3fcd86e9b8d6a30ac24808db1f7',
-          },
-        },
-        out_point: {
-          tx_hash: '0xd2fdccb50e40d30d9193af27532271616c9e09a33ab25dce4ed653c9e4dd72f8',
-          index: '0x0',
-        },
-        block_hash: '0x2b17c782478f908110b1f653a1d3d322c39ac620d5f951d160977b02c2bcc9ce',
-        block_number: '0x13',
-        data: CkbUtils.formatOrderData(5000000000n, 1n, 15000000000n, 70000000000n, 0, true),
-      },
-      {
-        sUDTAmount: '50000000000',
-        orderAmount: '100000000000',
-        effect: 5,
-        exponent: 10,
-        isBid: false,
-        cell_output: {
-          capacity: `0x${BigInt(80000000000).toString(16)}`,
-          lock: {
-            code_hash: '0x04878826e4bf143a93eb33cb298a46f96e4014533d98865983e048712da65160',
-            hash_type: 'data',
-            args: `0x${'0'.repeat(64)}`,
-          },
-          type: {
-            code_hash: '0xc68fb287d8c04fd354f8332c3d81ca827deea2a92f12526e2f35be37968f6740',
-            hash_type: 'type',
-            args: '0xbe7e812b85b692515a21ea3d5aed0ad37dccb3fcd86e9b8d6a30ac24808db1f7',
-          },
-        },
-        out_point: {
-          tx_hash: '0xeea888c6bae03f54c58e09bb1aaa51453f82438d1363528c570a5780d5d5aa7a',
-          index: '0x0',
-        },
-        block_hash: '0xcfeafc49705d16bcf0c85d71715f8e18fe2ab26f827cde5e4537d5a318b642cf',
-        block_number: '0x17',
-        data: CkbUtils.formatOrderData(50000000000n, 1n, 100000000000n, 50000000000n, 0, false),
-      },
-      {
-        sUDTAmount: '50000000000',
-        orderAmount: '100000000000',
-        effect: 55,
-        exponent: 9,
-        isBid: false,
-        cell_output: {
-          capacity: `0x${BigInt(80000000000).toString(16)}`,
-          lock: {
-            code_hash: '0x04878826e4bf143a93eb33cb298a46f96e4014533d98865983e048712da65160',
-            hash_type: 'data',
-            args: `0x${'0'.repeat(64)}`,
-          },
-          type: {
-            code_hash: '0xc68fb287d8c04fd354f8332c3d81ca827deea2a92f12526e2f35be37968f6740',
-            hash_type: 'type',
-            args: '0xbe7e812b85b692515a21ea3d5aed0ad37dccb3fcd86e9b8d6a30ac24808db1f7',
-          },
-        },
-        out_point: {
-          tx_hash: '0xb634202edd6409e6282b0d1d0b1dbcd5b3a52918a82235e9539dbe31961b1932',
-          index: '0x0',
-        },
-        block_hash: '0x301326140a7ccf7735dc88deec20da679eb19a344321d849376b01a07a0c6a19',
-        block_number: '0x1b',
-        data: CkbUtils.formatOrderData(50000000000n, 1n, 100000000000n, 55000000000n, 0, false),
-      },
-    ];
-
     mock_repository = MockRepositoryFactory.getInstance();
 
     const service = new OrdersService(mock_repository);
@@ -830,9 +718,10 @@ describe('Orders controller', () => {
             hash_type: 'type',
             args: '0xe7dd2956717c180e727cc0948cdc3275f247c18b7592b39adcebc0d0e1a906bb'
           }
-          req.query.type_code_hash = TYPE_SCRIPT.code_hash
-          req.query.type_hash_type = TYPE_SCRIPT.hash_type
+          req.query.type_code_hash = TYPE_SCRIPT.code_hash;
+          req.query.type_hash_type = TYPE_SCRIPT.hash_type;
           req.query.type_args = TYPE_SCRIPT.args;
+          req.query.decimal = "18";
           
           mock_repository.mockCollectTransactions().resolves(dexOrderTransactions);
         })
@@ -844,7 +733,7 @@ describe('Orders controller', () => {
             bid_orders: [{ price: "400000", receive: "2500000" }]
           });
         }) 
-      }); 
+      });  
 
       describe('lumos query when the transaction is empty', () => {
         beforeEach(() => {

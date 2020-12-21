@@ -76,13 +76,15 @@ export default class OrderController {
     const {
       type_code_hash,
       type_hash_type,
-      type_args
+      type_args,
+      decimal
     } = req.query;
     try {
       const orders = await this.orderService.getOrders(
         <string>type_code_hash,
         <string>type_hash_type,
-        <string>type_args
+        <string>type_args,
+        <string>decimal
       );
       res.status(200).json(orders)
 
@@ -91,6 +93,7 @@ export default class OrderController {
       res.status(500).send();
     }
   }
+  
   
   @ApiOperationGet({
     path: "current-price",
