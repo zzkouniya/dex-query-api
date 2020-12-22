@@ -1,0 +1,16 @@
+version: '2'
+
+services:
+  ckb-testnode:
+    restart: always
+    image: nervos/ckb:v0.39.0-rc2
+    environment:
+      CKB_CHAIN: testnet
+    ports:
+      - "8116:8114"
+      - "8115:8115" 
+    volumes:
+      - ./ckb-testnet:/var/lib/ckb
+    command: run
+
+
