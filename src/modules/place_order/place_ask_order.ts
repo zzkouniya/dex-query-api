@@ -115,21 +115,21 @@ export default class PlaceAskOrder extends PlaceOrder {
       this.orderLock,
       this.sudtType,
     )
-    orderOutput.setHexData(PlaceAskOrder.buildAskData(this.actualPay.toString(), receive, this.price, this.sudtDecimal))
+    orderOutput.setHexData(PlaceAskOrder.buildAskData(this.pay.toString(), receive, this.price, this.sudtDecimal))
 
-    const sudtChangeAmount = keepBothChange
+    const sudtChangeCellCapacity = keepBothChange
       ? new Amount(SUDT_MIN_CAPACITY.toString(), AmountUnit.ckb)
       : new Amount(inputCapacity.minus(neededCapacity).toString(), AmountUnit.shannon)
 
     const sudtChangeOutput = new Cell(
-      sudtChangeAmount,
+      sudtChangeCellCapacity,
       this.inputLock,
       this.sudtType,
     )
 
     sudtChangeOutput.setHexData(
       CkbUtils.formatBigUInt128LE(BigInt(
-        sudtAmount.minus(this.actualPay.times(10 ** this.sudtDecimal).toFixed(0, 1))
+        sudtAmount.minus(new BigNumber(this.pay).times(10 ** this.sudtDecimal).toFixed(0, 1))
       ))
     )
 
