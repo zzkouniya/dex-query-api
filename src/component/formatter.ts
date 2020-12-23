@@ -181,12 +181,6 @@ export class CkbUtils {
     return amount.toFixed(4, BigNumber.ROUND_HALF_UP)
   }
 
-  static priceUnitConversion(price: string, decimal: string): string {
-    return new BigNumber(price)
-      .div(10 ** 20) // 10 * 10 && 20
-      .times(new BigNumber(10).pow(parseInt(decimal) - 8)).toString()
-  }
-
   static getRequiredDataLength(): number {
     return 88;
   } 

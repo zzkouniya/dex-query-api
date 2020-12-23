@@ -187,7 +187,7 @@ export default class OrdersService {
     const groupbyPrice: Map<string, DexOrderCellFormat[]> = new Map()
     for(let i = 0; i < dexOrders.length; i++) {
       const dexOrder = dexOrders[i];
-      const key = this.getRoundHalfUpPrice(dexOrder.price.toString(), decimal);
+      const key = CkbUtils.roundHalfUp(dexOrder.price.toString());
       let priceArr = groupbyPrice.get(key);
       if(!priceArr) {
         priceArr = []
@@ -200,10 +200,5 @@ export default class OrdersService {
     return groupbyPrice;
   }
 
-  private getRoundHalfUpPrice(price: string, decimal: string) {
-    const key = CkbUtils.roundHalfUp(CkbUtils.priceUnitConversion(price, decimal));
-    
-    return key;
-  }
 }
 
