@@ -1,24 +1,23 @@
-import { Hash } from '@ckb-lumos/base';
-import CkbCellModel from "./ckb_cell";
-import CkbTransactionCellDepsModel from "./ckb_transaction_cell_deps";
-import CkbTransactionInputsModel from "./ckb_transaction_inputs";
+import { Hash } from '@ckb-lumos/base'
+import CkbCellModel from './ckb_cell'
+import CkbTransactionCellDepsModel from './ckb_transaction_cell_deps'
+import CkbTransactionInputsModel from './ckb_transaction_inputs'
 
 export default interface CkbTransactionModel {
-  cellDeps: Array<CkbTransactionCellDepsModel>;
+  cellDeps: CkbTransactionCellDepsModel[]
 
-  inputs: Array<CkbTransactionInputsModel>;
+  inputs: CkbTransactionInputsModel[]
 
-  outputs: Array<CkbCellModel>;
+  outputs: CkbCellModel[]
 
-  outputsData: Array<string>;
+  outputsData: string[]
 
-  headerDeps: Array<Hash>;
+  headerDeps: Hash[]
 
-  hash: string;
+  hash: string
 
-  version: string;
+  version: string
 
-  witnesses: Array<string>;
-
+  witnesses: string[]
 
 }

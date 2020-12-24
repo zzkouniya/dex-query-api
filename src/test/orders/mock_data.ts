@@ -1,4 +1,4 @@
-import { CkbUtils } from "../../component";
+import { CkbUtils } from '../../component'
 
 export const dexOrderTransactions = [
   {
@@ -22,7 +22,7 @@ export const dexOrderTransactions = [
           since: '0x0'
         }
       ],
-      outputs: [    {
+      outputs: [{
         capacity: `0x${18700000000n.toString(16)}`,
         lock: {
           args: '0x9eb946551d1eed6aad1b186af975af8ddb2d5043a30d28b6228e6b66d4f3521a',
@@ -56,7 +56,7 @@ export const dexOrderTransactions = [
           hash_type: 'type'
         },
         type: null
-      } ],
+      }],
       outputs_data: [
         CkbUtils.formatOrderData(300900000000000000n, 300000000000n, 100000000000000n, false),
         CkbUtils.formatOrderData(57836558651830568n, 38821799640843962n, 38821799640843962n, false),

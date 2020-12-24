@@ -1,7 +1,7 @@
 
-import CkbOutPointModel from "./ckb_out_point";
+import CkbOutPointModel from './ckb_out_point'
 
 export default interface CkbTransactionCellDepsModel {
-    outPoint: CkbOutPointModel;
-    depType: string;
-} 
+  outPoint: CkbOutPointModel
+  depType: string
+}
