@@ -9,7 +9,7 @@
     "sourceMap": true,
     "removeComments": true,  
     "importHelpers": true,
-    "strictNullChecks": true,
+    // "strictNullChecks": true,
     /* 
     "downlevelIteration": true,
     "isolatedModules": true,

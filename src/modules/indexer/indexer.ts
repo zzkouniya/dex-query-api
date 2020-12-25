@@ -22,6 +22,7 @@ export default class IndexerWrapper implements IndexerService {
     this.indexer = new Indexer(indexer_config.nodeUrl, indexer_config.dataPath)
     this.indexer.startForever()
 
+    // eslint-disable-next-line @typescript-eslint/no-misused-promises
     setInterval(async () => {
       const { block_number } = await this.indexer.tip()
       console.log('indexer tip block', parseInt(block_number, 16))

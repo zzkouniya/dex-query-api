@@ -55,4 +55,5 @@ export class DexQueryApiServer {
 }
 
 const dexQueryApiServer: DexQueryApiServer = new DexQueryApiServer()
+// eslint-disable-next-line @typescript-eslint/no-floating-promises
 dexQueryApiServer.run()

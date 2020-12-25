@@ -6,12 +6,11 @@ import sinonStubPromise from 'sinon-stub-promise'
 
 import { mockReq, mockRes } from 'sinon-express-mock'
 import { CkbUtils } from '../component/formatter'
-import { utils, Cell, QueryOptions, TransactionWithStatus, HashType } from '@ckb-lumos/base'
-
-import { IndexerService } from '../modules/indexer/indexer_service'
+import { utils, Cell, HashType, Script } from '@ckb-lumos/base'
 import BalanceService from '../modules/balance/balance_service'
 import BalanceController from '../modules/balance/balance_controller'
 import { contracts } from '../config'
+import { MockRepository, MockRepositoryFactory } from './mock_repository_factory'
 
 chai.use(sinonChai)
 chai.should()
@@ -23,9 +22,9 @@ describe('Balance controller', () => {
   let res
   let next
   let controller
-  let mock_cells
+  let mock_repository: MockRepository
 
-  const generateCell = (capacity, data, lock, type, txHash = '0x1') => {
+  const generateCell = (capacity: number, data: string, lock: Script, type: Script, txHash = '0x1') => {
     const cell: Cell = {
       cell_output: {
         capacity: `0x${capacity.toString(16)}`,
@@ -51,17 +50,17 @@ describe('Balance controller', () => {
     return cell
   }
 
-  const lock = {
+  const lock: Script = {
     code_hash: '0x04878826e4bf143a93eb33cb298a46f96e4014533d98865983e048712da65160',
     hash_type: <HashType>'data',
     args: '0x2946e43211d00ab3791ab1d8b598c99643c39649'
   }
-  const orderLock = {
+  const orderLock: Script = {
     code_hash: contracts.orderLock.codeHash,
     hash_type: contracts.orderLock.hashType,
     args: utils.computeScriptHash(lock)
   }
-  const sudtType = {
+  const sudtType: Script = {
     code_hash: '0xc68fb287d8c04fd354f8332c3d81ca827deea2a92f12526e2f35be37968f6740',
     hash_type: 'type',
     args: '0xbe7e812b85b692515a21ea3d5aed0ad37dccb3fcd86e9b8d6a30ac24808db1f7'
@@ -87,33 +86,10 @@ describe('Balance controller', () => {
   const clone = (obj) => JSON.parse(JSON.stringify(obj))
 
   beforeEach(() => {
-    class MockIndex implements IndexerService {
-      tip (): Promise<number> {
-        return null
-      }
-
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      collectCells (queryOptions: QueryOptions): Promise<Cell[]> {
-        return null
-      }
-
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      collectTransactions (queryOptions: QueryOptions): Promise<TransactionWithStatus[]> {
-        return null
-      }
-
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      getLastMatchOrders (type) {
-        return null
-      }
-    }
-
-    const mock: MockIndex = new MockIndex()
-    mock_cells = sinon.stub(mock, 'collectCells')
-    const service = new BalanceService(mock)
+    mock_repository = MockRepositoryFactory.getInstance()
+    // mock_cells = sinon.stub(mock_repository, 'collectCells')
+    const service = new BalanceService(mock_repository)
     controller = new BalanceController(service)
-
-    // const test = sinon.stub(mock, 'collectCells');
 
     req = mockReq()
     res = mockRes()
@@ -131,10 +107,9 @@ describe('Balance controller', () => {
       })
       describe('with mixed cells', () => {
         beforeEach(async () => {
-          mock_cells
+          mock_repository.mockCollectCells()
             .withArgs({ lock })
-            .resolves(clone(cellsWithNormalLock))
-          mock_cells
+            .resolves(cellsWithNormalLock)
             .withArgs({ lock: orderLock })
             .resolves(clone(cellsWithOrderLock))
 
@@ -151,13 +126,12 @@ describe('Balance controller', () => {
       })
       describe('with cells having non-empty data', () => {
         beforeEach(async () => {
-          mock_cells
+          mock_repository.mockCollectCells()
             .withArgs({ lock })
             .resolves(clone([
               generateCell(10, null, lock, null),
               generateCell(40, '0x1111', lock, null)
             ]))
-          mock_cells
             .withArgs({ lock: orderLock })
             .resolves([])
           await controller.getCKBBalance(req, res, next)
@@ -173,13 +147,12 @@ describe('Balance controller', () => {
       })
       describe('with cells having type script', () => {
         beforeEach(async () => {
-          mock_cells
+          mock_repository.mockCollectCells()
             .withArgs({ lock })
             .resolves(clone([
               generateCell(10, null, lock, null),
               generateCell(40, null, lock, sudtType)
             ]))
-          mock_cells
             .withArgs({ lock: orderLock })
             .resolves([])
           await controller.getCKBBalance(req, res, next)
@@ -218,14 +191,12 @@ describe('Balance controller', () => {
           type_hash_type: sudtType.hash_type,
           type_args: sudtType.args
         }
-        mock_cells
+        mock_repository.mockCollectCells()
           .withArgs({
             lock,
             type: sudtType
           })
           .resolves(clone(cellsWithNormalLock))
-
-        mock_cells
           .withArgs({
             lock: orderLock,
             type: sudtType

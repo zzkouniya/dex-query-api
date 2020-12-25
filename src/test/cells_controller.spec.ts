@@ -6,11 +6,11 @@ import sinonStubPromise from 'sinon-stub-promise'
 
 import { mockReq, mockRes } from 'sinon-express-mock'
 import { CkbUtils } from '../component/formatter'
-import { Cell, QueryOptions, TransactionWithStatus } from '@ckb-lumos/base'
+import { Cell, Script } from '@ckb-lumos/base'
 
-import { IndexerService } from '../modules/indexer/indexer_service'
 import CellsSerive from '../modules/cells/cells_service'
 import CellsController from '../modules/cells/cells_controller'
+import { MockRepository, MockRepositoryFactory } from './mock_repository_factory'
 
 chai.use(sinonChai)
 chai.should()
@@ -22,9 +22,9 @@ describe('Cells controller', () => {
   let res
   let next
   let controller
-  let mock_cells
+  let mock_repository: MockRepository
 
-  const generateCell = (capacity, data, lock, type, txHash = '0x1', index = '0x0') => {
+  const generateCell = (capacity: number, data: string, lock: Script, type: Script, txHash = '0x1', index = '0x0') => {
     const cell: Cell = {
       cell_output: {
         capacity: `0x${capacity.toString(16)}`,
@@ -50,12 +50,12 @@ describe('Cells controller', () => {
     return cell
   }
 
-  const lock = {
+  const lock: Script = {
     code_hash: '0x04878826e4bf143a93eb33cb298a46f96e4014533d98865983e048712da65160',
     hash_type: 'data',
     args: '0x2946e43211d00ab3791ab1d8b598c99643c39649'
   }
-  const type = {
+  const type: Script = {
     code_hash: '0xc68fb287d8c04fd354f8332c3d81ca827deea2a92f12526e2f35be37968f6740',
     hash_type: 'type',
     args: '0xbe7e812b85b692515a21ea3d5aed0ad37dccb3fcd86e9b8d6a30ac24808db1f7'
@@ -68,38 +68,16 @@ describe('Cells controller', () => {
   ]
 
   const cellsWithBothLockType = [
-    generateCell('1', CkbUtils.formatBigUInt128LE(BigInt(30)), lock, type),
-    generateCell('1', CkbUtils.formatBigUInt128LE(BigInt(10)), lock, type),
-    generateCell('1', CkbUtils.formatBigUInt128LE(BigInt(20)), lock, type)
+    generateCell(1, CkbUtils.formatBigUInt128LE(BigInt(30)), lock, type),
+    generateCell(1, CkbUtils.formatBigUInt128LE(BigInt(10)), lock, type),
+    generateCell(1, CkbUtils.formatBigUInt128LE(BigInt(20)), lock, type)
   ]
 
   const clone = (obj: Cell[]) => JSON.parse(JSON.stringify(obj))
 
   beforeEach(() => {
-    class MockIndex implements IndexerService {
-      tip (): Promise<number> {
-        return null
-      }
-
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      collectCells (queryOptions: QueryOptions): Promise<Cell[]> {
-        return null
-      }
-
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      collectTransactions (queryOptions: QueryOptions): Promise<TransactionWithStatus[]> {
-        return null
-      }
-
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      getLastMatchOrders (type) {
-        return null
-      }
-    }
-
-    const mock: MockIndex = new MockIndex()
-    mock_cells = sinon.stub(mock, 'collectCells')
-    const service = new CellsSerive(mock)
+    mock_repository = MockRepositoryFactory.getInstance()
+    const service = new CellsSerive(mock_repository)
     controller = new CellsController(service)
     req = mockReq()
     res = mockRes()
@@ -116,7 +94,7 @@ describe('Cells controller', () => {
             lock_args: lock.args
           }
 
-          mock_cells.resolves(clone(cellsWithLock))
+          mock_repository.mockCollectCells().resolves(clone(cellsWithLock))
           await controller.getLiveCells(req, res, next)
         })
         it('returns cells', () => {
@@ -131,7 +109,7 @@ describe('Cells controller', () => {
             type_hash_type: type.hash_type,
             type_args: type.args
           }
-          mock_cells.resolves(clone(cellsWithLock))
+          mock_repository.mockCollectCells().resolves(clone(cellsWithLock))
           await controller.getLiveCells(req, res, next)
         })
         it('returns cells', () => {
@@ -149,7 +127,7 @@ describe('Cells controller', () => {
             lock_hash_type: lock.hash_type,
             lock_args: lock.args
           }
-          mock_cells.resolves(clone(cellsWithLock))
+          mock_repository.mockCollectCells().resolves(clone(cellsWithLock))
           await controller.getLiveCells(req, res, next)
         })
         it('returns cells', () => {
@@ -162,7 +140,7 @@ describe('Cells controller', () => {
       describe('with neither lock nor type script', () => {
         beforeEach(async () => {
           req.query = {}
-          mock_cells.resolves(clone(cellsWithLock))
+          mock_repository.mockCollectCells().resolves(clone(cellsWithLock))
           await controller.getLiveCells(req, res, next)
         })
         it('returns cells', () => {
@@ -184,13 +162,16 @@ describe('Cells controller', () => {
       })
 
       describe('with sufficient balance', () => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        let mock_cell: sinon.SinonStub<any[], any> | sinon.SinonStub<unknown[], unknown>
         beforeEach(async () => {
-          mock_cells.resolves(clone(cellsWithLock))
+          mock_cell = mock_repository.mockCollectCells()
+          mock_cell.resolves(clone(cellsWithLock))
           req.body.ckb_amount = '22'
           await controller.postLiveCellsForAmount(req, res, next)
         })
         it('type script indexer query option should be empty', () => {
-          mock_cells.should.have.been.calledWith({
+          mock_cell.should.have.been.calledWith({
             lock,
             type: 'empty'
           })
@@ -205,8 +186,11 @@ describe('Cells controller', () => {
       })
 
       describe('with sufficient balance and empty spent cells', () => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        let mock_cell: sinon.SinonStub<any[], any> | sinon.SinonStub<unknown[], unknown>
         beforeEach(async () => {
-          mock_cells.resolves(clone(cellsWithLock))
+          mock_cell = mock_repository.mockCollectCells()
+          mock_cell.resolves(clone(cellsWithLock))
           req.body.ckb_amount = '22'
           await controller.postLiveCellsForAmount({
             ...req,
@@ -217,7 +201,7 @@ describe('Cells controller', () => {
           }, res, next)
         })
         it('type script indexer query option should be empty', () => {
-          mock_cells.should.have.been.calledWith({
+          mock_cell.should.have.been.calledWith({
             lock,
             type: 'empty'
           })
@@ -239,7 +223,7 @@ describe('Cells controller', () => {
         ]
 
         beforeEach(async () => {
-          mock_cells.resolves(clone(cells))
+          mock_repository.mockCollectCells().resolves(clone(cells))
           req.body.ckb_amount = '40'
           await controller.postLiveCellsForAmount({
             ...req,
@@ -262,7 +246,7 @@ describe('Cells controller', () => {
 
       describe('with could not find cells fulfilling the amount query', () => {
         beforeEach(async () => {
-          mock_cells.resolves(clone(cellsWithLock))
+          mock_repository.mockCollectCells().resolves(clone(cellsWithLock))
           req.body.ckb_amount = '100'
           await controller.postLiveCellsForAmount(req, res, next)
         })
@@ -288,7 +272,7 @@ describe('Cells controller', () => {
 
         describe('with sufficient balance', () => {
           beforeEach(async () => {
-            mock_cells.resolves(clone(cellsWithBothLockType))
+            mock_repository.mockCollectCells().resolves(clone(cellsWithBothLockType))
             req.body.sudt_amount = '22'
             await controller.postLiveCellsForAmount(req, res, next)
           })
@@ -303,13 +287,13 @@ describe('Cells controller', () => {
 
         describe('with sufficient balance and spent cells', () => {
           const cells = [
-            generateCell('1', CkbUtils.formatBigUInt128LE(BigInt(30)), lock, type, '0xa', '0x0'),
-            generateCell('1', CkbUtils.formatBigUInt128LE(BigInt(10)), lock, type, '0xb', '0x2'),
-            generateCell('1', CkbUtils.formatBigUInt128LE(BigInt(20)), lock, type, '0xc', '0x2')
+            generateCell(1, CkbUtils.formatBigUInt128LE(BigInt(30)), lock, type, '0xa', '0x0'),
+            generateCell(1, CkbUtils.formatBigUInt128LE(BigInt(10)), lock, type, '0xb', '0x2'),
+            generateCell(1, CkbUtils.formatBigUInt128LE(BigInt(20)), lock, type, '0xc', '0x2')
           ]
 
           beforeEach(async () => {
-            mock_cells.resolves(clone(cells))
+            mock_repository.mockCollectCells().resolves(clone(cells))
             req.body.sudt_amount = '22'
             await controller.postLiveCellsForAmount({
               ...req,
@@ -333,7 +317,7 @@ describe('Cells controller', () => {
 
         describe('with could not find cells fulfilling the amount query', () => {
           beforeEach(async () => {
-            mock_cells.resolves(clone(cellsWithBothLockType))
+            mock_repository.mockCollectCells().resolves(clone(cellsWithBothLockType))
             req.body.sudt_amount = '100'
             await controller.postLiveCellsForAmount(req, res, next)
           })
@@ -414,13 +398,16 @@ describe('Cells controller', () => {
         }
       })
       describe('with sufficient balance', () => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        let mock_cell: sinon.SinonStub<any[], any> | sinon.SinonStub<unknown[], unknown>
         beforeEach(async () => {
-          mock_cells.resolves(clone(cellsWithLock))
+          mock_cell = mock_repository.mockCollectCells()
+          mock_cell.resolves(clone(cellsWithLock))
           req.query.ckb_amount = '22'
           await controller.getLiveCellsForAmount(req, res, next)
         })
         it('type script indexer query option should be empty', () => {
-          mock_cells.should.have.been.calledWith({
+          mock_cell.should.have.been.calledWith({
             lock,
             type: 'empty'
           })
@@ -440,7 +427,7 @@ describe('Cells controller', () => {
           generateCell(20, null, lock, null)
         ]
         beforeEach(async () => {
-          mock_cells.resolves(clone(cells))
+          mock_repository.mockCollectCells().resolves(clone(cells))
           req.query.ckb_amount = '22'
           await controller.getLiveCellsForAmount(req, res, next)
         })
@@ -454,7 +441,7 @@ describe('Cells controller', () => {
       })
       describe('with could not find cells fulfilling the amount query', () => {
         beforeEach(async () => {
-          mock_cells.resolves(clone(cellsWithLock))
+          mock_repository.mockCollectCells().resolves(clone(cellsWithLock))
           req.query.ckb_amount = '100'
           await controller.getLiveCellsForAmount(req, res, next)
         })
@@ -478,7 +465,7 @@ describe('Cells controller', () => {
         })
         describe('with sufficient balance', () => {
           beforeEach(async () => {
-            mock_cells.resolves(clone(cellsWithBothLockType))
+            mock_repository.mockCollectCells().resolves(clone(cellsWithBothLockType))
             req.query.sudt_amount = '22'
             await controller.getLiveCellsForAmount(req, res, next)
           })
@@ -492,7 +479,7 @@ describe('Cells controller', () => {
         })
         describe('with could not find cells fulfilling the amount query', () => {
           beforeEach(async () => {
-            mock_cells.resolves(clone(cellsWithBothLockType))
+            mock_repository.mockCollectCells().resolves(clone(cellsWithBothLockType))
             req.query.sudt_amount = '100'
             await controller.getLiveCellsForAmount(req, res, next)
           })

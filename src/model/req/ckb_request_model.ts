@@ -52,12 +52,12 @@ export default class CkbRequestModel {
   ): CkbRequestModel {
     const reqParam: CkbRequestModel = new CkbRequestModel()
 
-    reqParam.type_code_hash = type_code_hash;
-    (reqParam.type_hash_type = type_hash_type)
-    (reqParam.type_args = type_args)
-    (reqParam.lock_code_hash = lock_code_hash)
-    (reqParam.lock_hash_type = lock_hash_type)
-    (reqParam.lock_args = lock_args)
+    reqParam.type_code_hash = type_code_hash
+    reqParam.type_hash_type = type_hash_type
+    reqParam.type_args = type_args
+    reqParam.lock_code_hash = lock_code_hash
+    reqParam.lock_hash_type = lock_hash_type
+    reqParam.lock_args = lock_args
 
     return reqParam
   }

@@ -1,11 +1,11 @@
-import { inject, injectable, LazyServiceIdentifer } from 'inversify';
-import { QueryOptions, Script } from '@ckb-lumos/base';
+import { inject, injectable, LazyServiceIdentifer } from 'inversify'
+import { QueryOptions, Script } from '@ckb-lumos/base'
 
-import { modules } from '../../ioc';
-import CkbRequestModel from '../../model/req/ckb_request_model';
-import { CkbUtils } from '../../component';
+import { modules } from '../../ioc'
+import CkbRequestModel from '../../model/req/ckb_request_model'
+import { CkbUtils } from '../../component'
 
-import CkbCellScriptModel from '../../model/ckb/ckb_cell_script';
+import CkbCellScriptModel from '../../model/ckb/ckb_cell_script'
 import TransactionDetailsModel from './transaction_details_model'
 import CkbRepository from '../repository/ckb_repository'
 import { DexRepository } from '../repository/dex_repository'
@@ -39,7 +39,7 @@ export default class TxService {
         queryOptions
       )
 
-      if(txsWithStatus.length === 0) {
+      if (txsWithStatus.length === 0) {
         return []
       }
 
@@ -51,7 +51,7 @@ export default class TxService {
         }
       }
       const inputTxs = await this.repository.getTransactions(requests)
-      
+
       const inputTxsMap = new Map()
       for (const tx of inputTxs) {
         inputTxsMap.set(tx.ckbTransactionWithStatus.transaction.hash, tx)
@@ -75,7 +75,7 @@ export default class TxService {
           const tx = inputTxsMap.get(tx_hash)
           if (tx) {
             const cell = tx.ckbTransactionWithStatus.transaction.outputs[inputIndex]
-            if(reqParam.isValidTypeScript()) {
+            if (reqParam.isValidTypeScript()) {
               if (
                 cell &&
                 this.isSameTypeScript(cell.lock, <Script>queryOptions.lock) &&
@@ -95,28 +95,27 @@ export default class TxService {
 
         for (let j = 0; j < outputs.length; j++) {
           const output = outputs[j]
-          if(reqParam.isValidTypeScript()) {
+          if (reqParam.isValidTypeScript()) {
             if (
               this.isSameTypeScript(output.type, <Script>queryOptions.type) &&
               this.isSameTypeScript(output.lock, <Script>queryOptions.lock)
             ) {
-              const amount = CkbUtils.parseAmountFromLeHex(outputs_data[j])        
+              const amount = CkbUtils.parseAmountFromLeHex(outputs_data[j])
               outputSum += amount
             }
           } else {
             if (this.isSameTypeScript(output.lock, <Script>queryOptions.lock)) {
               outputSum += BigInt(parseInt(output.capacity, 16))
             }
-
           }
         }
 
-        const income = outputSum - inputSum        
+        const income = outputSum - inputSum
 
         if (income.toString() !== '0') {
-          const blockHash: string = txWithStatus.tx_status.block_hash          
+          const blockHash: string = txWithStatus.tx_status.block_hash
           const timestamp = await this.repository.getBlockTimestampByHash(blockHash)
-        
+
           txs.push({
             hash,
             income: income.toString(),
@@ -136,7 +135,7 @@ export default class TxService {
     txHash: string
   ): Promise<TransactionDetailsModel> {
     try {
-      const tx = await this.repository.getTransactionByHash(txHash)      
+      const tx = await this.repository.getTransactionByHash(txHash)
       if (!tx) {
         return null
       }
@@ -148,7 +147,7 @@ export default class TxService {
       }
 
       const inputTransactions = await this.repository.getTransactions(requests)
-    
+
       const fee = tx.getFee(inputTransactions)
       let amount: bigint
       const lock: CkbCellScriptModel = {
@@ -208,7 +207,7 @@ export default class TxService {
     args: string
   } {
     if ('code_hash' in script) {
-      const s = >script
+      const s = script
       return {
         code_hash: s.code_hash,
         hash_type: s.hash_type,

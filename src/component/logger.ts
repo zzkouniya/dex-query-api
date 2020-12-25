@@ -30,6 +30,6 @@ export class DexLogger {
   }
 
   error (error: Record<string, unknown>): void {
-    this.logger.error(`${this.logTag}: ${error}`)
+    this.logger.error(this.logTag, error)
   }
 }

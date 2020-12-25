@@ -116,7 +116,7 @@ export default class CkbTransactionWithStatusModelWrapper {
     }
 
     if (inputAddr.length === 1) {
-      return outputAddr.find(x => x != inputAddr[0])
+      return outputAddr.find(x => x !== inputAddr[0])
     }
   }
 
@@ -129,7 +129,7 @@ export default class CkbTransactionWithStatusModelWrapper {
     }
 
     if (outputAddr.length === 1) {
-      return inputAddr.find(x => x != outputAddr[0])
+      return inputAddr.find(x => x !== outputAddr[0])
     }
   }
 

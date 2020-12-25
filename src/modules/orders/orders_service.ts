@@ -97,7 +97,7 @@ export default class OrdersService {
       .slice(0, askOrderPriceKeys.length > CkbUtils.getOrdersLimit() ? CkbUtils.getOrdersLimit() : askOrderPriceKeys.length).map(x => {
         let order_amount = BigInt(0)
         const group = groupbyPriceAsk.get(x)
-        group.forEach(x => order_amount += BigInt(x.orderAmount))
+        group.forEach(x => { order_amount += BigInt(x.orderAmount) })
 
         return {
           receive: order_amount.toString(),
@@ -142,7 +142,7 @@ export default class OrdersService {
     })
 
     if (!orderCells.length) {
-      throw { error: 'cells is null' }
+      throw new Error('cells is null')
     }
 
     const formattedOrderCells = CkbUtils.formatOrderCells(orderCells)
