@@ -1,7 +1,6 @@
-import CkbOutPointModel from "./ckb_out_point";
-
+import CkbOutPointModel from './ckb_out_point'
 
 export default interface CkbTransactionInputsModel {
-    previousOutput: CkbOutPointModel;
-    since: string;
-} 
+  previousOutput: CkbOutPointModel
+  since: string
+}
