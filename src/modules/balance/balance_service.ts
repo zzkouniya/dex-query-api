@@ -1,6 +1,5 @@
 import { inject, injectable, LazyServiceIdentifer } from 'inversify'
 import { utils, Script, QueryOptions, Cell } from '@ckb-lumos/base'
-import IndexerWrapper from '../indexer/indexer'
 import { modules } from '../../ioc'
 import { contracts } from '../../config'
 import { CkbUtils, DexLogger } from '../../component'
