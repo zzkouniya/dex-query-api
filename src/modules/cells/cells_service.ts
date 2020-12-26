@@ -1,23 +1,24 @@
 import { inject, injectable, LazyServiceIdentifer } from 'inversify'
 import { Cell, HashType, QueryOptions } from '@ckb-lumos/base'
-import IndexerWrapper from '../indexer/indexer'
+
 import { modules } from '../../ioc'
 import { CkbUtils } from '../../component'
 import CellsAmountRequestModel from './cells_amount_request_model'
-import { IndexerService } from '../indexer/indexer_service'
 import { OutPoint } from '../orders/orders_history_model'
+import CkbRepository from '../repository/ckb_repository'
+import { DexRepository } from '../repository/dex_repository'
 
 @injectable()
 export default class CellsSerive {
   constructor (
-    @inject(new LazyServiceIdentifer(() => modules[IndexerWrapper.name]))
-    private readonly indexer: IndexerService
+    @inject(new LazyServiceIdentifer(() => modules[CkbRepository.name]))
+    private readonly dexRepository: DexRepository
   ) {}
 
   async getLiveCells (reqParam: CellsAmountRequestModel): Promise<Cell[]> {
     const queryOptions = this.buildQueryParams(reqParam)
 
-    const cells = await this.indexer.collectCells(queryOptions)
+    const cells = await this.dexRepository.collectCells(queryOptions)
     return cells
   }
 
@@ -26,7 +27,7 @@ export default class CellsSerive {
   ): Promise<Cell[]> {
     const queryOptions = this.buildQueryParams(reqParam)
 
-    let cells = await this.indexer.collectCells(queryOptions)
+    let cells = await this.dexRepository.collectCells(queryOptions)
 
     if (reqParam.ckb_amount) {
       const ckb = BigInt(reqParam.ckb_amount)

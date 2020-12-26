@@ -6,15 +6,16 @@ import { contracts } from '../../config'
 import { CkbUtils, DexLogger } from '../../component'
 import BalanceCkbModel from './balance_ckb_model'
 import BalanceSudtModel from './balance_sudt_model'
-import { IndexerService } from '../indexer/indexer_service'
 import CkbRequestModel from '../../model/req/ckb_request_model'
+import { DexRepository } from '../repository/dex_repository'
+import CkbRepository from '../repository/ckb_repository'
 
 @injectable()
 export default class BalanceService {
   private readonly logger: DexLogger
   constructor (
-    @inject(new LazyServiceIdentifer(() => modules[IndexerWrapper.name]))
-    private readonly indexer: IndexerService
+    @inject(new LazyServiceIdentifer(() => modules[CkbRepository.name]))
+    private readonly dexRepository: DexRepository
   ) {
     this.logger = new DexLogger(BalanceService.name)
   }
@@ -23,7 +24,7 @@ export default class BalanceService {
     reqParms: CkbRequestModel
   ): Promise<BalanceCkbModel> {
     const queryLock: Script = reqParms.lockScript()
-    const cells = await this.indexer.collectCells({
+    const cells = await this.dexRepository.collectCells({
       lock: queryLock
     })
 
@@ -51,7 +52,7 @@ export default class BalanceService {
       args: queryLockHash
     }
 
-    const orderCells = await this.indexer.collectCells({
+    const orderCells = await this.dexRepository.collectCells({
       lock: orderLock
     })
 
@@ -76,7 +77,7 @@ export default class BalanceService {
       type: reqParms.typeScript()
     }
 
-    const cells = await this.indexer.collectCells(queryOptions)
+    const cells = await this.dexRepository.collectCells(queryOptions)
 
     const balance = cells.reduce((total, cell) => {
       try {
@@ -94,7 +95,7 @@ export default class BalanceService {
       args: queryLockHash
     }
 
-    const orderCells = await this.indexer.collectCells({
+    const orderCells = await this.dexRepository.collectCells({
       lock: orderLock,
       type: queryOptions.type
     })

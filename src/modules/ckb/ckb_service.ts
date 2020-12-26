@@ -1,5 +1,7 @@
 import CKB from '@nervosnetwork/ckb-sdk-core'
 import { injectable } from 'inversify'
+import rp from 'request-promise'
+import { DexLogger } from '../../component'
 import { indexer_config } from '../../config'
 import CkbTransactionWithStatusModelWrapper from '../../model/ckb/ckb_transaction_with_status'
 
@@ -8,9 +10,11 @@ export type ckb_methons = 'getTipBlockNumber' | 'getTipHeader' | 'getCurrentEpoc
 @injectable()
 export default class CkbService {
   private readonly ckbNode: CKB
+  private readonly logger: DexLogger
 
   constructor () {
     this.ckbNode = new CKB(indexer_config.nodeUrl)
+    this.logger = new DexLogger(CkbService.name)
   }
 
   async getTransactions (ckbReqParams: Array<[method: ckb_methons, ...rest: []]>): Promise<CkbTransactionWithStatusModelWrapper[]> {
@@ -51,5 +55,43 @@ export default class CkbService {
       .exec()
 
     return block[0].header.timestamp
+  }
+
+  async getCellsOutPointFromTheTxPool () {
+    const txs = await this.getPoolTxs()
+    console.log(txs)
+  }
+
+  private async getPoolTxs (): Promise<CkbTransactionWithStatusModelWrapper[]> {
+    try {
+      const QueryOptions = {
+        url: indexer_config.nodeUrl,
+        method: 'POST',
+        json: true,
+        headers: {
+          'content-type': 'application/json'
+        },
+        body: {
+          id: 42,
+          jsonrpc: '2.0',
+          method: 'get_raw_tx_pool',
+          params: [true]
+        }
+      }
+      const result = await rp(QueryOptions)
+      const hashes = []
+      for (const hash of Object.keys(result.result.pending)) {
+        hashes.push(['getTransaction', hash])
+      }
+
+      for (const hash of Object.keys(result.result.proposed)) {
+        hashes.push(['getTransaction', hash])
+      }
+
+      return await this.getTransactions(hashes)
+    } catch (error) {
+      this.logger.error(error)
+      throw new Error('query tx pool error!')
+    }
   }
 }
