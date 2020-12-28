@@ -251,7 +251,7 @@ describe('Balance controller', () => {
         })
         it('returns balance', () => {
           res.status.should.have.been.calledWith(200)
-          res.json.should.have.been.calledWith({ free: '5000000000', locked_order: '5000000000', occupied: '100000000' })
+          res.json.should.have.been.calledWith({ free: '200', locked_order: '250' })
         })
       })
     })
