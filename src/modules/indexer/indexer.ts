@@ -1,6 +1,7 @@
 import { Cell, QueryOptions, TransactionWithStatus, Transaction, Script } from '@ckb-lumos/base'
 import TransactionManager from '@ckb-lumos/transaction-manager'
 import {
+  CellCollector,
   Indexer,
   TransactionCollector
 } from '@ckb-lumos/indexer'
@@ -21,8 +22,8 @@ export default class IndexerWrapper implements IndexerService {
     private readonly ckbService: CkbService
   ) {
     this.indexer = new Indexer(indexer_config.nodeUrl, indexer_config.dataPath)
-    this.txManager = new TransactionManager(this.indexer)
-    this.txManager.start()
+    // this.txManager = new TransactionManager(this.indexer)
+    this.indexer.start()
 
     // eslint-disable-next-line @typescript-eslint/no-misused-promises
     setInterval(async () => {
@@ -37,7 +38,7 @@ export default class IndexerWrapper implements IndexerService {
   }
 
   async collectCells (queryOptions: QueryOptions): Promise<Cell[]> {
-    const cellCollector = this.txManager.collector(queryOptions)
+    const cellCollector = new CellCollector(this.indexer, queryOptions)
 
     const cells = []
     for await (const cell of cellCollector.collect()) cells.push(cell)

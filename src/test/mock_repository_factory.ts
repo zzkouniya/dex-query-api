@@ -12,8 +12,7 @@ export class MockRepositoryFactory {
 }
 
 export class MockRepository implements DexRepository {
-  getCellsOutPointFromTheTxPool: () => Promise<void>
-
+  getInputOutPointFromTheTxPool: () => Promise<Map<string, CkbTransactionWithStatusModelWrapper>>
   async tip (): Promise<number> {
     return null
   }

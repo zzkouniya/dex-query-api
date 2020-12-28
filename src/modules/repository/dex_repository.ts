@@ -12,6 +12,6 @@ export interface DexRepository extends IndexerService {
 
   getBlockTimestampByHash: (blockHash: string) => Promise<string>
 
-  getCellsOutPointFromTheTxPool: () => Promise<void>
+  getInputOutPointFromTheTxPool: () => Promise<Map<string, CkbTransactionWithStatusModelWrapper>>
 
 }

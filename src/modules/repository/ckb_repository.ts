@@ -18,8 +18,8 @@ export default class CkbRepository implements DexRepository {
     private readonly ckbService: CkbService
   ) {}
 
-  async getCellsOutPointFromTheTxPool (): Promise<void> {
-    await this.ckbService.getCellsOutPointFromTheTxPool()
+  async getInputOutPointFromTheTxPool (): Promise<Map<string, CkbTransactionWithStatusModelWrapper>> {
+    return await this.ckbService.getInputOutPointFromTheTxPool()
   }
 
   async tip (): Promise<number> {
