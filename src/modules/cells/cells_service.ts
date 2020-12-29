@@ -27,7 +27,7 @@ export default class CellsSerive {
   ): Promise<Cell[]> {
     const queryOptions = this.buildQueryParams(reqParam)
 
-    const inputOutPoint = await (await this.dexRepository.getInputOutPointFromTheTxPool())
+    const inputOutPoint = await this.dexRepository.getInputOutPointFromTheTxPool()
     let cells = await this.dexRepository.collectCells(queryOptions)
     cells = cells.filter(x => !inputOutPoint.has(`${x.out_point.tx_hash}:${x.out_point.index}`))
 
