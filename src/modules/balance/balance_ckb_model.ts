@@ -1,26 +1,25 @@
-import { ApiModel, ApiModelProperty } from "swagger-express-ts";
+import { ApiModel, ApiModelProperty } from 'swagger-express-ts'
 
 @ApiModel({
-  description: "Ckb balance",
-  name: "BalanceCkbModel",
+  description: 'Ckb balance',
+  name: 'BalanceCkbModel'
 })
 export default class BalanceCkbModel {
   @ApiModelProperty({
-    description: "Id of version",
-    required: true,
+    description: 'Id of version',
+    required: true
   })
-  free: string;
+  free: string
 
   @ApiModelProperty({
-    description: "",
-    required: true,
+    description: '',
+    required: true
   })
-  occupied: string;
+  occupied: string
 
   @ApiModelProperty({
-    description: "Description of version",
-    required: true,
+    description: 'Description of version',
+    required: true
   })
-  locked_order: string;
+  locked_order: string
 }
-
