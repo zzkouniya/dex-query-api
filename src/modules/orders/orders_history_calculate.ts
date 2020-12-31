@@ -1,13 +1,10 @@
 import { Input, OutPoint, Output, Script, Transaction } from "@ckb-lumos/base";
-import BigNumber from 'bignumber.js';
+import BigNumber from "bignumber.js";
 
-import {
-  CkbUtils,
-} from "../../component";
-import { IndexerService } from '../indexer/indexer_service';
+import { CkbUtils } from "../../component";
+import { IndexerService } from "../indexer/indexer_service";
 
 export default class OrdersHistoryCalculate {
-
   private orderLock: Script;
   private sudtType: Script;
   private indexer: IndexerService;
@@ -16,11 +13,7 @@ export default class OrdersHistoryCalculate {
   private usedInputOutPoints: Set<string>;
   private orderCellsInputOutPoints: Set<string>;
 
-  constructor(
-    indexer: IndexerService,
-    orderLock: Script,
-    sudtType: Script
-  ) {
+  constructor(indexer: IndexerService, orderLock: Script, sudtType: Script) {
     this.orderLock = orderLock;
     this.sudtType = sudtType;
     this.indexer = indexer;
@@ -30,9 +23,7 @@ export default class OrdersHistoryCalculate {
     this.orderCellsInputOutPoints = new Set();
   }
 
-  async calculateOrdersHistory()
-  : Promise<Array<OrderHistoryCalculateData>> 
-  {
+  async calculateOrdersHistory(): Promise<Array<OrderHistoryCalculateData>> {
     const txsWithStatus = await this.indexer.collectTransactions({
       type: this.sudtType,
       lock: this.orderLock,
@@ -98,7 +89,7 @@ export default class OrdersHistoryCalculate {
         const order_cells = this.getChainedOrderCells(output);
         ordersHistory.push({
           order_cells,
-          block_hash: txWithStatus.tx_status.block_hash
+          block_hash: txWithStatus.tx_status.block_hash,
         });
       }
     }
@@ -114,11 +105,14 @@ export default class OrdersHistoryCalculate {
         firstOrderCellData.orderAmount - lastOrderCellData.orderAmount;
       let turnoverRate;
       try {
-        turnoverRate = new BigNumber(tradedAmount.toString()).multipliedBy(100).div(firstOrderCellData.orderAmount.toString()).div(100);
-        if(Number(turnoverRate.toFixed(3, 1)) >= 0.999) {
+        turnoverRate = new BigNumber(tradedAmount.toString())
+          .multipliedBy(100)
+          .div(firstOrderCellData.orderAmount.toString())
+          .div(100);
+        if (Number(turnoverRate.toFixed(3, 1)) >= 0.999) {
           turnoverRate = 1;
         } else {
-          turnoverRate = turnoverRate.toFixed(2, 1)
+          turnoverRate = turnoverRate.toFixed(2, 1);
         }
       } catch (error) {
         console.error("zero order amount for the  first order cell");
@@ -162,13 +156,16 @@ export default class OrdersHistoryCalculate {
       }
 
       orderHistory.status = status;
-      
     }
-    
+
     return ordersHistory;
   }
 
-  groupOrderCells(cells: Array<OrderHistoryCalculateOutputs>, orderLock: Script, sudtType: Script): Array<[number, OrderHistoryCalculateOutputs]> {
+  groupOrderCells(
+    cells: Array<OrderHistoryCalculateOutputs>,
+    orderLock: Script,
+    sudtType: Script
+  ): Array<[number, OrderHistoryCalculateOutputs]> {
     const groupedCells = [];
     for (let i = 0; i < cells.length; i++) {
       const cell = cells[i];
@@ -210,7 +207,10 @@ export default class OrdersHistoryCalculate {
     return true;
   }
 
-  determineGroupedOrderCellIndex(inputs: Array<Input>, outpoint: string): number {
+  determineGroupedOrderCellIndex(
+    inputs: Array<Input>,
+    outpoint: string
+  ): number {
     const inputOutpointList: Array<string> = [];
     for (let i = 0; i < inputs.length; i++) {
       const input = inputs[i];
@@ -227,11 +227,16 @@ export default class OrdersHistoryCalculate {
     return inputOutpointList.indexOf(outpoint);
   }
 
-  getChainedOrderCells(currentOutput: OrderHistoryCalculateOutputs, prevOrderCells: Array<OrderHistoryCalculateOutputs> = []): Array<OrderHistoryCalculateOutputs> {
-    const {outpoint} = currentOutput;
-    const inputOutPoint = this.formatInputOutPoint(outpoint.tx_hash, parseInt(outpoint.index));
+  getChainedOrderCells(
+    currentOutput: OrderHistoryCalculateOutputs,
+    prevOrderCells: Array<OrderHistoryCalculateOutputs> = []
+  ): Array<OrderHistoryCalculateOutputs> {
+    const { outpoint } = currentOutput;
+    const inputOutPoint = this.formatInputOutPoint(
+      outpoint.tx_hash,
+      parseInt(outpoint.index)
+    );
     const nextTransaction = this.txsByInputOutPoint.get(inputOutPoint);
-  
 
     if (!this.usedInputOutPoints.has(inputOutPoint)) {
       this.usedInputOutPoints.add(inputOutPoint);
@@ -242,7 +247,10 @@ export default class OrdersHistoryCalculate {
     }
 
     // input 所在的位置
-    const nextGroupedOrderCellIndex = this.determineGroupedOrderCellIndex(nextTransaction.inputs, inputOutPoint);
+    const nextGroupedOrderCellIndex = this.determineGroupedOrderCellIndex(
+      nextTransaction.inputs,
+      inputOutPoint
+    );
 
     const nextGroupedOrderCells = this.groupOrderCells(
       nextTransaction.outputs,
@@ -271,10 +279,10 @@ export default class OrdersHistoryCalculate {
       index: nextOriginalIndex.toString(),
     };
 
-    return this.getChainedOrderCells(
-      nextOutput,
-      [...prevOrderCells, currentOutput]
-    );
+    return this.getChainedOrderCells(nextOutput, [
+      ...prevOrderCells,
+      currentOutput,
+    ]);
   }
 
   formatInputOutPoint(txHash: string, index: number): string {

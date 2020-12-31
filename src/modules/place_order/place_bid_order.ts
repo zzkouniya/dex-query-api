@@ -144,7 +144,7 @@ export default class PlaceBidOrder extends PlaceOrder {
     })
 
     const orderOutput = new Cell(
-      new Amount(new BigNumber(ORDER_CELL_CAPACITY).plus(this.actualPay).toString(), AmountUnit.ckb),
+      new Amount(new BigNumber(ORDER_CELL_CAPACITY).plus(this.pay).toString(), AmountUnit.ckb),
       this.orderLock,
       this.sudtType,
     )
@@ -155,7 +155,7 @@ export default class PlaceBidOrder extends PlaceOrder {
     const changeOutput = new Cell(
       new Amount(
         inputCapacity.minus(
-          new BigNumber(ORDER_CELL_CAPACITY).plus(this.actualPay).times(10 ** AmountUnit.ckb)
+          new BigNumber(ORDER_CELL_CAPACITY).plus(this.pay).times(10 ** AmountUnit.ckb)
         ).toFixed(0, BigNumber.ROUND_DOWN),
         AmountUnit.shannon,
       ),
