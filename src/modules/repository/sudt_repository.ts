@@ -24,7 +24,7 @@ export default class CkbTokenRepository {
         method: 'GET',
         headers: {
           accept: 'application/vnd.api+json',
-          'accept-language': 'en-US,en;q=0.9,zh-CN;q=0.8,zh;q=0.7',
+          // 'accept-language': 'en-US,en;q=0.9,zh-CN;q=0.8,zh;q=0.7',
           'content-type': 'application/vnd.api+json'
         },
         referrer: 'https://explorer.nervos.org/',
@@ -66,7 +66,7 @@ export default class CkbTokenRepository {
   }
 
   getGroupByAddress (): Map<string, SudtTokenInfo> {
-    return this.groupByName
+    return this.groupByAddress
   }
 
   getGroupByTypeHash (): Map<string, SudtTokenInfo> {
