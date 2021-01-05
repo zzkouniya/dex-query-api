@@ -18,41 +18,32 @@ export default class TokenService {
     private readonly ckbRepository: DexRepository
   ) {}
 
-  async getWhiteListSudt (): Promise<SudtTokenInfo[]> {
-    return this.tokenRepository.getWhiteList()
-  }
-
-  async getTokenInfoByNameOrSymbol (partialNameOrSymbol: string): Promise<SudtTokenInfo[]> {
-    const result: SudtTokenInfo[] = []
-    for (const name of this.tokenRepository.getWhiteListGroupByName().keys()) {
-      if (name.startsWith(partialNameOrSymbol)) {
-        result.push(this.tokenRepository.getWhiteListGroupByName().get(name))
-      }
+  async getTokesByTypeHashOrAddress (typeHashOrAddress: string): Promise<SudtTokenInfo[]> {
+    const tokens: SudtTokenInfo[] = []
+    const token = this.getTokenInfoByTypeHash(typeHashOrAddress)
+    if (token) {
+      tokens.push(token)
     }
 
-    for (const symbol of this.tokenRepository.getWhiteListGroupBySymbol().keys()) {
-      if (symbol.startsWith(partialNameOrSymbol)) {
-        result.push(this.tokenRepository.getWhiteListGroupBySymbol().get(symbol))
-      }
+    const tokenList = this.getTokenInfoByAddress(typeHashOrAddress)
+    if (tokenList) {
+      tokenList.forEach(x => tokens.push(x))
     }
 
-    return result
+    return tokens
   }
 
-  async getTokenInfoByTypeHash (typeHash: string): Promise<SudtTokenInfo> {
-    return this.tokenRepository.getGroupByTypeHash().get(typeHash)
-  }
+  async getCellInfoByTypeHash (typeHash: string): Promise<SudtTokenInfo> {
+    const token = this.getTokenInfoByTypeHash(typeHash)
+    if (!token) {
+      return undefined
+    }
 
-  async getTokenInfoByAddress (address: string): Promise<SudtTokenInfo> {
-    return this.tokenRepository.getGroupByAddress().get(address)
-  }
-
-  async getCellInfoByAddress (address: string): Promise<SudtTokenInfo> {
     const queryOption: QueryOptions = {
       type: {
         code_hash: this.type_code_hash,
         hash_type: 'type',
-        args: ckbCoreUtils.scriptToHash(ckbCoreUtils.addressToScript(address))
+        args: ckbCoreUtils.scriptToHash(ckbCoreUtils.addressToScript(token.address))
       }
     }
 
@@ -67,15 +58,10 @@ export default class TokenService {
       name: sudtInfoData.name,
       symbol: sudtInfoData.symbol,
       decimal: sudtInfoData.decimal,
-      address: address,
+      address: token.address,
       amount: undefined,
-      chianName: 'ckb',
-      typeHash: ckbCoreUtils.scriptToHash(
-        {
-          codeHash: this.type_code_hash,
-          hashType: 'type',
-          args: ckbCoreUtils.scriptToHash(ckbCoreUtils.addressToScript(address))
-        })
+      chainName: 'ckb',
+      typeHash: undefined
     }
 
     return sudtTokenInfo
@@ -99,6 +85,14 @@ export default class TokenService {
     }
 
     return sudtInfoData
+  }
+
+  private getTokenInfoByTypeHash (typeHash: string): SudtTokenInfo {
+    return this.tokenRepository.getGroupByTypeHash().get(typeHash)
+  }
+
+  private getTokenInfoByAddress (address: string): SudtTokenInfo[] {
+    return this.tokenRepository.getGroupByAddress().get(address)
   }
 }
 

@@ -4,7 +4,7 @@ export interface TokenInfo {
   decimal: number
   address: string
   amount: number
-  chianName: string
+  chainName: string
 }
 
 export interface SudtTokenInfo extends TokenInfo {
@@ -18,7 +18,7 @@ export interface SudtTokenInfo extends TokenInfo {
 //   decimal: 8,
 //   address: 'ckt1qyqppsrmkue95prhy4faekhqg7re5zxh8czq8w7sdn',
 //   amount: 9909988048.9891405,
-//   chianName: 'ckb',
+//   chainName: 'ckb',
 //   typeHash: '0x788c79191970e313693351531930b46a708b1ca58f6d414ddc8a8827afb554ff'
 
 // }

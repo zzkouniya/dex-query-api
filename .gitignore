@@ -29,3 +29,6 @@ indexer_data_dev
 .env
 env/ckb-testnet/data
 
+
+### vscode ###
+.vscode

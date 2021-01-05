@@ -22,34 +22,13 @@ export default class TokenController {
   }
 
   @ApiOperationGet({
-    path: 'tokens/whiteList',
-    description: 'white list',
-    summary: 'white list',
-    responses: {
-      200: {
-        description: 'Success'
-      },
-      400: { description: 'Parameters fail' }
-    }
-  })
-  @httpGet('tokens/whiteList')
-  async whiteList (req: express.Request, res: express.Response): Promise<void> {
-    try {
-      const whiteList = await this.tokenService.getWhiteListSudt()
-      res.status(200).json(whiteList)
-    } catch (error) {
-      this.logger.error(error)
-    }
-  }
-
-  @ApiOperationGet({
-    path: 'tokens/partialNameOrSymbol',
-    description: 'partial name or symbol',
-    summary: 'partial name or symbol',
+    path: 'tokens/typeHashOrAddress',
+    description: 'query by typeHash',
+    summary: 'query by typeHash',
     parameters: {
       query: {
         type_code_hash: {
-          name: 'partialNameOrSymbol',
+          name: 'typeHashOrAddress',
           type: 'string',
           required: true,
           description: ''
@@ -63,21 +42,21 @@ export default class TokenController {
       400: { description: 'Parameters fail' }
     }
   })
-  @httpGet('tokens/partialNameOrSymbol')
-  async partialNameOrSymbol (req: express.Request, res: express.Response): Promise<void> {
-    const partialNameOrSymbol = <string>req.query.partialNameOrSymbol
+  @httpGet('tokens/typeHashOrAddress')
+  async typeHash (req: express.Request, res: express.Response): Promise<void> {
+    const typeHashOrAddress = <string>req.query.typeHashOrAddress
     try {
-      const whiteList = await this.tokenService.getTokenInfoByNameOrSymbol(partialNameOrSymbol)
-      res.status(200).json(whiteList)
+      const tokenInfo = await this.tokenService.getTokesByTypeHashOrAddress(typeHashOrAddress)
+      res.status(200).json(tokenInfo)
     } catch (error) {
       this.logger.error(error)
     }
   }
 
   @ApiOperationGet({
-    path: 'tokens/typeHash',
-    description: 'query by typeHash',
-    summary: 'query by typeHash',
+    path: 'tokens/cellInfo',
+    description: 'query cell info',
+    summary: 'query cell info',
     parameters: {
       query: {
         type_code_hash: {
@@ -95,76 +74,16 @@ export default class TokenController {
       400: { description: 'Parameters fail' }
     }
   })
-  @httpGet('tokens/typeHash')
-  async typeHash (req: express.Request, res: express.Response): Promise<void> {
-    const typeHash = <string>req.query.typeHash
-    try {
-      const tokenInfo = await this.tokenService.getTokenInfoByTypeHash(typeHash)
-      res.status(200).json(tokenInfo)
-    } catch (error) {
-      this.logger.error(error)
-    }
-  }
-
-  @ApiOperationGet({
-    path: 'tokens/address',
-    description: 'query by address',
-    summary: 'query by address',
-    parameters: {
-      query: {
-        type_code_hash: {
-          name: 'address',
-          type: 'string',
-          required: true,
-          description: ''
-        }
-      }
-    },
-    responses: {
-      200: {
-        description: 'Success'
-      },
-      400: { description: 'Parameters fail' }
-    }
-  })
-  @httpGet('tokens/address')
-  async address (req: express.Request, res: express.Response): Promise<void> {
-    const address = <string>req.query.address
-    try {
-      const tokenInfo = await this.tokenService.getTokenInfoByAddress(address)
-      res.status(200).json(tokenInfo)
-    } catch (error) {
-      this.logger.error(error)
-    }
-  }
-
-  @ApiOperationGet({
-    path: 'tokens/cellInfo',
-    description: 'query cell info',
-    summary: 'query cell info',
-    parameters: {
-      query: {
-        type_code_hash: {
-          name: 'address',
-          type: 'string',
-          required: true,
-          description: ''
-        }
-      }
-    },
-    responses: {
-      200: {
-        description: 'Success'
-      },
-      400: { description: 'Parameters fail' }
-    }
-  })
   @httpGet('tokens/cellInfo')
   async cellInfo (req: express.Request, res: express.Response): Promise<void> {
-    const address = <string>req.query.address
+    const typeHash = <string>req.query.typeHash
     try {
-      const result = await this.tokenService.getCellInfoByAddress(address)
-      res.status(200).json(result)
+      const cellInfo = await this.tokenService.getCellInfoByTypeHash(typeHash)
+      if (!cellInfo) {
+        res.status(400).json({ error: 'cell info does not exist' })
+        return
+      }
+      res.status(200).json(cellInfo)
     } catch (error) {
       this.logger.error(error)
     }

@@ -23,5 +23,15 @@ export const contracts: Contracts = {
   }
 }
 
+interface ExplorerConfig {
+  explorerTokensUrl: string
+  explorerCorsReferrer: string
+}
+
+export const explorerConfig: ExplorerConfig = {
+  explorerTokensUrl: process.env.EXPLORER_TOKENS_URL ? process.env.EXPLORER_TOKENS_URL : 'https://api.explorer.nervos.org/testnet/api/v1/udts',
+  explorerCorsReferrer: process.env.EXPLORER_CORS_REFERRER ? process.env.EXPLORER_CORS_REFERRER : 'https://explorer.nervos.org/'
+}
+
 export const env = process.env.NODE_ENV ? process.env.NODE_ENV : 'development'
 export const port = process.env.PORT ? process.env.PORT : 7001
