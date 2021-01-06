@@ -156,13 +156,13 @@ describe('Orders controller', () => {
                   traded_amount: '1',
                   order_amount: '1',
                   turnover_rate: '1',
-                  status: 'completed',
+                  status: 'claimed',
                   is_bid: true,
                   last_order_cell_outpoint: {
                     tx_hash: 'hash2',
                     index: '0x0',
                   },
-                  order_cells: [{ index: "0x0", tx_hash: "hash1" }, { index: "0x0", tx_hash: "hash2" }]
+                  order_cells: [{ index: "0x0", tx_hash: "hash1" }]
                 },
               ],
             );
@@ -184,14 +184,16 @@ describe('Orders controller', () => {
                   ],
                   outputs: [
                     {
-                      capacity: '0x2',
+                      capacity: '0x0',
                       lock: {
-                        ...orderLockScript,
-                        args: orderLockArgs,
+                        // user lock
+                        code_hash: '0x58c5f491aba6d61678b7cf7edf4910b1f5e00ec0cde2f42e0abb4fd9aff25a63',
+                        hash_type: 'type',
+                        args: '0x6c8c7f80161485c3e4adceda4c6c425410140054'
                       },
                     },
                   ],
-                  outputs_data: ['0x'],
+                  outputs_data: [CkbUtils.formatBigUInt128LE(1n)],
                 },
                 tx_status: {
                   block_hash: '0x50c20ecc2b3b56ed336e4d8b840cf99a29069ffa7b279433e1c7093a359657b9',
@@ -216,7 +218,7 @@ describe('Orders controller', () => {
                     is_bid: true,
                     last_order_cell_outpoint: {
                       tx_hash: 'hash3',
-                      index: '0x1',
+                      index: '0x0',
                     },
                     order_cells: [{ index: "0x0", tx_hash: "hash1" }, { index: "0x0", tx_hash: "hash2" }]
                   },
@@ -328,17 +330,11 @@ describe('Orders controller', () => {
                       capacity: orderCell1_2.capacity,
                       lock: orderCell1_2.lock,
                       type: orderCell1_2.type,
-                    },
-                    {
-                      capacity: orderCell2_2.capacity,
-                      lock: orderCell2_2.lock,
-                      type: orderCell2_2.type,
-                    },
+                    }
                   ],
                   outputs_data: [
-                    '0x',
-                    orderCell1_2.data,
-                    orderCell2_2.data,
+                    CkbUtils.formatBigUInt128LE(3n),
+                    orderCell1_2.data
                   ],
                 },
                 tx_status: {
@@ -364,18 +360,18 @@ describe('Orders controller', () => {
                 [
                   {
                     block_hash: "0x50c20ecc2b3b56ed336e4d8b840cf99a29069ffa7b279433e1c7093a359657b9",
-                    paid_amount: '2',
+                    paid_amount: '3',
                     traded_amount: '1',
                     order_amount: '1',
                     turnover_rate: '1',
                     price: '1',
-                    status: 'completed',
+                    status: 'claimed',
                     is_bid: true,
                     last_order_cell_outpoint: {
                       tx_hash: 'hash2',
-                      index: '0x1',
+                      index: '0x0',
                     },
-                    order_cells: [{ index: "0x0", tx_hash: "hash1" }, { index: "0x1", tx_hash: "hash2" }]
+                    order_cells: [{ index: "0x0", tx_hash: "hash1" }]
                   },
                   {
                     block_hash: "0x50c20ecc2b3b56ed336e4d8b840cf99a29069ffa7b279433e1c7093a359657b9",
@@ -384,13 +380,13 @@ describe('Orders controller', () => {
                     order_amount: '10',
                     turnover_rate: '1',
                     price: '1',
-                    status: 'completed',
+                    status: 'claimed',
                     is_bid: true,
                     last_order_cell_outpoint: {
                       tx_hash: 'hash2',
-                      index: '0x2',
+                      index: '0x1',
                     },
-                    order_cells: [{ index: "0x1", tx_hash: "hash1" }, { index: "0x2", tx_hash: "hash2" }]
+                    order_cells: [{ index: "0x1", tx_hash: "hash1" }]
                   },
                 ],
               );
@@ -528,13 +524,13 @@ describe('Orders controller', () => {
                   order_amount: '1',
                   turnover_rate: '1',
                   price: '1',
-                  status: 'completed',
+                  status: 'claimed',
                   is_bid: true,
                   last_order_cell_outpoint: {
                     tx_hash: 'hash3',
                     index: '0x2',
                   },
-                  order_cells: [{ index: "0x0", tx_hash: "hash1" }, { index: "0x2", tx_hash: "hash3" }]
+                  order_cells: [{ index: "0x0", tx_hash: "hash1" }]
                 },
                 {
                   block_hash: '0x50c20ecc2b3b56ed336e4d8b840cf99a29069ffa7b279433e1c7093a359657b9',
@@ -543,13 +539,13 @@ describe('Orders controller', () => {
                   order_amount: '10',
                   turnover_rate: '1',
                   price: '1',
-                  status: 'completed',
+                  status: 'claimed',
                   is_bid: true,
                   last_order_cell_outpoint: {
                     tx_hash: 'hash3',
                     index: '0x1',
                   },
-                  order_cells: [{ index: "0x0", tx_hash: "hash2" }, { index: "0x1", tx_hash: "hash3" }]
+                  order_cells: [{ index: "0x0", tx_hash: "hash2" }]
                 },
               ],
             );
@@ -600,7 +596,7 @@ describe('Orders controller', () => {
               ],
               outputs: [
                 {
-                  capacity: '0x2',
+                  capacity: '0x1',
                   lock: {
                     ...orderLockScript,
                     args: orderLockArgs,
@@ -632,13 +628,13 @@ describe('Orders controller', () => {
             paid_amount: '0',
             traded_amount: '0',
             order_amount: '1',
-            turnover_rate: '0.00',
+            turnover_rate: '0',
             price: '1',
             status: 'aborted',
             is_bid: true,
             last_order_cell_outpoint: {
               tx_hash: 'hash2',
-              index: '0x1',
+              index: '0x0',
             },
             order_cells: [{ index: "0x0", tx_hash: "hash1" }]
           },
@@ -694,7 +690,7 @@ describe('Orders controller', () => {
             paid_amount: '0',
             traded_amount: '0',
             order_amount: '1',
-            turnover_rate: '0.00',
+            turnover_rate: '0',
             price: '1',
             status: 'opening',
             is_bid: true,

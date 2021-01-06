@@ -4,9 +4,9 @@ import IndexerWrapper from "../indexer/indexer";
 
 import { modules } from "../../ioc";
 import { contracts } from "../../config";
-import OrdersHistoryCalculate from "./orders_history_calculate";
 import { IndexerService } from '../indexer/indexer_service';
 import { OrdersHistoryModel } from './orders_history_model';
+import { DexOrderChainFactory } from "../../model/orders/dex_order_chain_factory";
 
 @injectable()
 export default class OrdersHistoryService {
@@ -32,41 +32,48 @@ export default class OrdersHistoryService {
       args: order_lock_args,
     };
 
-    const ordersHistoryService = new OrdersHistoryCalculate(this.indexer, orderLock, sudtType);
-    const ordersHistory = await ordersHistoryService.calculateOrdersHistory();    
-
-    const formattedOrdersHistory = ordersHistory.map((o) => {
-      const {order_cells} = o
-      const lastOrderCell = order_cells[order_cells.length - 1]
-
-      const orderHistory: OrdersHistoryModel = {
-        block_hash: o.block_hash,
-        is_bid: o.is_bid,
-        order_amount: o.order_amount.toString(),
-        traded_amount: o.traded_amount.toString(),
-        turnover_rate: o.turnover_rate.toString(),
-        paid_amount: o.paid_amount.toString(),
-        price: o.price.toString(),
-        status: o.status,
-        last_order_cell_outpoint: {
-          tx_hash: lastOrderCell.outpoint.tx_hash,
-          index: `0x${parseInt(lastOrderCell.outpoint.index).toString(16)}`,
-        },
-        order_cells: order_cells.map(orderCell => ({
-          tx_hash: orderCell.outpoint.tx_hash,
-          index: `0x${parseInt(orderCell.outpoint.index).toString(16)}`,
-        }))
-      };
-      if (lastOrderCell.nextTxHash) {
-        orderHistory.last_order_cell_outpoint = {
-          tx_hash: lastOrderCell.nextTxHash,
-          index: "0x1",
-        };
-      }
-
-      return orderHistory;
+    const txsWithStatus = await this.indexer.collectTransactions({
+      type: sudtType,
+      lock: orderLock,
     });
 
-    return formattedOrdersHistory;
+    // console.log(txsWithStatus);
+    
+
+    const factory: DexOrderChainFactory = new DexOrderChainFactory();
+    const orders = factory.getOrderChains(orderLock, sudtType, txsWithStatus).filter(x => x.cell.lock.args === order_lock_args);
+
+    const result = orders.map(x => {
+      const orders = x.getOrders();
+      const orderCells = x.getOrderStatus() !== "opening" ? orders.splice(0, orders.length - 1) : orders;
+
+      const orderHistory: OrdersHistoryModel = {
+        block_hash: x.tx.tx_status.block_hash,
+        is_bid: x.isBid(),
+        order_amount: x.getOrderData().orderAmount.toString(),
+        traded_amount: x.getTradedAmount().toString(),
+        turnover_rate: x.getTurnoverRate().toString(),
+        paid_amount: x.getPaidAmount().toString(),
+        price: x.getOrderData().price.toString(),
+        status: x.getOrderStatus(),
+        last_order_cell_outpoint: {
+          tx_hash: x.getLastOrder().tx.transaction.hash,
+          index: `0x${x.getLastOrder().index.toString(16)}`,
+        },
+        order_cells: orderCells.map(orderCell => ({
+          tx_hash: orderCell.tx.transaction.hash,
+          index: `0x${orderCell.index.toString(16)}`,
+        }))
+      };
+
+      return orderHistory;
+    })
+
+    console.log(result);
+    
+
+    return result
+
   }
+
 }

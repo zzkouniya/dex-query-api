@@ -25,19 +25,21 @@ export class DexOrderChain {
       return new BigNumber(0);
     }
   }
-
-  getLiveCell(): DexOrderChain{
-    const cell = this.getLastOrder();
-    if(cell.live) {
-      return cell;
-    }
-
-    return null;
-
-  }
-
+  
   getTradedAmount(): bigint {
     const firstOrderAmount = this.getTopOrder().getOrderData().orderAmount;
+
+    if(this.isCancel()) {
+      const orders = this.getOrders()
+      // Orders with only two transactions and a status of cancel, with a TradedAmount of 0
+      if(orders.length === 2) {
+        return BigInt(0)
+      }
+
+      const preSudtAmount = orders[orders.length - 2].getOrderData().orderAmount;
+      return firstOrderAmount - preSudtAmount;
+    }
+    
     const lastOrderAmount = this.getLastOrder().getOrderData().orderAmount;
     return firstOrderAmount - lastOrderAmount;
   }
@@ -51,6 +53,58 @@ export class DexOrderChain {
       return firstCell.getOrderData().sUDTAmount - lastCell.getOrderData().sUDTAmount;
     }
   }
+
+  isCancel(): boolean {
+
+    // When there is only one order, it can't be a cancel
+    const orders = this.getOrders();
+    if(orders.length === 1) {
+      return false
+    }
+
+    if(this.isBid()) {
+      // 0x
+      const lastCellData = this.getLastOrder().data
+      if(lastCellData === "0x") {
+        return true
+      }
+
+    } else {
+      // If the last amount is equal to the amount of the previous one, it must be cancel.
+      const preSudtAmount = orders[orders.length - 2].getOrderData().sUDTAmount;
+      const lastSudtAmount = this.getLastOrder().getOrderData().sUDTAmount;
+      if(lastSudtAmount === preSudtAmount) {
+        return true
+      }
+    }
+
+    return false
+  }
+
+  getLiveCell(): DexOrderChain{
+    const cell = this.getLastOrder();
+    if(cell.live) {
+      return cell;
+    }
+
+    return null;
+
+  }
+
+  getOrderStatus(): string {
+
+    if(this.isCancel()) {
+      return "aborted";
+    }
+
+    const turnoverRate = this.getTurnoverRate();
+    if(turnoverRate.eq(1)) {
+      return "claimed"
+    } else {
+      return "opening";
+    }
+  }
+
 
   getTopOrder(): DexOrderChain {
     return this;

@@ -87,6 +87,10 @@ export class DexOrderChainFactory {
 
 
       x.transaction.outputs.forEach((output, index) => {
+        if(type && !output.type) {
+          return
+        }
+
         if(output.lock.code_hash === lock.code_hash
           && output.lock.hash_type === lock.hash_type
           && output.type.code_hash === type.code_hash
