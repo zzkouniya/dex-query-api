@@ -26,17 +26,11 @@ export interface DexOrderCellFormat {
 export class CkbUtils {
   static parseOrderData(hex: HexString): DexOrderData {
     const sUDTAmount = CkbUtils.parseAmountFromLeHex(hex.slice(0, 34));
-
-    const versionBuf: Buffer = Buffer.from(hex.slice(34, 36), "hex");
-    const version = versionBuf.readUInt8()
-    
+    const version = CkbUtils.readVersion(hex);
     const orderAmount = CkbUtils.parseAmountFromLeHex(hex.slice(36, 68));
+    const effect = CkbUtils.readEffect(hex);
   
-    const effectBuf: Buffer = Buffer.from(hex.slice(68, 84), "hex");
-    const effect = effectBuf.readBigUInt64LE();
-  
-    const exponentBuf: Buffer = Buffer.from(hex.slice(84, 86), "hex");
-    const exponent = exponentBuf.readInt8();
+    const exponent = CkbUtils.readExponent(hex);
   
     const isBid = hex.slice(86, 88) === "00";
 
@@ -55,7 +49,40 @@ export class CkbUtils {
     return orderData;
   }
 
+  private static readExponent(hex: string) {
+    const exponentHex = hex.slice(84, 86)
+    if(!exponentHex) {
+      return 0
+    }
+    const exponentBuf: Buffer = Buffer.from(exponentHex, "hex");
+    const exponent = exponentBuf.readInt8();
+    return exponent;
+  }
+
+  private static readEffect(hex: string): bigint {
+    const effectHex = hex.slice(68, 84)
+    if(!effectHex) {
+      return BigInt(0)
+    }
+    const effectBuf: Buffer = Buffer.from(effectHex, "hex");
+    const effect = effectBuf.readBigUInt64LE();
+    return effect;
+  }
+
+  private static readVersion(hex: string): number {
+    const versionHex = hex.slice(34, 36)
+    if(!versionHex) {
+      return 0
+    }
+    const versionBuf: Buffer = Buffer.from(versionHex, "hex");
+    const version = versionBuf.readUInt8();
+    return version;
+  }
+
   static getPrice(effect: bigint, exponent: number): number {
+    if(effect === BigInt(0)) {
+      return 0
+    }
     return Number(`${effect}e${exponent}`);
   }
 
