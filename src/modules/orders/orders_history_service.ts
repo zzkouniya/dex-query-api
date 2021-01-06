@@ -37,9 +37,6 @@ export default class OrdersHistoryService {
       lock: orderLock,
     });
 
-    // console.log(txsWithStatus);
-    
-
     const factory: DexOrderChainFactory = new DexOrderChainFactory();
     const orders = factory.getOrderChains(orderLock, sudtType, txsWithStatus).filter(x => x.cell.lock.args === order_lock_args);
 
@@ -68,10 +65,7 @@ export default class OrdersHistoryService {
 
       return orderHistory;
     })
-
-    console.log(result);
     
-
     return result
 
   }
