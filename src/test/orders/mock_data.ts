@@ -1,4 +1,5 @@
 import { CkbUtils } from "../../component";
+import { contracts } from "../../config";
 
 export const dexOrderTransactions = [
   {
@@ -26,8 +27,8 @@ export const dexOrderTransactions = [
         capacity: `0x${18700000000n.toString(16)}`,
         lock: {
           args: '0x9eb946551d1eed6aad1b186af975af8ddb2d5043a30d28b6228e6b66d4f3521a',
-          code_hash: '0xeef5d7b6f61dc21be89763907e6966f8b776f33e0bf718c2c718dea90f577dbf',
-          hash_type: 'data'
+          code_hash: contracts.orderLock.codeHash,
+          hash_type: contracts.orderLock.hashType
         },
         type: {
           args: '0xe7dd2956717c180e727cc0948cdc3275f247c18b7592b39adcebc0d0e1a906bb',
@@ -119,8 +120,8 @@ export const dexOrderTransactions = [
           capacity: `0x${61909999999n.toString(16)}`,
           lock: {
             args: '0x9eb946551d1eed6aad1b186af975af8ddb2d5043a30d28b6228e6b66d4f3521a',
-            code_hash: '0xeef5d7b6f61dc21be89763907e6966f8b776f33e0bf718c2c718dea90f577dbf',
-            hash_type: 'data'
+            code_hash: contracts.orderLock.codeHash,
+            hash_type: contracts.orderLock.hashType
           },
           type: {
             args: '0xe7dd2956717c180e727cc0948cdc3275f247c18b7592b39adcebc0d0e1a906bb',
@@ -132,8 +133,8 @@ export const dexOrderTransactions = [
           capacity: `0x${35886352825n.toString(16)}`,
           lock: {
             args: '0x9eb946551d1eed6aad1b186af975af8ddb2d5043a30d28b6228e6b66d4f3521a',
-            code_hash: '0xeef5d7b6f61dc21be89763907e6966f8b776f33e0bf718c2c718dea90f577dbf',
-            hash_type: 'data'
+            code_hash: contracts.orderLock.codeHash,
+            hash_type: contracts.orderLock.hashType
           },
           type: {
             args: '0xe7dd2956717c180e727cc0948cdc3275f247c18b7592b39adcebc0d0e1a906bb',
@@ -145,8 +146,8 @@ export const dexOrderTransactions = [
           capacity: `0x${81755052021n.toString(16)}`,
           lock: {
             args: '0x9eb946551d1eed6aad1b186af975af8ddb2d5043a30d28b6228e6b66d4f3521a',
-            code_hash: '0xeef5d7b6f61dc21be89763907e6966f8b776f33e0bf718c2c718dea90f577dbf',
-            hash_type: 'data'
+            code_hash: contracts.orderLock.codeHash,
+            hash_type: contracts.orderLock.hashType
           },
           type: {
             args: '0xe7dd2956717c180e727cc0948cdc3275f247c18b7592b39adcebc0d0e1a906bb',
@@ -195,8 +196,8 @@ export const dexOrderTransactions = [
           capacity: `0x${18700000000n.toString(16)}`,
           lock: {
             args: '0x87a9ac1f2ccdfdc0fd5fc87d8239968176f9f3917a9b25935a28459992727b9c',
-            code_hash: '0xeef5d7b6f61dc21be89763907e6966f8b776f33e0bf718c2c718dea90f577dbf',
-            hash_type: 'data'
+            code_hash: contracts.orderLock.codeHash,
+            hash_type: contracts.orderLock.hashType
           },
           type: {
             args: '0xe7dd2956717c180e727cc0948cdc3275f247c18b7592b39adcebc0d0e1a906bb',
@@ -259,8 +260,8 @@ export const dexOrderTransactions = [
           capacity: `0x${11900000000000n.toString(16)}`,
           lock: {
             args: '0xa02332efd9363b1dbc87458c4064602aee5c61a3167d281fba50abc64466f614',
-            code_hash: '0xeef5d7b6f61dc21be89763907e6966f8b776f33e0bf718c2c718dea90f577dbf',
-            hash_type: 'data'
+            code_hash: contracts.orderLock.codeHash,
+            hash_type: contracts.orderLock.hashType
           },
           type: {
             args: '0xe7dd2956717c180e727cc0948cdc3275f247c18b7592b39adcebc0d0e1a906bb',

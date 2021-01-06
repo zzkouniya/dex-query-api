@@ -785,7 +785,7 @@ describe('Orders controller', () => {
       it('should return bid orders and ask orders', async () => {
         await controller.getCurrentPrice(req, res, next);
         res.status.should.have.been.calledWith(200);
-        res.json.should.have.been.calledWith("15000000000");
+        res.json.should.have.been.calledWith("1.5e+10");
       })
     })
 
