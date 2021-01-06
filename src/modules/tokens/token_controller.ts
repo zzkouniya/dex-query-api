@@ -22,9 +22,9 @@ export default class TokenController {
   }
 
   @ApiOperationGet({
-    path: 'tokens/typeHashOrAddress',
-    description: 'query by typeHash',
-    summary: 'query by typeHash',
+    path: 'tokens/search',
+    description: 'query by typeHash or address',
+    summary: 'query by typeHash or address',
     parameters: {
       query: {
         type_code_hash: {
@@ -42,7 +42,7 @@ export default class TokenController {
       400: { description: 'Parameters fail' }
     }
   })
-  @httpGet('tokens/typeHashOrAddress')
+  @httpGet('tokens/search')
   async typeHash (req: express.Request, res: express.Response): Promise<void> {
     const typeHashOrAddress = <string>req.query.typeHashOrAddress
     try {
@@ -54,7 +54,7 @@ export default class TokenController {
   }
 
   @ApiOperationGet({
-    path: 'tokens/cellInfo',
+    path: 'tokens/cell-info',
     description: 'query cell info',
     summary: 'query cell info',
     parameters: {
@@ -74,7 +74,7 @@ export default class TokenController {
       400: { description: 'Parameters fail' }
     }
   })
-  @httpGet('tokens/cellInfo')
+  @httpGet('tokens/cell-info')
   async cellInfo (req: express.Request, res: express.Response): Promise<void> {
     const typeHash = <string>req.query.typeHash
     try {
