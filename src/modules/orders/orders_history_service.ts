@@ -1,12 +1,13 @@
 import { inject, injectable, LazyServiceIdentifer } from 'inversify'
-import { HashType, Script } from '@ckb-lumos/base'
+import { HashType, OutPoint, Script } from '@ckb-lumos/base'
 
 import { modules } from '../../ioc'
-import { contracts } from '../../config'
+import { contracts, crossLockScript } from '../../config'
 import { OrdersHistoryModel } from './orders_history_model'
 import { DexOrderChainFactory } from '../../model/orders/dex_order_chain_factory'
-import CkbRepository from '../repository/ckb_repository'
+import { DexOrderChain } from '../../model/orders/dex_order_chain'
 import { DexRepository } from '../repository/dex_repository'
+import CkbRepository from '../repository/ckb_repository'
 
 @injectable()
 export default class OrdersHistoryService {
@@ -40,11 +41,12 @@ export default class OrdersHistoryService {
 
     const factory: DexOrderChainFactory = new DexOrderChainFactory()
     const orders = factory.getOrderChains(orderLock, sudtType, txsWithStatus).filter(x => x.cell.lock.args === order_lock_args)
-    const result: OrdersHistoryModel[] = []
 
+    const result: OrdersHistoryModel[] = []
     for (const order of orders) {
       const orders = order.getOrders()
       const orderCells = order.getOrderStatus() !== 'opening' ? orders.splice(0, orders.length - 1) : orders
+      const isCross = await this.isCrossChain(order)
       const timestamp = await this.repository.getBlockTimestampByHash(order.tx.tx_status.block_hash)
 
       const orderHistory: OrdersHistoryModel = {
@@ -56,6 +58,7 @@ export default class OrdersHistoryService {
         paid_amount: order.getPaidAmount().toString(),
         price: order.getOrderData().price.toString(),
         status: order.getOrderStatus(),
+        is_cross_chain: isCross,
         timestamp: parseInt(timestamp, 16),
         last_order_cell_outpoint: {
           tx_hash: order.getLastOrder().tx.transaction.hash,
@@ -66,10 +69,24 @@ export default class OrdersHistoryService {
           index: `0x${orderCell.index.toString(16)}`
         }))
       }
-
       result.push(orderHistory)
     }
 
     return result
+  }
+
+  async isCrossChain (order: DexOrderChain): Promise<boolean> {
+    const placeCell = order.getTopOrder()
+    const inputOutPoint: OutPoint = placeCell.tx.transaction.inputs[0].previous_output
+
+    const tx = await this.repository.getTransactionByHash(inputOutPoint.tx_hash)
+    const crossCell = tx.ckbTransactionWithStatus.transaction.outputs[0]
+    if (crossLockScript.code_hash === crossCell.lock.codeHash &&
+      crossLockScript.hash_type === crossCell.lock.hashType &&
+      crossLockScript.args === crossCell.lock.args) {
+      return true
+    }
+
+    return false
   }
 }

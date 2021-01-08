@@ -292,3 +292,40 @@ export const dexOrderTransactions = [
     }
   }
 ]
+
+export const ckbTx = {
+  transaction: {
+    cell_deps: [],
+    hash: '0x00097d5ebbdc6889ddb6b70bfc61f8f362b455067e1c970a44aab46e2fbdad28',
+    header_deps: [],
+    inputs: [
+      {
+        previous_output: {
+          index: '0x0',
+          tx_hash: '0xd0147a9d81a7cc6eead2625dc943a0afa0c89a92fbce84438f399ba2d4b3f6ee'
+        },
+        since: '0x0'
+      }
+    ],
+    outputs: [
+      {
+        capacity: `0x${500317498155n.toString(16)}`,
+        lock: {
+          args: '0xe2fa82e70b062c8644b80ad7ecf6e015e5f352f6',
+          code_hash: '0x9bd7e06f3ecf4be0f2fcd2188b23f1b9fcc88e5d4b65a8637b17723bbda3cce8',
+          hash_type: 'type'
+        },
+        type: null
+      }
+    ],
+    outputs_data: [
+      '0x'
+    ],
+    version: '0x0',
+    witnesses: []
+  },
+  tx_status: {
+    block_hash: '0xa559baa681d7b77c774c69d8d975ff0ab262d1ab06739f5ce844890dfab4916d',
+    status: 'committed'
+  }
+}
