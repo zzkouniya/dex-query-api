@@ -1,6 +1,6 @@
-import { inject, injectable, LazyServiceIdentifer } from "inversify";
-import { HashType, Script } from "@ckb-lumos/base";
-import IndexerWrapper from "../indexer/indexer";
+import { inject, injectable, LazyServiceIdentifer } from 'inversify'
+import { HashType, Script } from '@ckb-lumos/base'
+import IndexerWrapper from '../indexer/indexer'
 
 import { modules } from "../../ioc";
 import { contracts } from "../../config";
@@ -10,27 +10,28 @@ import { DexOrderChainFactory } from "../../model/orders/dex_order_chain_factory
 
 @injectable()
 export default class OrdersHistoryService {
-  constructor(
+  constructor (
     @inject(new LazyServiceIdentifer(() => modules[IndexerWrapper.name]))
-    private indexer: IndexerService
+    private readonly indexer: IndexerService
   ) {}
-  async getOrderHistory(
+
+  async getOrderHistory (
     type_code_hash: string,
     type_hash_type: string,
     type_args: string,
     order_lock_args: string
-  ): Promise<Array<OrdersHistoryModel>> {
+  ): Promise<OrdersHistoryModel[]> {
     const sudtType: Script = {
       code_hash: type_code_hash,
       hash_type: <HashType>type_hash_type,
-      args: type_args,
-    };
+      args: type_args
+    }
 
     const orderLock: Script = {
       code_hash: contracts.orderLock.codeHash,
       hash_type: contracts.orderLock.hashType,
-      args: order_lock_args,
-    };
+      args: order_lock_args
+    }
 
     const txsWithStatus = await this.indexer.collectTransactions({
       type: sudtType,
@@ -67,7 +68,6 @@ export default class OrdersHistoryService {
     })
     
     return result
-
   }
 
 }

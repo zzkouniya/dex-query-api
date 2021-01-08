@@ -1,89 +1,88 @@
-import { controller, httpGet } from "inversify-express-utils";
-import { inject, LazyServiceIdentifer } from "inversify";
+import { controller, httpGet } from 'inversify-express-utils'
+import { inject, LazyServiceIdentifer } from 'inversify'
 import {
   ApiOperationGet,
   ApiPath,
-  SwaggerDefinitionConstant,
-} from "swagger-express-ts";
-import * as express from "express";
+  SwaggerDefinitionConstant
+} from 'swagger-express-ts'
+import * as express from 'express'
 
-import { modules } from "../../ioc";
-import { DexLogger } from "../../component";
-import TxService from "./tx_service";
-import CkbRequestModel from "../../model/req/ckb_request_model";
-import TransactionDetailsModel from './transaction_details_model';
+import { modules } from '../../ioc'
+import { DexLogger } from '../../component'
+import TxService from './tx_service'
+import CkbRequestModel from '../../model/req/ckb_request_model'
+import TransactionDetailsModel from './transaction_details_model'
 
 @ApiPath({
-  path: "/",
-  name: "Transactions",
-  security: { basicAuth: [] },
+  path: '/',
+  name: 'Transactions',
+  security: { basicAuth: [] }
 })
-@controller("/")
+@controller('/')
 export default class TxController {
-  private logger: DexLogger;
-  constructor(
+  private readonly logger: DexLogger
+  constructor (
     @inject(new LazyServiceIdentifer(() => modules[TxService.name]))
-    private txService: TxService
+    private readonly txService: TxService
   ) {
-    this.logger = new DexLogger(TxController.name);
+    this.logger = new DexLogger(TxController.name)
   }
 
-
   @ApiOperationGet({
-    path: "transactions",
-    description: "Get transactions",
-    summary: "Get transactions",
+    path: 'transactions',
+    description: 'Get transactions',
+    summary: 'Get transactions',
     parameters: {
       query: {
         type_code_hash: {
-          name: "type_code_hash",
-          type: "string",
+          name: 'type_code_hash',
+          type: 'string',
           required: false,
-          description: "",
+          description: ''
         },
         type_hash_type: {
-          name: "type_hash_type",
-          type: "string",
+          name: 'type_hash_type',
+          type: 'string',
           required: false,
-          description: "",
+          description: ''
         },
         type_args: {
-          name: "type_args",
-          type: "string",
+          name: 'type_args',
+          type: 'string',
           required: false,
-          description: "",
+          description: ''
         },
         lock_code_hash: {
-          name: "lock_code_hash",
-          type: "string",
+          name: 'lock_code_hash',
+          type: 'string',
           required: true,
-          description: "",
+          description: ''
         },
         lock_hash_type: {
-          name: "lock_hash_type",
-          type: "string",
+          name: 'lock_hash_type',
+          type: 'string',
           required: true,
-          description: "",
+          description: ''
         },
         lock_args: {
-          name: "lock_args",
-          type: "string",
+          name: 'lock_args',
+          type: 'string',
           required: true,
-          description: "",
-        },
-      },
+          description: ''
+        }
+      }
     },
     responses: {
       200: {
-        description: "Success",
-        type: SwaggerDefinitionConstant.Response.Type.ARRAY,
+        description: 'Success',
+        type: SwaggerDefinitionConstant.Response.Type.ARRAY
         // model: "BalanceCkbModel",
       },
-      400: { description: "Parameters fail" },
-    },
+      400: { description: 'Parameters fail' }
+    }
   })
-  @httpGet("transactions")
-  async getTransactions(
+  @httpGet('transactions')
+  async getTransactions (
     req: express.Request,
     res: express.Response
   ): Promise<void> {
@@ -94,81 +93,81 @@ export default class TxController {
       <string>req.query.lock_code_hash,
       <string>req.query.lock_hash_type,
       <string>req.query.lock_args
-    );
+    )
 
     if (!reqParam.isValidLockScript() && !reqParam.isValidTypeScript()) {
       res.status(400).json({
-        error: "requires either lock or type script specified as parameters",
-      });
+        error: 'requires either lock or type script specified as parameters'
+      })
 
-      return;
+      return
     }
 
     try {
-      const txs = await this.txService.getSudtTransactions(reqParam);
+      const txs = await this.txService.getSudtTransactions(reqParam)
 
-      res.status(200).json(txs.sort((t1, t2) => parseInt(t1.timestamp) - parseInt(t2.timestamp)).reverse());
+      res.status(200).json(txs.sort((t1, t2) => parseInt(t1.timestamp) - parseInt(t2.timestamp)).reverse())
     } catch (err) {
-      console.error(err);
-      res.status(500).send();
+      console.error(err)
+      res.status(500).send()
     }
   }
 
   @ApiOperationGet({
-    path: "sudt-transactions",
-    description: "Get sudt transactions",
-    summary: "Get sudt transactions",
+    path: 'sudt-transactions',
+    description: 'Get sudt transactions',
+    summary: 'Get sudt transactions',
     parameters: {
       query: {
         type_code_hash: {
-          name: "type_code_hash",
-          type: "string",
+          name: 'type_code_hash',
+          type: 'string',
           required: false,
-          description: "",
+          description: ''
         },
         type_hash_type: {
-          name: "type_hash_type",
-          type: "string",
+          name: 'type_hash_type',
+          type: 'string',
           required: false,
-          description: "",
+          description: ''
         },
         type_args: {
-          name: "type_args",
-          type: "string",
+          name: 'type_args',
+          type: 'string',
           required: false,
-          description: "",
+          description: ''
         },
         lock_code_hash: {
-          name: "lock_code_hash",
-          type: "string",
+          name: 'lock_code_hash',
+          type: 'string',
           required: true,
-          description: "",
+          description: ''
         },
         lock_hash_type: {
-          name: "lock_hash_type",
-          type: "string",
+          name: 'lock_hash_type',
+          type: 'string',
           required: true,
-          description: "",
+          description: ''
         },
         lock_args: {
-          name: "lock_args",
-          type: "string",
+          name: 'lock_args',
+          type: 'string',
           required: true,
-          description: "",
-        },
-      },
+          description: ''
+        }
+      }
     },
     responses: {
       200: {
-        description: "Success",
-        type: SwaggerDefinitionConstant.Response.Type.ARRAY,
+        description: 'Success',
+        type: SwaggerDefinitionConstant.Response.Type.ARRAY
         // model: "BalanceCkbModel",
       },
-      400: { description: "Parameters fail" },
-    },
+      400: { description: 'Parameters fail' }
+    }
   })
-  @httpGet("sudt-transactions")
-  async getSudtTransactions(
+  @httpGet('sudt-transactions')
+  async getSudtTransactions (
     req: express.Request,
     res: express.Response
   ): Promise<void> {
@@ -179,87 +178,87 @@ export default class TxController {
       <string>req.query.lock_code_hash,
       <string>req.query.lock_hash_type,
       <string>req.query.lock_args
-    );
+    )
 
     if (!reqParam.isValidLockScript() || !reqParam.isValidTypeScript()) {
       res.status(400).json({
-        error: "requires either lock and type script specified as parameters",
-      });
+        error: 'requires either lock and type script specified as parameters'
+      })
 
-      return;
+      return
     }
 
     try {
-      const txs = await this.txService.getSudtTransactions(reqParam);
+      const txs = await this.txService.getSudtTransactions(reqParam)
 
-      res.status(200).json(txs.sort((t1, t2) => parseInt(t1.timestamp) - parseInt(t2.timestamp)).reverse());
+      res.status(200).json(txs.sort((t1, t2) => parseInt(t1.timestamp) - parseInt(t2.timestamp)).reverse())
     } catch (err) {
-      console.error(err);
-      res.status(500).send();
+      console.error(err)
+      res.status(500).send()
     }
   }
 
   @ApiOperationGet({
-    path: "transactions-tx-hash",
-    description: "Get transactions by tx_hash",
-    summary: "Get transactions by tx_hash",
+    path: 'transactions-tx-hash',
+    description: 'Get transactions by tx_hash',
+    summary: 'Get transactions by tx_hash',
     parameters: {
       query: {
         type_code_hash: {
-          name: "type_code_hash",
-          type: "string",
+          name: 'type_code_hash',
+          type: 'string',
           required: false,
-          description: "",
+          description: ''
         },
         type_hash_type: {
-          name: "type_hash_type",
-          type: "string",
+          name: 'type_hash_type',
+          type: 'string',
           required: false,
-          description: "",
+          description: ''
         },
         type_args: {
-          name: "type_args",
-          type: "string",
+          name: 'type_args',
+          type: 'string',
           required: false,
-          description: "",
+          description: ''
         },
         lock_code_hash: {
-          name: "lock_code_hash",
-          type: "string",
+          name: 'lock_code_hash',
+          type: 'string',
           required: true,
-          description: "",
+          description: ''
         },
         lock_hash_type: {
-          name: "lock_hash_type",
-          type: "string",
+          name: 'lock_hash_type',
+          type: 'string',
           required: true,
-          description: "",
+          description: ''
         },
         lock_args: {
-          name: "lock_args",
-          type: "string",
+          name: 'lock_args',
+          type: 'string',
           required: true,
-          description: "",
+          description: ''
         },
         tx_hash: {
-          name: "tx_hash",
-          type: "string",
+          name: 'tx_hash',
+          type: 'string',
           required: true,
-          description: "",
-        },
-      },
+          description: ''
+        }
+      }
     },
     responses: {
       200: {
-        description: "Success",
+        description: 'Success',
         type: SwaggerDefinitionConstant.Response.Type.OBJECT,
-        model: "TransactionDetailsModel",
+        model: 'TransactionDetailsModel'
       },
-      400: { description: "Parameters fail" },
-    },
+      400: { description: 'Parameters fail' }
+    }
   })
-  @httpGet("transactions-tx-hash")
-  async getTransactionsByTxHash(
+  @httpGet('transactions-tx-hash')
+  async getTransactionsByTxHash (
     req: express.Request,
     res: express.Response
   ): Promise<TransactionDetailsModel> {
@@ -270,34 +269,34 @@ export default class TxController {
       <string>req.query.lock_code_hash,
       <string>req.query.lock_hash_type,
       <string>req.query.lock_args
-    );
-    
+    )
+
     if (!reqParam.isValidLockScript()) {
       res.status(400).json({
-        error: "requires lock script to be specified as parameters",
-      });
-      return;
+        error: 'requires lock script to be specified as parameters'
+      })
+      return
     }
-    
+
     if (reqParam.validTypeScriptParams()) {
       res.status(400).json({
-        error: "requires type script to be specified as parameters",
-      });
-      return;
+        error: 'requires type script to be specified as parameters'
+      })
+      return
     }
-    
+
     try {
-      const txDetail = await this.txService.getTransactionDetailsByHash(reqParam, <string>req.query.tx_hash);
-      
-      if(txDetail === null) {
-        res.status(400).json({ error: "The transaction does not exist!" });
-        return;
+      const txDetail = await this.txService.getTransactionDetailsByHash(reqParam, <string>req.query.tx_hash)
+
+      if (txDetail === null) {
+        res.status(400).json({ error: 'The transaction does not exist!' })
+        return
       }
-      
-      res.status(200).json(txDetail);
+
+      res.status(200).json(txDetail)
     } catch (err) {
-      console.error(err);
-      res.status(500).send();
+      console.error(err)
+      res.status(500).send()
     }
   }
 }

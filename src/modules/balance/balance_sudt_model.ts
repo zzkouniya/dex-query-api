@@ -1,20 +1,19 @@
-import { ApiModel, ApiModelProperty } from "swagger-express-ts";
+import { ApiModel, ApiModelProperty } from 'swagger-express-ts'
 
 @ApiModel({
-  description: "Sudt balance",
-  name: "BalanceSudtModel",
+  description: 'Sudt balance',
+  name: 'BalanceSudtModel'
 })
 export default class BalanceSudtModel {
   @ApiModelProperty({
-    description: "free",
-    required: true,
+    description: 'free',
+    required: true
   })
-  free: string;
+  free: string
 
   @ApiModelProperty({
-    description: "locked_order",
-    required: true,
+    description: 'locked_order',
+    required: true
   })
-  locked_order: string;
+  locked_order: string
 }
-
