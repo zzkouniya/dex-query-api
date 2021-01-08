@@ -102,7 +102,8 @@ export class DexOrderChain {
   }
 
   getTopOrder (): DexOrderChain {
-    return this
+    const orders = this.getOrders()
+    return orders[0]
   }
 
   getLastOrder (): DexOrderChain {
