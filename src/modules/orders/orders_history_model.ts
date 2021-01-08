@@ -8,6 +8,7 @@ export interface OrdersHistoryModel {
   paid_amount?: string
   price?: string
   status?: string
+  timestamp: number
   last_order_cell_outpoint?: OutPoint
   order_cells: OutPoint[]
 }

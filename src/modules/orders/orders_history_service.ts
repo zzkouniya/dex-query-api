@@ -1,18 +1,18 @@
 import { inject, injectable, LazyServiceIdentifer } from 'inversify'
 import { HashType, Script } from '@ckb-lumos/base'
-import IndexerWrapper from '../indexer/indexer'
 
 import { modules } from '../../ioc'
 import { contracts } from '../../config'
-import { IndexerService } from '../indexer/indexer_service'
 import { OrdersHistoryModel } from './orders_history_model'
 import { DexOrderChainFactory } from '../../model/orders/dex_order_chain_factory'
+import CkbRepository from '../repository/ckb_repository'
+import { DexRepository } from '../repository/dex_repository'
 
 @injectable()
 export default class OrdersHistoryService {
   constructor (
-    @inject(new LazyServiceIdentifer(() => modules[IndexerWrapper.name]))
-    private readonly indexer: IndexerService
+    @inject(new LazyServiceIdentifer(() => modules[CkbRepository.name]))
+    private readonly repository: DexRepository
   ) {}
 
   async getOrderHistory (
@@ -33,30 +33,33 @@ export default class OrdersHistoryService {
       args: order_lock_args
     }
 
-    const txsWithStatus = await this.indexer.collectTransactions({
+    const txsWithStatus = await this.repository.collectTransactions({
       type: sudtType,
       lock: orderLock
     })
 
     const factory: DexOrderChainFactory = new DexOrderChainFactory()
     const orders = factory.getOrderChains(orderLock, sudtType, txsWithStatus).filter(x => x.cell.lock.args === order_lock_args)
+    const result: OrdersHistoryModel[] = []
 
-    const result = orders.map(x => {
-      const orders = x.getOrders()
-      const orderCells = x.getOrderStatus() !== 'opening' ? orders.splice(0, orders.length - 1) : orders
+    for (const order of orders) {
+      const orders = order.getOrders()
+      const orderCells = order.getOrderStatus() !== 'opening' ? orders.splice(0, orders.length - 1) : orders
+      const timestamp = await this.repository.getBlockTimestampByHash(order.tx.tx_status.block_hash)
 
       const orderHistory: OrdersHistoryModel = {
-        block_hash: x.tx.tx_status.block_hash,
-        is_bid: x.isBid(),
-        order_amount: x.getOrderData().orderAmount.toString(),
-        traded_amount: x.getTradedAmount().toString(),
-        turnover_rate: x.getTurnoverRate().toString(),
-        paid_amount: x.getPaidAmount().toString(),
-        price: x.getOrderData().price.toString(),
-        status: x.getOrderStatus(),
+        block_hash: order.tx.tx_status.block_hash,
+        is_bid: order.isBid(),
+        order_amount: order.getOrderData().orderAmount.toString(),
+        traded_amount: order.getTradedAmount().toString(),
+        turnover_rate: order.getTurnoverRate().toString(),
+        paid_amount: order.getPaidAmount().toString(),
+        price: order.getOrderData().price.toString(),
+        status: order.getOrderStatus(),
+        timestamp: parseInt(timestamp, 16),
         last_order_cell_outpoint: {
-          tx_hash: x.getLastOrder().tx.transaction.hash,
-          index: `0x${x.getLastOrder().index.toString(16)}`
+          tx_hash: order.getLastOrder().tx.transaction.hash,
+          index: `0x${order.getLastOrder().index.toString(16)}`
         },
         order_cells: orderCells.map(orderCell => ({
           tx_hash: orderCell.tx.transaction.hash,
@@ -64,8 +67,8 @@ export default class OrdersHistoryService {
         }))
       }
 
-      return orderHistory
-    })
+      result.push(orderHistory)
+    }
 
     return result
   }

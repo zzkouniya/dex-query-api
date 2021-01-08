@@ -139,6 +139,7 @@ describe('Orders controller', () => {
         describe('when order cell is live', () => {
           beforeEach(async () => {
             mock_repository.mockCollectTransactions().resolves(transactions)
+            mock_repository.mockGetBlockTimestampByHash().resolves(1)
             await controller.getOrderHistory(req, res, next)
           })
           it('returns order history', () => {
@@ -154,6 +155,7 @@ describe('Orders controller', () => {
                   turnover_rate: '1',
                   status: 'claimed',
                   is_bid: true,
+                  timestamp: 1,
                   last_order_cell_outpoint: {
                     tx_hash: 'hash2',
                     index: '0x0'
@@ -197,6 +199,7 @@ describe('Orders controller', () => {
                 }
               })
               mock_repository.mockCollectTransactions().resolves(transactions)
+              mock_repository.mockGetBlockTimestampByHash().resolves(1)
               await controller.getOrderHistory(req, res, next)
             })
             it('returns order history', () => {
@@ -212,6 +215,7 @@ describe('Orders controller', () => {
                     price: '1',
                     status: 'claimed',
                     is_bid: true,
+                    timestamp: 1,
                     last_order_cell_outpoint: {
                       tx_hash: 'hash3',
                       index: '0x0'
@@ -348,6 +352,7 @@ describe('Orders controller', () => {
           describe('when order cell is live', () => {
             beforeEach(async () => {
               mock_repository.mockCollectTransactions().resolves(transactions)
+              mock_repository.mockGetBlockTimestampByHash().resolves(1)
               await controller.getOrderHistory(req, res, next)
             })
             it('returns order history', () => {
@@ -363,6 +368,7 @@ describe('Orders controller', () => {
                     price: '1',
                     status: 'claimed',
                     is_bid: true,
+                    timestamp: 1,
                     last_order_cell_outpoint: {
                       tx_hash: 'hash2',
                       index: '0x0'
@@ -378,6 +384,7 @@ describe('Orders controller', () => {
                     price: '1',
                     status: 'claimed',
                     is_bid: true,
+                    timestamp: 1,
                     last_order_cell_outpoint: {
                       tx_hash: 'hash2',
                       index: '0x1'
@@ -507,6 +514,7 @@ describe('Orders controller', () => {
             req.query.order_lock_args = orderLockArgs
 
             mock_repository.mockCollectTransactions().resolves(transactions)
+            mock_repository.mockGetBlockTimestampByHash().resolves(1)
             await controller.getOrderHistory(req, res, next)
           })
           it('returns order history', () => {
@@ -522,6 +530,7 @@ describe('Orders controller', () => {
                   price: '1',
                   status: 'claimed',
                   is_bid: true,
+                  timestamp: 1,
                   last_order_cell_outpoint: {
                     tx_hash: 'hash3',
                     index: '0x2'
@@ -537,6 +546,7 @@ describe('Orders controller', () => {
                   price: '1',
                   status: 'claimed',
                   is_bid: true,
+                  timestamp: 1,
                   last_order_cell_outpoint: {
                     tx_hash: 'hash3',
                     index: '0x1'
@@ -612,6 +622,7 @@ describe('Orders controller', () => {
         req.query.type_hash_type = typeScript.hash_type
         req.query.type_args = typeScript.args
         req.query.order_lock_args = orderLockArgs
+        mock_repository.mockGetBlockTimestampByHash().resolves(1)
         mock_repository.mockCollectTransactions().resolves(transactions)
 
         await controller.getOrderHistory(req, res, next)
@@ -628,6 +639,7 @@ describe('Orders controller', () => {
             price: '1',
             status: 'aborted',
             is_bid: true,
+            timestamp: 1,
             last_order_cell_outpoint: {
               tx_hash: 'hash2',
               index: '0x0'
@@ -674,6 +686,7 @@ describe('Orders controller', () => {
         req.query.type_hash_type = typeScript.hash_type
         req.query.type_args = typeScript.args
         req.query.order_lock_args = orderLockArgs
+        mock_repository.mockGetBlockTimestampByHash().resolves(1)
         mock_repository.mockCollectTransactions().resolves(transactions)
 
         await controller.getOrderHistory(req, res, next)
@@ -690,6 +703,7 @@ describe('Orders controller', () => {
             price: '1',
             status: 'opening',
             is_bid: true,
+            timestamp: 1,
             last_order_cell_outpoint: {
               tx_hash: 'hash1',
               index: '0x0'
