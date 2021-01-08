@@ -10,56 +10,53 @@ import CkbRepository from '../repository/ckb_repository';
 import { DexOrderChainFactory } from '../../model/orders/dex_order_chain_factory';
 import { DexOrderChain } from "../../model/orders/dex_order_chain";
 
-
-
 @injectable()
 export default class OrdersService {
-  constructor(
+  constructor (
     @inject(new LazyServiceIdentifer(() => modules[CkbRepository.name]))
-    private repository: DexRepository,
+    private readonly repository: DexRepository
   ) {}
 
-  async getOrders(
+  async getOrders (
     type_code_hash: string,
     type_hash_type: string,
     type_args: string,
   ): Promise<{
-    bid_orders: {receive: string, price: string}[],
-    ask_orders: {receive: string, price: string}[]
-  }> {
-    
+      bid_orders: Array<{receive: string, price: string}>
+      ask_orders: Array<{receive: string, price: string}>
+    }> {
     const lock: Script = {
       code_hash: contracts.orderLock.codeHash,
       hash_type: contracts.orderLock.hashType,
-      args: "0x",
+      args: '0x'
     }
 
     const type: Script = {
       code_hash: type_code_hash,
       hash_type: <HashType>type_hash_type,
-      args: type_args,
+      args: type_args
     }
 
     const orderTxs = await this.repository.collectTransactions({
       type: type,
       lock: {
         script: lock,
-        argsLen: 'any',
-      },
-    });
+        argsLen: 'any'
+      }
+    })
 
-    if(orderTxs.length === 0) {
+    if (orderTxs.length === 0) {
       return {
         bid_orders: [],
         ask_orders: []
       }
     }
 
-    const factory: DexOrderChainFactory = new DexOrderChainFactory();
-    const orders = factory.getOrderChains(lock, type, orderTxs);
+    const factory: DexOrderChainFactory = new DexOrderChainFactory()
+    const orders = factory.getOrderChains(lock, type, orderTxs)
     const liveCells = orders.filter(x => x.getLiveCell() != null && Number(x.getTurnoverRate().toFixed(3, 1)) < 0.999 && this.isMakerCellValid(x))
       .map(x => {
-        const c = x.getLiveCell();
+        const c = x.getLiveCell()
         const cell: Cell = {
           cell_output: {
             lock: c.cell.lock,
@@ -68,10 +65,10 @@ export default class OrdersService {
           },
           data: c.data
         }
-        return cell;
-      });
+        return cell
+      })
 
-    const orderCells = liveCells;
+    const orderCells = liveCells
 
     const dexOrdersBid = this.filterDexOrder(orderCells, true)     
     const groupbyPriceBid: Map<string, DexOrderCellFormat[]> = this.groupbyPrice(dexOrdersBid);
@@ -80,17 +77,15 @@ export default class OrdersService {
     bidOrderPriceKeys.sort((c1, c2) => new BigNumber(c1).minus(new BigNumber(c2)).toNumber())
       .reverse()
       .slice(0, bidOrderPriceKeys.length > CkbUtils.getOrdersLimit() ? CkbUtils.getOrdersLimit() : bidOrderPriceKeys.length).map(x => {
-        let order_amount = BigInt(0);
-        const group = groupbyPriceBid.get(x);
-        group.forEach(x => {order_amount += BigInt(x.orderAmount)})
-        
+        let order_amount = BigInt(0)
+        const group = groupbyPriceBid.get(x)
+        group.forEach(x => { order_amount += BigInt(x.orderAmount) })
+
         return {
           receive: order_amount.toString(),
           price: group[0].price.toString()
         }
-
-      }) 
-
+      })
 
     const dexOrdersAsk = this.filterDexOrder(orderCells, false)
     const groupbyPriceAsk: Map<string, DexOrderCellFormat[]> = this.groupbyPrice(dexOrdersAsk);
@@ -98,28 +93,26 @@ export default class OrdersService {
     const ask_orders =
     askOrderPriceKeys.sort((c1, c2) => new BigNumber(c1).minus(new BigNumber(c2)).toNumber())
       .slice(0, askOrderPriceKeys.length > CkbUtils.getOrdersLimit() ? CkbUtils.getOrdersLimit() : askOrderPriceKeys.length).map(x => {
-        let order_amount = BigInt(0); 
-        const group = groupbyPriceAsk.get(x);
-        group.forEach(x => order_amount += BigInt(x.orderAmount))
+        let order_amount = BigInt(0)
+        const group = groupbyPriceAsk.get(x)
+        group.forEach(x => { order_amount += BigInt(x.orderAmount) })
 
         return {
           receive: order_amount.toString(),
           price: group[0].price.toString()
         }
-
-      }).reverse();
+      }).reverse()
 
     return {
       bid_orders,
       ask_orders
     }
-
   }
 
-  async getCurrentPrice(type: { code_hash: string, args: string, hash_type: HashType }): Promise<string> {
-    const orders = await this.repository.getLastMatchOrders(type);
+  async getCurrentPrice (type: { code_hash: string, args: string, hash_type: HashType }): Promise<string> {
+    const orders = await this.repository.getLastMatchOrders(type)
     if (!orders) {
-      return '';
+      return ''
     }
     const bid_price = new BigNumber(orders.bid_orders.sort((o1, o2) => Number(o1.price - o2.price))[0].price.toString());
     const ask_price = new BigNumber(orders.ask_orders.sort((o1, o2) => Number(o2.price - o1.price))[0].price.toString());
@@ -132,10 +125,10 @@ export default class OrdersService {
     const FEE_RATIO = BigInt(1_000);
     // const PRICE_RATIO = BigInt(10 ** 20);
 
-    const live = order.getLiveCell();
+    const live = order.getLiveCell()
     try {
       if (live.data.length !== CkbUtils.getRequiredDataLength()) {
-        return false;
+        return false
       }
 
       const output = live.cell;
@@ -168,8 +161,8 @@ export default class OrdersService {
         }
         return true
       }
-      return false;
-    } catch (err) {      
+      return false
+    } catch (err) {
       return false
     }
   }
@@ -190,14 +183,13 @@ export default class OrdersService {
       let priceArr = groupbyPrice.get(key);
       if(!priceArr) {
         priceArr = []
-        groupbyPrice.set(key, priceArr);
+        groupbyPrice.set(key, priceArr)
       }
 
-      priceArr.push(dexOrder);
+      priceArr.push(dexOrder)
     }
 
-    return groupbyPrice;
+    return groupbyPrice
   }
-
 }
 

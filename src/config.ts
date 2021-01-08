@@ -1,11 +1,11 @@
-import { HashType, Hash } from "@ckb-lumos/base";
-import dotenv from "dotenv";
-dotenv.config();
+import { HashType, Hash } from '@ckb-lumos/base'
+import dotenv from 'dotenv'
+dotenv.config()
 
 export const indexer_config = {
-  dataPath: process.env.INDEXER_FOLDER_PATH || "./indexer_data",
-  nodeUrl: process.env.CKB_NODE_RPC_URL || "http://localhost:8114",
-};
+  dataPath: process.env.INDEXER_FOLDER_PATH ? process.env.INDEXER_FOLDER_PATH : './indexer_data',
+  nodeUrl: process.env.CKB_NODE_RPC_URL ? process.env.CKB_NODE_RPC_URL : 'http://localhost:8114'
+}
 
 interface Contracts {
   orderLock: Script & { version: number };
@@ -24,5 +24,5 @@ export const contracts: Contracts = {
   },
 };
 
-export const env = process.env.NODE_ENV || "development";
-export const port = process.env.PORT || 7001;
+export const env = process.env.NODE_ENV ? process.env.NODE_ENV : 'development'
+export const port = process.env.PORT ? process.env.PORT : 7001

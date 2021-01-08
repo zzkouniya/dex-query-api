@@ -1,4 +1,4 @@
 export default interface CkbTransactionStatusModel {
-    blockHash: string;
-    status: string;
-} 
+  blockHash: string
+  status: string
+}

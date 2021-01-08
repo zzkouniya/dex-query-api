@@ -4,16 +4,18 @@ module.exports = {
     es2021: true
   },
   extends: [
-    "eslint:recommended",
-    "plugin:@typescript-eslint/recommended"
+    'eslint:recommended',
+    'plugin:@typescript-eslint/recommended',
+    'eslint-config-standard-with-typescript'
   ],
-  parser: "@typescript-eslint/parser",
-  "parserOptions": {
-    "ecmaVersion": 12,
-    "sourceType": "module"
+  parser: '@typescript-eslint/parser',
+  parserOptions: {
+    ecmaVersion: 12,
+    sourceType: 'module',
+    project: './tsconfig.json'
   },
   plugins: [
-    "@typescript-eslint"
+    '@typescript-eslint'
   ],
   rules: {
     indent: ['error', 2],
@@ -30,5 +32,11 @@ module.exports = {
     'no-use-before-define': 'off',
     'no-plusplus': 'off',
     'no-bitwise': 'off',
-  },
-};
+    '@typescript-eslint/naming-convention': 'off',
+    '@typescript-eslint/consistent-type-assertions': 'off',
+    '@typescript-eslint/strict-boolean-expressions': 'off',
+    '@typescript-eslint/no-non-null-assertion': 'off',
+    '@typescript-eslint/no-extraneous-class': 'off',
+    '@typescript-eslint/explicit-function-return-type': 'off',
+  }
+}
