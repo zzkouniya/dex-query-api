@@ -43,10 +43,10 @@ export default class CkbTokenRepository {
           this.groupByAddress.set(info.address, tokens)
         }
 
-        if(tokens.filter(x => x.typeHash === info.typeHash).length === 0) {
+        if (tokens.filter(x => x.typeHash === info.typeHash).length === 0) {
           tokens.push(info)
         }
-        
+
         this.groupByTypeHash.set(info.typeHash, info)
       }
     }, 60000)
