@@ -8,7 +8,7 @@ export interface OrdersHistoryModel {
   paid_amount?: string
   price?: string
   status?: string
-  timestamp: number
+  timestamp: string
   is_cross_chain: boolean
   last_order_cell_outpoint?: OutPoint
   order_cells: OutPoint[]

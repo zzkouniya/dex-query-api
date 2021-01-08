@@ -59,7 +59,7 @@ export default class OrdersHistoryService {
         price: order.getOrderData().price.toString(),
         status: order.getOrderStatus(),
         is_cross_chain: isCross,
-        timestamp: parseInt(timestamp, 16),
+        timestamp: parseInt(timestamp, 16).toString(),
         last_order_cell_outpoint: {
           tx_hash: order.getLastOrder().tx.transaction.hash,
           index: `0x${order.getLastOrder().index.toString(16)}`

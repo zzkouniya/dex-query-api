@@ -154,7 +154,7 @@ describe('Orders controller', () => {
                   turnover_rate: '1',
                   status: 'claimed',
                   is_bid: true,
-                  timestamp: 1,
+                  timestamp: '1',
                   is_cross_chain: false,
                   last_order_cell_outpoint: {
                     tx_hash: 'hash2',
@@ -216,7 +216,7 @@ describe('Orders controller', () => {
                     price: '1',
                     status: 'claimed',
                     is_bid: true,
-                    timestamp: 1,
+                    timestamp: '1',
                     is_cross_chain: false,
                     last_order_cell_outpoint: {
                       tx_hash: 'hash3',
@@ -371,7 +371,7 @@ describe('Orders controller', () => {
                     price: '1',
                     status: 'claimed',
                     is_bid: true,
-                    timestamp: 1,
+                    timestamp: '1',
                     is_cross_chain: false,
                     last_order_cell_outpoint: {
                       tx_hash: 'hash2',
@@ -388,7 +388,7 @@ describe('Orders controller', () => {
                     price: '1',
                     status: 'claimed',
                     is_bid: true,
-                    timestamp: 1,
+                    timestamp: '1',
                     is_cross_chain: false,
                     last_order_cell_outpoint: {
                       tx_hash: 'hash2',
@@ -535,7 +535,7 @@ describe('Orders controller', () => {
                   price: '1',
                   status: 'claimed',
                   is_bid: true,
-                  timestamp: 1,
+                  timestamp: '1',
                   is_cross_chain: false,
                   last_order_cell_outpoint: {
                     tx_hash: 'hash3',
@@ -552,7 +552,7 @@ describe('Orders controller', () => {
                   price: '1',
                   status: 'claimed',
                   is_bid: true,
-                  timestamp: 1,
+                  timestamp: '1',
                   is_cross_chain: false,
                   last_order_cell_outpoint: {
                     tx_hash: 'hash3',
@@ -646,7 +646,7 @@ describe('Orders controller', () => {
             price: '1',
             status: 'aborted',
             is_bid: true,
-            timestamp: 1,
+            timestamp: '1',
             is_cross_chain: false,
             last_order_cell_outpoint: {
               tx_hash: 'hash2',
@@ -711,7 +711,7 @@ describe('Orders controller', () => {
             price: '1',
             status: 'opening',
             is_bid: true,
-            timestamp: 1,
+            timestamp: '1',
             is_cross_chain: false,
             last_order_cell_outpoint: {
               tx_hash: 'hash1',
