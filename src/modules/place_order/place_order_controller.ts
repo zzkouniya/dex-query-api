@@ -63,8 +63,7 @@ export default class PlaceOrderController {
 
       res.status(200).json(tx)
     } catch (error) {
-      console.log(error)
-
+      this.logger.error(error)
       res.status(400).json(error)
     }
   }

@@ -4,7 +4,7 @@ import BigNumber from 'bignumber.js'
 import { modules } from '../../ioc'
 import { contracts } from '../../config'
 import { CkbUtils, DexOrderCellFormat } from '../../component'
-import { Cell, HashType, Script } from '@ckb-lumos/base'
+import { Cell, HashType, QueryOptions, Script } from '@ckb-lumos/base'
 import { DexRepository } from '../repository/dex_repository'
 import CkbRepository from '../repository/ckb_repository'
 import { DexOrderChainFactory } from '../../model/orders/dex_order_chain_factory'
@@ -110,13 +110,37 @@ export default class OrdersService {
   }
 
   async getCurrentPrice (type: { code_hash: string, args: string, hash_type: HashType }): Promise<string> {
-    const orders = await this.repository.getLastMatchOrders(type)
-    if (!orders) {
-      return ''
+    const lock: Script = {
+      code_hash: contracts.orderLock.codeHash,
+      hash_type: contracts.orderLock.hashType,
+      args: '0x'
     }
-    const bid_price = new BigNumber(orders.bid_orders.sort((o1, o2) => Number(o1.price - o2.price))[0].price.toString())
-    const ask_price = new BigNumber(orders.ask_orders.sort((o1, o2) => Number(o2.price - o1.price))[0].price.toString())
-    return (bid_price.plus(ask_price)).dividedBy(2).toExponential()
+    const queryOption: QueryOptions = {
+      type,
+      lock: {
+        script: lock,
+        argsLen: 'any'
+      },
+      order: 'desc'
+    }
+
+    const orderTxs = await this.repository.collectTransactions(queryOption)
+    if (orderTxs.length === 0) { return '' }
+    const factory: DexOrderChainFactory = new DexOrderChainFactory()
+    const orders = factory.getOrderChains(lock, type, orderTxs)
+    const makerOrders = orders.filter(x => {
+      const top = x.getTopOrder()
+      if (!top.isCancel() && top.nextOrderCell) {
+        return x
+      }
+    })
+
+    if (makerOrders.length === 0) { return '' }
+    const lastMakerOrders = makerOrders.filter(x => x.getLastOrder().tx.transaction.hash === makerOrders[0].getLastOrder().tx.transaction.hash)
+    return lastMakerOrders.reduce(
+      (total, order) => total.plus(new BigNumber(CkbUtils.parseOrderData(order.data).price)),
+      new BigNumber(0)
+    ).dividedBy(2).toExponential()
   }
 
   isMakerCellValid (order: DexOrderChain): boolean {
