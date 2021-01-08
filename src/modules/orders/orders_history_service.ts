@@ -2,11 +2,11 @@ import { inject, injectable, LazyServiceIdentifer } from 'inversify'
 import { HashType, Script } from '@ckb-lumos/base'
 import IndexerWrapper from '../indexer/indexer'
 
-import { modules } from "../../ioc";
-import { contracts } from "../../config";
-import { IndexerService } from '../indexer/indexer_service';
-import { OrdersHistoryModel } from './orders_history_model';
-import { DexOrderChainFactory } from "../../model/orders/dex_order_chain_factory";
+import { modules } from '../../ioc'
+import { contracts } from '../../config'
+import { IndexerService } from '../indexer/indexer_service'
+import { OrdersHistoryModel } from './orders_history_model'
+import { DexOrderChainFactory } from '../../model/orders/dex_order_chain_factory'
 
 @injectable()
 export default class OrdersHistoryService {
@@ -35,15 +35,15 @@ export default class OrdersHistoryService {
 
     const txsWithStatus = await this.indexer.collectTransactions({
       type: sudtType,
-      lock: orderLock,
-    });
+      lock: orderLock
+    })
 
-    const factory: DexOrderChainFactory = new DexOrderChainFactory();
-    const orders = factory.getOrderChains(orderLock, sudtType, txsWithStatus).filter(x => x.cell.lock.args === order_lock_args);
+    const factory: DexOrderChainFactory = new DexOrderChainFactory()
+    const orders = factory.getOrderChains(orderLock, sudtType, txsWithStatus).filter(x => x.cell.lock.args === order_lock_args)
 
     const result = orders.map(x => {
-      const orders = x.getOrders();
-      const orderCells = x.getOrderStatus() !== "opening" ? orders.splice(0, orders.length - 1) : orders;
+      const orders = x.getOrders()
+      const orderCells = x.getOrderStatus() !== 'opening' ? orders.splice(0, orders.length - 1) : orders
 
       const orderHistory: OrdersHistoryModel = {
         block_hash: x.tx.tx_status.block_hash,
@@ -56,18 +56,17 @@ export default class OrdersHistoryService {
         status: x.getOrderStatus(),
         last_order_cell_outpoint: {
           tx_hash: x.getLastOrder().tx.transaction.hash,
-          index: `0x${x.getLastOrder().index.toString(16)}`,
+          index: `0x${x.getLastOrder().index.toString(16)}`
         },
         order_cells: orderCells.map(orderCell => ({
           tx_hash: orderCell.tx.transaction.hash,
-          index: `0x${orderCell.index.toString(16)}`,
+          index: `0x${orderCell.index.toString(16)}`
         }))
-      };
+      }
 
-      return orderHistory;
+      return orderHistory
     })
-    
+
     return result
   }
-
 }

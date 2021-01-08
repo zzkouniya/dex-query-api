@@ -137,10 +137,10 @@ export const sudtTx = {
         capacity: `0x${BigInt(1999999995000n).toString(16)}`
       }
     ],
-    outputsData: [ 
-      CkbUtils.formatOrderData(4000000000n, 1, BigInt(1), BigInt(1), 0, false), 
+    outputsData: [
+      CkbUtils.formatOrderData(4000000000n, 1, BigInt(1), BigInt(1), 0, false),
       CkbUtils.formatOrderData(6000000000n, 1, BigInt(1), BigInt(1), 0, false),
-      '0x' 
+      '0x'
     ],
     headerDeps: [],
     hash: '0x34c5ba66e5be46e4b78d3dafe6a9f124912af64bad2f3a3ff53e1c684b7694c7',
@@ -189,7 +189,7 @@ export const preSudtTx: CkbTransactionWithStatusModel = {
         capacity: `0x${BigInt(18700000000n).toString(16)}`
       }
     ],
-    outputsData: [ '0x', 
+    outputsData: ['0x',
       CkbUtils.formatOrderData(10000000000n, 1, BigInt(1), BigInt(1), 0, false)],
     headerDeps: [],
     hash: 'hash0',
@@ -261,10 +261,10 @@ export const sudtTxList =
           capacity: `0x${BigInt(1999999995000n).toString(16)}`
         }
       ],
-      outputs_data: [ 
-        CkbUtils.formatOrderData(4000000000n, 1, BigInt(1), BigInt(1), 0, false), 
+      outputs_data: [
+        CkbUtils.formatOrderData(4000000000n, 1, BigInt(1), BigInt(1), 0, false),
         CkbUtils.formatOrderData(6000000000n, 1, BigInt(1), BigInt(1), 0, false),
-        '0x' 
+        '0x'
       ],
       version: '0x0',
       witnesses: []
@@ -274,4 +274,3 @@ export const sudtTxList =
       status: 'committed'
     }
   }
-

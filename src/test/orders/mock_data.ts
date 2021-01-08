@@ -1,5 +1,5 @@
-import { CkbUtils } from "../../component";
-import { contracts } from "../../config";
+import { CkbUtils } from '../../component'
+import { contracts } from '../../config'
 
 export const dexOrderTransactions = [
   {

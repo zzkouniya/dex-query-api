@@ -7,22 +7,22 @@ import { ApiModel, ApiModelProperty } from 'swagger-express-ts'
 })
 export default class CkbRequestModel {
   @ApiModelProperty({
-    description: "type_code_hash",
-    required: false,
+    description: 'type_code_hash',
+    required: false
   })
-  type_code_hash?: string;
+  type_code_hash?: string
 
   @ApiModelProperty({
-    description: "type_hash_type",
-    required: false,
+    description: 'type_hash_type',
+    required: false
   })
-  type_hash_type?: string;
+  type_hash_type?: string
 
   @ApiModelProperty({
-    description: "type_args",
-    required: false,
+    description: 'type_args',
+    required: false
   })
-  type_args?: string;
+  type_args?: string
 
   @ApiModelProperty({
     description: 'lock_code_hash',

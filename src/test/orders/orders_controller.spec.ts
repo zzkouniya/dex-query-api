@@ -20,14 +20,14 @@ chai.should()
 sinonStubPromise(sinon)
 
 describe('Orders controller', () => {
-  let req;
-  let res;
-  let next;
-  let controller;
-  let mock_repository: MockRepository;
+  let req
+  let res
+  let next
+  let controller
+  let mock_repository: MockRepository
 
   beforeEach(() => {
-    mock_repository = MockRepositoryFactory.getInstance();
+    mock_repository = MockRepositoryFactory.getInstance()
     const service = new OrdersService(mock_repository)
     const historyService = new OrdersHistoryService(mock_repository)
     controller = new OrderController(service, historyService)
@@ -158,12 +158,12 @@ describe('Orders controller', () => {
                     tx_hash: 'hash2',
                     index: '0x0'
                   },
-                  order_cells: [{ index: "0x0", tx_hash: "hash1" }]
-                },
-              ],
-            );
-          });
-        });
+                  order_cells: [{ index: '0x0', tx_hash: 'hash1' }]
+                }
+              ]
+            )
+          })
+        })
         describe('when order cell is not live', () => {
           describe('with order lock or type mismatched', () => {
             beforeEach(async () => {
@@ -186,10 +186,10 @@ describe('Orders controller', () => {
                         code_hash: '0x58c5f491aba6d61678b7cf7edf4910b1f5e00ec0cde2f42e0abb4fd9aff25a63',
                         hash_type: 'type',
                         args: '0x6c8c7f80161485c3e4adceda4c6c425410140054'
-                      },
-                    },
+                      }
+                    }
                   ],
-                  outputs_data: [CkbUtils.formatBigUInt128LE(1n)],
+                  outputs_data: [CkbUtils.formatBigUInt128LE(1n)]
                 },
                 tx_status: {
                   block_hash: '0x50c20ecc2b3b56ed336e4d8b840cf99a29069ffa7b279433e1c7093a359657b9',
@@ -214,7 +214,7 @@ describe('Orders controller', () => {
                     is_bid: true,
                     last_order_cell_outpoint: {
                       tx_hash: 'hash3',
-                      index: '0x0',
+                      index: '0x0'
                     },
                     order_cells: [{ index: '0x0', tx_hash: 'hash1' }, { index: '0x0', tx_hash: 'hash2' }]
                   }
@@ -325,13 +325,13 @@ describe('Orders controller', () => {
                     {
                       capacity: orderCell1_2.capacity,
                       lock: orderCell1_2.lock,
-                      type: orderCell1_2.type,
+                      type: orderCell1_2.type
                     }
                   ],
                   outputs_data: [
                     CkbUtils.formatBigUInt128LE(3n),
                     orderCell1_2.data
-                  ],
+                  ]
                 },
                 tx_status: {
                   block_hash: '0x50c20ecc2b3b56ed336e4d8b840cf99a29069ffa7b279433e1c7093a359657b9',
@@ -355,7 +355,7 @@ describe('Orders controller', () => {
               res.json.should.have.been.calledWith(
                 [
                   {
-                    block_hash: "0x50c20ecc2b3b56ed336e4d8b840cf99a29069ffa7b279433e1c7093a359657b9",
+                    block_hash: '0x50c20ecc2b3b56ed336e4d8b840cf99a29069ffa7b279433e1c7093a359657b9',
                     paid_amount: '3',
                     traded_amount: '1',
                     order_amount: '1',
@@ -365,9 +365,9 @@ describe('Orders controller', () => {
                     is_bid: true,
                     last_order_cell_outpoint: {
                       tx_hash: 'hash2',
-                      index: '0x0',
+                      index: '0x0'
                     },
-                    order_cells: [{ index: "0x0", tx_hash: "hash1" }]
+                    order_cells: [{ index: '0x0', tx_hash: 'hash1' }]
                   },
                   {
                     block_hash: '0x50c20ecc2b3b56ed336e4d8b840cf99a29069ffa7b279433e1c7093a359657b9',
@@ -380,15 +380,15 @@ describe('Orders controller', () => {
                     is_bid: true,
                     last_order_cell_outpoint: {
                       tx_hash: 'hash2',
-                      index: '0x1',
+                      index: '0x1'
                     },
-                    order_cells: [{ index: "0x1", tx_hash: "hash1" }]
-                  },
-                ],
-              );
-            });
-          });
-        });
+                    order_cells: [{ index: '0x1', tx_hash: 'hash1' }]
+                  }
+                ]
+              )
+            })
+          })
+        })
         describe('with two input transactions to one transaction', () => {
           beforeEach(async () => {
             transactions = [
@@ -526,7 +526,7 @@ describe('Orders controller', () => {
                     tx_hash: 'hash3',
                     index: '0x2'
                   },
-                  order_cells: [{ index: "0x0", tx_hash: "hash1" }]
+                  order_cells: [{ index: '0x0', tx_hash: 'hash1' }]
                 },
                 {
                   block_hash: '0x50c20ecc2b3b56ed336e4d8b840cf99a29069ffa7b279433e1c7093a359657b9',
@@ -541,14 +541,14 @@ describe('Orders controller', () => {
                     tx_hash: 'hash3',
                     index: '0x1'
                   },
-                  order_cells: [{ index: "0x0", tx_hash: "hash2" }]
-                },
-              ],
-            );
-          });
-        });
-      });
-    });
+                  order_cells: [{ index: '0x0', tx_hash: 'hash2' }]
+                }
+              ]
+            )
+          })
+        })
+      })
+    })
     describe('aborted order', () => {
       beforeEach(async () => {
         const transactions = [
@@ -630,7 +630,7 @@ describe('Orders controller', () => {
             is_bid: true,
             last_order_cell_outpoint: {
               tx_hash: 'hash2',
-              index: '0x0',
+              index: '0x0'
             },
             order_cells: [{ index: '0x0', tx_hash: 'hash1' }]
           }
@@ -721,11 +721,11 @@ describe('Orders controller', () => {
           await controller.getOrders(req, res, next)
           res.status.should.have.been.calledWith(200)
           res.json.should.have.been.calledWith({
-            ask_orders: [{ price: "100000000000000", receive: "236944947979" }, { price: "98760000000000", receive: "296280000" }, { price: "43210000000000", receive: "1" }],
-            bid_orders: [{ price: "400000", receive: "2500000" }]
-          });
-        }) 
-      });  
+            ask_orders: [{ price: '100000000000000', receive: '236944947979' }, { price: '98760000000000', receive: '296280000' }, { price: '43210000000000', receive: '1' }],
+            bid_orders: [{ price: '400000', receive: '2500000' }]
+          })
+        })
+      })
 
       describe('lumos query when the transaction is empty', () => {
         beforeEach(() => {
@@ -779,9 +779,9 @@ describe('Orders controller', () => {
       })
 
       it('should return bid orders and ask orders', async () => {
-        await controller.getCurrentPrice(req, res, next);
-        res.status.should.have.been.calledWith(200);
-        res.json.should.have.been.calledWith("1.5e+10");
+        await controller.getCurrentPrice(req, res, next)
+        res.status.should.have.been.calledWith(200)
+        res.json.should.have.been.calledWith('1.5e+10')
       })
     })
 

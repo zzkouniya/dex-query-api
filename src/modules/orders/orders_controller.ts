@@ -77,13 +77,13 @@ export default class OrderController {
       type_code_hash,
       type_hash_type,
       type_args
-    } = req.query;
+    } = req.query
     try {
       const orders = await this.orderService.getOrders(
         <string>type_code_hash,
         <string>type_hash_type,
         <string>type_args
-      );
+      )
       res.status(200).json(orders)
     } catch (err) {
       console.error(err)
@@ -142,9 +142,9 @@ export default class OrderController {
   }
 
   @ApiOperationGet({
-    path: "order-history",
-    description: "Get orders history",
-    summary: "Get orders history",
+    path: 'order-history',
+    description: 'Get orders history',
+    summary: 'Get orders history',
     parameters: {
       query: {
         type_code_hash: {

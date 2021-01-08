@@ -1,13 +1,13 @@
-import { inject, injectable, LazyServiceIdentifer } from "inversify";
-import { modules } from "../../ioc";
+import { inject, injectable, LazyServiceIdentifer } from 'inversify'
+import { modules } from '../../ioc'
 
-import CellsSerive from "../cells/cells_service";
-import BalanceService from "../balance/balance_service";
-import CkbRequestModel from "../../model/req/ckb_request_model";
-import { OutPoint as LumosOutPoint } from '@ckb-lumos/base';
-import { Address, AddressType, Transaction } from "@lay2/pw-core";
-import PlaceBidOrder from "./place_bid_order";
-import PlaceAskOrder from "./place_ask_order";
+import CellsSerive from '../cells/cells_service'
+import BalanceService from '../balance/balance_service'
+import CkbRequestModel from '../../model/req/ckb_request_model'
+import { OutPoint as LumosOutPoint } from '@ckb-lumos/base'
+import { Address, AddressType, Transaction } from '@lay2/pw-core'
+import PlaceBidOrder from './place_bid_order'
+import PlaceAskOrder from './place_ask_order'
 interface Payload {
   pay: string
   price: string
@@ -15,16 +15,16 @@ interface Payload {
   ckb_address: string
   is_bid: boolean
   udt_decimals: number
-  spent_cells?: Array<LumosOutPoint>
+  spent_cells?: LumosOutPoint[]
 }
 
 @injectable()
 export default class PlaceOrderService {
-  constructor(
+  constructor (
     @inject(new LazyServiceIdentifer(() => modules[CellsSerive.name]))
-    private cellService: CellsSerive,
+    private readonly cellService: CellsSerive,
     @inject(new LazyServiceIdentifer(() => modules[BalanceService.name]))
-    private balanceService: BalanceService
+    private readonly balanceService: BalanceService
   ) {}
 
   async placeOrder (payload: Payload): Promise<Transaction> {
@@ -45,9 +45,9 @@ export default class PlaceOrderService {
       free,
       ckb_address,
       udt_type_args,
-      spent_cells,
+      spent_cells
     )
 
-    return builder.placeOrder()
+    return await builder.placeOrder()
   }
 }
