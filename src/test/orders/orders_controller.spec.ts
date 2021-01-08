@@ -18,6 +18,8 @@ import OrderController from '../../modules/orders/orders_controller';
 import { contracts } from "../../config";
 import { MockRepository, MockRepositoryFactory } from '../mock_repository_factory';
 import { dexOrderTransactions } from './mock_data';
+import { ckbTx } from "../tx/mock_data";
+import CkbTransactionWithStatusModelWrapper from "../../model/ckb/ckb_transaction_with_status";
 
 
 describe('Orders controller', () => {
@@ -143,6 +145,7 @@ describe('Orders controller', () => {
         describe('when order cell is live', () => {
           beforeEach(async () => {
             mock_repository.mockCollectTransactions().resolves(transactions);
+            mock_repository.mockGetTransactionByHash().resolves(new CkbTransactionWithStatusModelWrapper(ckbTx))
             await controller.getOrderHistory(req, res, next);
           });
           it('returns order history', () => {
@@ -158,6 +161,7 @@ describe('Orders controller', () => {
                   turnover_rate: '1',
                   status: 'claimed',
                   is_bid: true,
+                  is_cross_chain: false,
                   last_order_cell_outpoint: {
                     tx_hash: 'hash2',
                     index: '0x0',
@@ -201,6 +205,7 @@ describe('Orders controller', () => {
                 }
               });
               mock_repository.mockCollectTransactions().resolves(transactions);
+              mock_repository.mockGetTransactionByHash().resolves(new CkbTransactionWithStatusModelWrapper(ckbTx));
               await controller.getOrderHistory(req, res, next);
             });
             it('returns order history', () => {
@@ -216,6 +221,7 @@ describe('Orders controller', () => {
                     price: '1',
                     status: 'claimed',
                     is_bid: true,
+                    is_cross_chain: false,
                     last_order_cell_outpoint: {
                       tx_hash: 'hash3',
                       index: '0x0',
@@ -352,6 +358,7 @@ describe('Orders controller', () => {
           describe('when order cell is live', () => {
             beforeEach(async () => {
               mock_repository.mockCollectTransactions().resolves(transactions);
+              mock_repository.mockGetTransactionByHash().resolves(new CkbTransactionWithStatusModelWrapper(ckbTx));
               await controller.getOrderHistory(req, res, next);
             });
             it('returns order history', () => {
@@ -367,6 +374,7 @@ describe('Orders controller', () => {
                     price: '1',
                     status: 'claimed',
                     is_bid: true,
+                    is_cross_chain: false,
                     last_order_cell_outpoint: {
                       tx_hash: 'hash2',
                       index: '0x0',
@@ -382,6 +390,7 @@ describe('Orders controller', () => {
                     price: '1',
                     status: 'claimed',
                     is_bid: true,
+                    is_cross_chain: false,
                     last_order_cell_outpoint: {
                       tx_hash: 'hash2',
                       index: '0x1',
@@ -511,6 +520,7 @@ describe('Orders controller', () => {
             req.query.order_lock_args = orderLockArgs;
 
             mock_repository.mockCollectTransactions().resolves(transactions);
+            mock_repository.mockGetTransactionByHash().resolves(new CkbTransactionWithStatusModelWrapper(ckbTx))
             await controller.getOrderHistory(req, res, next);
           });
           it('returns order history', () => {
@@ -526,6 +536,7 @@ describe('Orders controller', () => {
                   price: '1',
                   status: 'claimed',
                   is_bid: true,
+                  is_cross_chain: false,
                   last_order_cell_outpoint: {
                     tx_hash: 'hash3',
                     index: '0x2',
@@ -541,6 +552,7 @@ describe('Orders controller', () => {
                   price: '1',
                   status: 'claimed',
                   is_bid: true,
+                  is_cross_chain: false,
                   last_order_cell_outpoint: {
                     tx_hash: 'hash3',
                     index: '0x1',
@@ -617,6 +629,7 @@ describe('Orders controller', () => {
         req.query.type_args = typeScript.args;
         req.query.order_lock_args = orderLockArgs;
         mock_repository.mockCollectTransactions().resolves(transactions);
+        mock_repository.mockGetTransactionByHash().resolves(new CkbTransactionWithStatusModelWrapper(ckbTx))
 
         await controller.getOrderHistory(req, res, next);
       });
@@ -632,6 +645,7 @@ describe('Orders controller', () => {
             price: '1',
             status: 'aborted',
             is_bid: true,
+            is_cross_chain: false,
             last_order_cell_outpoint: {
               tx_hash: 'hash2',
               index: '0x0',
@@ -679,6 +693,7 @@ describe('Orders controller', () => {
         req.query.type_args = typeScript.args;
         req.query.order_lock_args = orderLockArgs;
         mock_repository.mockCollectTransactions().resolves(transactions);
+        mock_repository.mockGetTransactionByHash().resolves(new CkbTransactionWithStatusModelWrapper(ckbTx));
 
         await controller.getOrderHistory(req, res, next);
       });
@@ -694,6 +709,7 @@ describe('Orders controller', () => {
             price: '1',
             status: 'opening',
             is_bid: true,
+            is_cross_chain: false,
             last_order_cell_outpoint: {
               tx_hash: 'hash1',
               index: '0x0',
