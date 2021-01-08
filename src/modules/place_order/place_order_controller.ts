@@ -1,52 +1,52 @@
-import { controller, httpPost } from "inversify-express-utils";
-import { modules } from "../../ioc";
-import { inject, LazyServiceIdentifer } from "inversify";
+import { controller, httpPost } from 'inversify-express-utils'
+import { modules } from '../../ioc'
+import { inject, LazyServiceIdentifer } from 'inversify'
 import {
   ApiOperationPost,
   ApiPath,
-  SwaggerDefinitionConstant,
-} from "swagger-express-ts";
-import * as express from "express";
-import { DexLogger } from "../../component";
-import PlaceOrderService from "./place_order_service";
+  SwaggerDefinitionConstant
+} from 'swagger-express-ts'
+import * as express from 'express'
+import { DexLogger } from '../../component'
+import PlaceOrderService from './place_order_service'
 
 @ApiPath({
-  path: "/",
-  name: "place-order",
-  security: { basicAuth: [] },
+  path: '/',
+  name: 'place-order',
+  security: { basicAuth: [] }
 })
-@controller("/")
+@controller('/')
 export default class PlaceOrderController {
-  private logger: DexLogger;
-  constructor(
+  private readonly logger: DexLogger
+  constructor (
     @inject(new LazyServiceIdentifer(() => modules[PlaceOrderService.name]))
-    private placeOrderService: PlaceOrderService
+    private readonly placeOrderService: PlaceOrderService
   ) {
-    this.logger = new DexLogger(PlaceOrderController.name);
+    this.logger = new DexLogger(PlaceOrderController.name)
   }
 
   @ApiOperationPost({
-    path: "place-order",
-    description: "place order tx",
-    summary: "",
+    path: 'place-order',
+    description: 'place order tx',
+    summary: '',
     parameters: {
       body: {
-        description: "",
+        description: '',
         required: true,
-        model: "PlaceOrderModel",
-      },
+        model: 'PlaceOrderModel'
+      }
     },
     responses: {
       200: {
-        description: "Success",
-        type: SwaggerDefinitionConstant.Response.Type.ARRAY,
+        description: 'Success',
+        type: SwaggerDefinitionConstant.Response.Type.ARRAY
         // model: "BalanceCkbModel",
       },
-      400: { description: "Parameters fail" },
-    },
+      400: { description: 'Parameters fail' }
+    }
   })
-  @httpPost("place-order")
-  async getLiveCells(
+  @httpPost('place-order')
+  async getLiveCells (
     req: express.Request,
     res: express.Response
   ): Promise<void> {
@@ -59,15 +59,13 @@ export default class PlaceOrderController {
         is_bid: req.body.is_bid,
         udt_decimals: req.body.udt_decimals,
         spent_cells: req.body.spent_cells
-      });
+      })
 
-      res.status(200).json(tx);
+      res.status(200).json(tx)
     } catch (error) {
-      console.log(error);
-      
-      res.status(400).json(error);
+      console.log(error)
+
+      res.status(400).json(error)
     }
-
   }
-
 }

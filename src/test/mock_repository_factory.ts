@@ -1,87 +1,86 @@
-import { Cell, QueryOptions, Script, TransactionWithStatus } from '@ckb-lumos/base';
-import sinon from 'sinon';
-import { DexOrderData } from '../component';
-import CkbTransactionWithStatusModelWrapper from '../model/ckb/ckb_transaction_with_status';
-import { ckb_methons } from '../modules/ckb/ckb_service';
-import { DexRepository } from '../modules/repository/dex_repository';
-
+import { Cell, QueryOptions, Script, TransactionWithStatus } from '@ckb-lumos/base'
+import sinon from 'sinon'
+import { DexOrderData } from '../component'
+import CkbTransactionWithStatusModelWrapper from '../model/ckb/ckb_transaction_with_status'
+import { ckb_methons } from '../modules/ckb/ckb_service'
+import { DexRepository } from '../modules/repository/dex_repository'
 
 export class MockRepositoryFactory {
-  static getInstance(): MockRepository {
+  static getInstance (): MockRepository {
     return new MockRepository()
   }
-
 }
 
 export class MockRepository implements DexRepository {
-
-  tip(): Promise<number> {
-    return null;
-  }
-  collectCells(queryOptions: QueryOptions): Promise<Cell[]> {
-    console.log(queryOptions + " is mock");
-    return null;
-  }
-  collectTransactions(queryOptions: QueryOptions): Promise<TransactionWithStatus[]> {
-    console.log(queryOptions + " is mock");
-    return null;
-  }
-  getLastMatchOrders(type: Script): Promise<Record<'ask_orders' | 'bid_orders', Array<DexOrderData> | null>> {
-    console.log(type + " is mock");
-    return null;
+  async tip (): Promise<number> {
+    return null
   }
 
-  getTransactions(ckbReqParams: [method: ckb_methons, ...rest: []][]): Promise<Array<CkbTransactionWithStatusModelWrapper>> {
-    console.log(ckbReqParams + " is mock");
-    return null;
+  async collectCells (queryOptions: QueryOptions): Promise<Cell[]> {
+    return null
   }
 
-  getTransactionByHash(txHash: string): Promise<CkbTransactionWithStatusModelWrapper> {
-    console.log(txHash + " is mock");
-    return null;
-  }
-  
-  getblockNumberByBlockHash(blockHash: string): Promise<number> {
-    console.log(blockHash + " is mock");
-    return null;
-  }
-  
-  async getBlockTimestampByHash(blockHash: string): Promise<string> {
-    console.log(blockHash + " is mock");
-    return "111";
+  async collectTransactions (queryOptions: QueryOptions): Promise<TransactionWithStatus[]> {
+    return null
   }
 
-  /* eslint-disable */
-  mockTip(): sinon.SinonStub<any[], any> | sinon.SinonStub<unknown[], unknown> {
-    return sinon.stub(this, 'tip');  
+  async getLastMatchOrders (type: Script): Promise<Record<'ask_orders' | 'bid_orders', DexOrderData[] | null>> {
+    return null
   }
 
-  mockCollectCells(): sinon.SinonStub<any[], any> | sinon.SinonStub<unknown[], unknown> {
-    return sinon.stub(this, 'collectCells');  
+  async getTransactions (ckbReqParams: Array<[method: ckb_methons, ...rest: []]>): Promise<CkbTransactionWithStatusModelWrapper[]> {
+    return null
   }
 
-  mockCollectTransactions(): sinon.SinonStub<any[], any> | sinon.SinonStub<unknown[], unknown> {
-    return sinon.stub(this, 'collectTransactions');  
+  async getTransactionByHash (txHash: string): Promise<CkbTransactionWithStatusModelWrapper> {
+    return null
   }
 
-  mockGetLastMatchOrders(): sinon.SinonStub<any[], any> | sinon.SinonStub<unknown[], unknown> {
-    return sinon.stub(this, 'getLastMatchOrders');  
+  async getblockNumberByBlockHash (blockHash: string): Promise<number> {
+    return 0
   }
 
-  mockGetTransactions(): sinon.SinonStub<any[], any> | sinon.SinonStub<unknown[], unknown> {
-    return sinon.stub(this, 'getTransactions');  
+  async getBlockTimestampByHash (blockHash: string): Promise<string> {
+    return '111'
   }
 
-  mockGetTransactionByHash(): sinon.SinonStub<any[], any> | sinon.SinonStub<unknown[], unknown> {
-    return sinon.stub(this, 'getTransactionByHash');  
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  mockTip (): sinon.SinonStub<any[], any> | sinon.SinonStub<unknown[], unknown> {
+    return sinon.stub(this, 'tip')
   }
 
-  mockGetblockNumberByBlockHash(): sinon.SinonStub<any[], any> | sinon.SinonStub<unknown[], unknown> {
-    return sinon.stub(this, 'getblockNumberByBlockHash');  
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  mockCollectCells (): sinon.SinonStub<any[], any> | sinon.SinonStub<unknown[], unknown> {
+    return sinon.stub(this, 'collectCells')
   }
 
-  mockGetBlockTimestampByHash(): sinon.SinonStub<any[], any> | sinon.SinonStub<unknown[], unknown> {
-    return sinon.stub(this, 'getBlockTimestampByHash');  
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  mockCollectTransactions (): sinon.SinonStub<any[], any> | sinon.SinonStub<unknown[], unknown> {
+    return sinon.stub(this, 'collectTransactions')
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  mockGetLastMatchOrders (): sinon.SinonStub<any[], any> | sinon.SinonStub<unknown[], unknown> {
+    return sinon.stub(this, 'getLastMatchOrders')
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  mockGetTransactions (): sinon.SinonStub<any[], any> | sinon.SinonStub<unknown[], unknown> {
+    return sinon.stub(this, 'getTransactions')
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  mockGetTransactionByHash (): sinon.SinonStub<any[], any> | sinon.SinonStub<unknown[], unknown> {
+    return sinon.stub(this, 'getTransactionByHash')
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  mockGetblockNumberByBlockHash (): sinon.SinonStub<any[], any> | sinon.SinonStub<unknown[], unknown> {
+    return sinon.stub(this, 'getblockNumberByBlockHash')
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  mockGetBlockTimestampByHash (): sinon.SinonStub<any[], any> | sinon.SinonStub<unknown[], unknown> {
+    return sinon.stub(this, 'getBlockTimestampByHash')
+  }
 }

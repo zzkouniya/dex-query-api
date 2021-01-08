@@ -1,10 +1,10 @@
-import CellsSerive from "../cells/cells_service";
-import BigNumber from "bignumber.js";
-import { contracts } from "../../config";
-import { Address, AddressType, Amount, AmountUnit, Cell, OutPoint, Script } from "@lay2/pw-core";
+import CellsSerive from '../cells/cells_service'
+import BigNumber from 'bignumber.js'
+import { contracts } from '../../config'
+import { Address, AddressType, Amount, AmountUnit, Cell, OutPoint, Script } from '@lay2/pw-core'
 import { COMMISSION_FEE } from '../../constant/number'
-import { Cell as LumosCell, OutPoint as LumosOutPoint  } from '@ckb-lumos/base';
-import { SUDT_TYPE_SCRIPT } from "../../constant/script";
+import { Cell as LumosCell, OutPoint as LumosOutPoint } from '@ckb-lumos/base'
+import { SUDT_TYPE_SCRIPT } from '../../constant/script'
 
 export default class PlaceOrder {
   protected cellService: CellsSerive
@@ -17,9 +17,9 @@ export default class PlaceOrder {
   protected price: string
   protected actualPay: BigNumber
   protected sudtDecimal: number
-  protected spentCells?: Array<LumosOutPoint>
+  protected spentCells?: LumosOutPoint[]
 
-  constructor(
+  constructor (
     pay: string,
     price: string,
     sudtDecimal: number,
@@ -27,7 +27,7 @@ export default class PlaceOrder {
     balance: string,
     address: string,
     sudtArgs: string,
-    spentCells?: Array<LumosOutPoint>
+    spentCells?: LumosOutPoint[]
   ) {
     this.cellService = cellService
     this.balance = new BigNumber(balance)
@@ -42,38 +42,38 @@ export default class PlaceOrder {
     this.spentCells = spentCells
   }
 
-  static buildSUDTTypeScript(typeArgs: string): Script {
+  static buildSUDTTypeScript (typeArgs: string): Script {
     return new Script(
       SUDT_TYPE_SCRIPT.codeHash,
       typeArgs,
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      SUDT_TYPE_SCRIPT.hashType as any,
+      SUDT_TYPE_SCRIPT.hashType as any
     )
   }
 
-  static buildOrderLock(address: Address): Script {
+  static buildOrderLock (address: Address): Script {
     return new Script(
       contracts.orderLock.codeHash,
       address.toLockScript().toHash(),
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      contracts.orderLock.hashType as any,
+      contracts.orderLock.hashType as any
     )
   }
 
-  async collect(neededCapacity: string): Promise<Cell[]> {
+  async collect (neededCapacity: string): Promise<Cell[]> {
     const lock = this.address.toLockScript()
     const cells = await this.cellService.getLiveCellsForAmount({
       spent_cells: this.spentCells,
       lock_args: lock.args,
       lock_code_hash: lock.codeHash,
       lock_hash_type: lock.hashType,
-      ckb_amount: neededCapacity,
+      ckb_amount: neededCapacity
     })
 
     return cells.map(PlaceOrder.fromLumosCell)
   }
 
-  async collectSUDT(sudtAmount: string): Promise<Cell[]> {
+  async collectSUDT (sudtAmount: string): Promise<Cell[]> {
     const lock = this.address.toLockScript()
     const type = this.sudtType
     const cells = await this.cellService.getLiveCellsForAmount({
@@ -84,13 +84,13 @@ export default class PlaceOrder {
       type_args: type.args,
       type_code_hash: type.codeHash,
       type_hash_type: type.hashType,
-      sudt_amount: sudtAmount,
+      sudt_amount: sudtAmount
     })
 
     return cells.map(PlaceOrder.fromLumosCell)
   }
 
-  static buildPriceData(price: string, decimal: number): string {
+  static buildPriceData (price: string, decimal: number): string {
     const realPrice = new BigNumber(price).times(10 ** (AmountUnit.ckb - decimal))
     const [effectStr, exponentStr] = realPrice.toExponential().split('e')
     const [, offset] = effectStr.split('.')
@@ -107,17 +107,17 @@ export default class PlaceOrder {
     return effectBuf.toString('hex') + exponentBuf.toString('hex')
   }
 
-  static buildVersionData(): string {
+  static buildVersionData (): string {
     const buf = Buffer.allocUnsafe(1)
     buf.writeUInt8(contracts.orderLock.version, 0) // u8
     return buf.toString('hex')
   }
 
-  public static fromLumosCell(cell: LumosCell): Cell {
+  public static fromLumosCell (cell: LumosCell): Cell {
     const {
       cell_output: { lock, type, capacity },
       data,
-      out_point,
+      out_point
     } = cell
     const { tx_hash, index } = out_point
 
@@ -126,7 +126,7 @@ export default class PlaceOrder {
       Script.fromRPC(lock),
       Script.fromRPC(type),
       new OutPoint(tx_hash, index),
-      data,
+      data
     )
   }
 }

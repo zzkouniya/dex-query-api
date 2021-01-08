@@ -1,2 +1,2 @@
-export * from "./bootstrap";
-export * from "./container";
+export * from './bootstrap'
+export * from './container'
