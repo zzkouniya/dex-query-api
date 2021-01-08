@@ -1,12 +1,11 @@
-import { Cell, QueryOptions, TransactionWithStatus, Transaction, Script } from '@ckb-lumos/base'
+import { Cell, QueryOptions, TransactionWithStatus } from '@ckb-lumos/base'
 import {
   Indexer,
   CellCollector,
   TransactionCollector
 } from '@ckb-lumos/indexer'
 import { inject, injectable, LazyServiceIdentifer } from 'inversify'
-import { indexer_config, contracts } from '../../config'
-import { DexOrderData, CkbUtils } from '../../component'
+import { indexer_config } from '../../config'
 import { IndexerService } from './indexer_service'
 import CkbService from '../ckb/ckb_service'
 import { modules } from '../../ioc'
@@ -53,61 +52,5 @@ export default class IndexerWrapper implements IndexerService {
     for await (const tx of transactionCollector.collect()) txs.push(tx)
 
     return txs
-  }
-
-  async getLastMatchOrders (
-    type: Script
-  ): Promise<Record<'ask_orders' | 'bid_orders', DexOrderData[]> | null> {
-    const transactionCollector = new TransactionCollector(
-      this.indexer,
-      {
-        type,
-        lock: {
-          script: {
-            code_hash: contracts.orderLock.codeHash,
-            hash_type: contracts.orderLock.hashType,
-            args: '0x'
-          },
-          argsLen: 'any'
-        },
-        order: 'desc'
-      }
-    )
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    for await (const { tx_status, transaction } of transactionCollector.collect() as any) {
-      if (tx_status.status === 'committed') {
-        const bid_orders: DexOrderData[] = []
-        const ask_orders: DexOrderData[] = []
-        const { inputs, outputs, outputs_data } = transaction as Transaction
-
-        if (!outputs.find(x => CkbUtils.isOrder(type, x))) {
-          continue
-        }
-
-        const requests = []
-        for (const input of inputs) {
-          requests.push(['getTransaction', input.previous_output.tx_hash])
-        }
-        const inputTxs = await this.ckbService.getTransactions(requests)
-
-        if (!inputTxs.find(x => x.ckbTransactionWithStatus.transaction.outputsData.find(y => y.length === CkbUtils.getRequiredDataLength()))) {
-          continue
-        }
-
-        for (const data of outputs_data) {
-          if (data.length !== CkbUtils.getRequiredDataLength()) {
-            continue
-          }
-          const orderCell = CkbUtils.parseOrderData(data);
-          (orderCell.isBid ? bid_orders : ask_orders).push(orderCell)
-        }
-
-        if (ask_orders.length && bid_orders.length) {
-          return { ask_orders, bid_orders }
-        }
-      }
-    }
-    return null
   }
 }

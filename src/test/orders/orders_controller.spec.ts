@@ -12,7 +12,7 @@ import OrderController from '../../modules/orders/orders_controller'
 
 import { contracts } from '../../config'
 import { MockRepository, MockRepositoryFactory } from '../mock_repository_factory'
-import { dexOrderTransactions } from './mock_data'
+import { dexOrderTransactions, makerOrders } from './mock_data'
 
 chai.use(sinonChai)
 chai.should()
@@ -755,9 +755,9 @@ describe('Orders controller', () => {
   describe('#getCurrentPrice', () => {
     beforeEach(() => {
       const TYPE_SCRIPT = {
-        code_hash: '0xe1e354d6d643ad42724d40967e334984534e0367405c5ae42a9d7d63d77df419',
-        hash_type: 'data',
-        args: '0x32e555f3ff8e135cece1351a6a2971518392c1e30375c1e006ad0ce8eac07947'
+        code_hash: '0xc5e5dcf215925f7ef4dfaf5f4b4f105bc321c02776d6e7d52a1db3fcd9d011a4',
+        hash_type: 'type',
+        args: '0xb9bd13d1714ce30c30aff25565e062fb2e94fac8c3e907494ad3108a1e92a4eb'
       }
       req.query.type_code_hash = TYPE_SCRIPT.code_hash
       req.query.type_hash_type = TYPE_SCRIPT.hash_type
@@ -766,28 +766,19 @@ describe('Orders controller', () => {
 
     describe('when orders are found', () => {
       beforeEach(() => {
-        mock_repository.mockGetLastMatchOrders().resolves({
-          ask_orders: [
-            { sUDTAmount: 9775000006n, orderAmount: 0n, price: 20000000000n, isBid: false },
-            { sUDTAmount: 9775000006n, orderAmount: 0n, price: 10000000000n, isBid: false }
-          ],
-          bid_orders: [
-            { sUDTAmount: 4087736789n, orderAmount: 0n, price: 30000000000n, isBid: true },
-            { sUDTAmount: 6580259222n, orderAmount: 0n, price: 10000000000n, isBid: true }
-          ]
-        })
+        mock_repository.mockCollectTransactions().resolves(makerOrders)
       })
 
       it('should return bid orders and ask orders', async () => {
         await controller.getCurrentPrice(req, res, next)
         res.status.should.have.been.calledWith(200)
-        res.json.should.have.been.calledWith('1.5e+10')
+        res.json.should.have.been.calledWith('1e+0')
       })
     })
 
     describe('when orders are not found', () => {
       beforeEach(() => {
-        mock_repository.mockGetLastMatchOrders().resolves(null)
+        mock_repository.mockCollectTransactions().resolves([])
       })
 
       it('should return bid orders and ask orders', async () => {
