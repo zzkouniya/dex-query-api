@@ -150,7 +150,7 @@ export default class OrdersService {
 
     const live = order.getLiveCell()
     try {
-      if (live.data.length !== CkbUtils.getRequiredDataLength()) {
+      if (live.getTopOrder().data.length !== CkbUtils.getRequiredDataLength()) {
         return false
       }
 
