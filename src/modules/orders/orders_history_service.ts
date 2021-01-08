@@ -16,6 +16,21 @@ export default class OrdersHistoryService {
     private readonly repository: DexRepository
   ) {}
 
+  async batch (types: Array<{
+    order_lock_args: string
+    type_code_hash: string
+    type_hash_type: string
+    type_args: string
+  }>): Promise<OrdersHistoryModel[]> {
+    const result = []
+    for (const type of types) {
+      const orders = await this.getOrderHistory(type.type_code_hash, type.type_hash_type, type.type_args, type.order_lock_args)
+      orders.forEach(x => result.push(x))
+    }
+
+    return result
+  }
+
   async getOrderHistory (
     type_code_hash: string,
     type_hash_type: string,
