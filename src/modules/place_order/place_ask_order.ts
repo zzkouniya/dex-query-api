@@ -1,11 +1,11 @@
-import CellsSerive from "../cells/cells_service";
-import BigNumber from "bignumber.js";
-import { Address, Amount, AmountUnit, Builder, Cell, RawTransaction, Script, Transaction } from "@lay2/pw-core";
+import CellsSerive from '../cells/cells_service'
+import BigNumber from 'bignumber.js'
+import { Address, Amount, AmountUnit, Builder, Cell, RawTransaction, Script, Transaction } from '@lay2/pw-core'
 import { CKB_MIN_CAPACITY, MAX_TRANSACTION_FEE, ORDER_CELL_CAPACITY, SUDT_MIN_CAPACITY } from '../../constant/number'
-import { SUDT_DEP } from "../../constant/script";
-import { CkbUtils } from "../../component";
+import { SUDT_DEP } from '../../constant/script'
+import { CkbUtils } from '../../component'
 import PlaceOrder from './place_order'
-import { OutPoint as LumosOutPoint  } from '@ckb-lumos/base';
+import { OutPoint as LumosOutPoint } from '@ckb-lumos/base'
 
 export default class PlaceAskOrder extends PlaceOrder {
   protected cellService: CellsSerive
@@ -18,31 +18,9 @@ export default class PlaceAskOrder extends PlaceOrder {
   protected price: string
   protected actualPay: BigNumber
   protected sudtDecimal: number
-  protected spentCells?: Array<LumosOutPoint>
+  protected spentCells?: LumosOutPoint[]
 
-  constructor(
-    pay: string,
-    price: string,
-    sudtDecimal: number,
-    cellService: CellsSerive,
-    balance: string,
-    address: string,
-    sudtArgs: string,
-    spentCells?: Array<LumosOutPoint>
-  ) {
-    super(
-      pay,
-      price,
-      sudtDecimal,
-      cellService,
-      balance,
-      address,
-      sudtArgs,
-      spentCells
-    )
-  }
-
-  async placeOrder(): Promise<Transaction> {
+  async placeOrder (): Promise<Transaction> {
     const minKeepBothChangeCapacity = new BigNumber(0)
       .plus(ORDER_CELL_CAPACITY) // 181
       .plus(SUDT_MIN_CAPACITY) // 142
@@ -61,18 +39,18 @@ export default class PlaceAskOrder extends PlaceOrder {
       .times(10 ** AmountUnit.ckb)
 
     if (minKeepBothChangeCapacity.lte(this.balance)) {
-      return this.placeOrderWithChange(minKeepBothChangeCapacity, true)
+      return await this.placeOrderWithChange(minKeepBothChangeCapacity, true)
     }
 
     if (minKeepSudtChangeCapacity.lte(this.balance)) {
-      return this.placeOrderWithChange(minKeepSudtChangeCapacity, false)
+      return await this.placeOrderWithChange(minKeepSudtChangeCapacity, false)
     }
 
     if (minCapacity.lte(this.balance)) {
-      return this.placeOrderWithoutChange(minCapacity)
+      return await this.placeOrderWithoutChange(minCapacity)
     }
 
-    throw new Error("CKB is Not enough") 
+    throw new Error('CKB is Not enough')
   }
 
   async placeOrderWithChange (neededCapacity: BigNumber, keepBothChange: boolean): Promise<Transaction> {
@@ -90,7 +68,7 @@ export default class PlaceAskOrder extends PlaceOrder {
     })
 
     if (sudtAmount.lt(this.pay)) {
-      throw new Error(`You don't have enough live cells to complete this transaction, please wait for other transactions to be completed.`);
+      throw new Error('You don\'t have enough live cells to complete this transaction, please wait for other transactions to be completed.')
     }
 
     if (inputCapacity.lt(neededCapacity)) {
@@ -105,7 +83,7 @@ export default class PlaceAskOrder extends PlaceOrder {
     }
 
     if (inputCapacity.lt(neededCapacity)) {
-      throw new Error(`You don't have enough live cells to complete this transaction, please wait for other transactions to be completed.`);
+      throw new Error('You don\'t have enough live cells to complete this transaction, please wait for other transactions to be completed.')
     }
 
     const receive = PlaceAskOrder.calcAskReceive(this.actualPay.toString(), this.price)
@@ -113,7 +91,7 @@ export default class PlaceAskOrder extends PlaceOrder {
     const orderOutput = new Cell(
       new Amount(ORDER_CELL_CAPACITY.toString(), AmountUnit.ckb),
       this.orderLock,
-      this.sudtType,
+      this.sudtType
     )
     orderOutput.setHexData(PlaceAskOrder.buildAskData(this.pay.toString(), receive, this.price, this.sudtDecimal))
 
@@ -124,7 +102,7 @@ export default class PlaceAskOrder extends PlaceOrder {
     const sudtChangeOutput = new Cell(
       sudtChangeCellCapacity,
       this.inputLock,
-      this.sudtType,
+      this.sudtType
     )
 
     sudtChangeOutput.setHexData(
@@ -144,14 +122,14 @@ export default class PlaceAskOrder extends PlaceOrder {
             .toFixed(0, 1),
           AmountUnit.shannon
         ),
-        this.inputLock,
+        this.inputLock
       )
 
       outputs.push(ckbChangeOutput)
     }
 
     const tx = new Transaction(new RawTransaction(inputs, outputs), [Builder.WITNESS_ARGS.Secp256k1])
-  
+
     tx.raw.cellDeps.push(SUDT_DEP)
     const fee = Builder.calcFee(tx)
 
@@ -178,7 +156,7 @@ export default class PlaceAskOrder extends PlaceOrder {
     })
 
     if (sudtAmount.lt(this.pay)) {
-      throw new Error(`You don't have enough live cells to complete this transaction, please wait for other transactions to be completed.`);
+      throw new Error('You don\'t have enough live cells to complete this transaction, please wait for other transactions to be completed.')
     }
 
     if (inputCapacity.lt(neededCapacity)) {
@@ -193,7 +171,7 @@ export default class PlaceAskOrder extends PlaceOrder {
     }
 
     if (inputCapacity.lt(neededCapacity)) {
-      throw new Error(`You don't have enough live cells to complete this transaction, please wait for other transactions to be completed.`);
+      throw new Error('You don\'t have enough live cells to complete this transaction, please wait for other transactions to be completed.')
     }
 
     const receive = PlaceAskOrder.calcAskReceive(this.actualPay.toString(), this.price)
@@ -201,14 +179,14 @@ export default class PlaceAskOrder extends PlaceOrder {
     const orderOutput = new Cell(
       new Amount(inputCapacity.toString(), AmountUnit.shannon),
       this.orderLock,
-      this.sudtType,
+      this.sudtType
     )
     orderOutput.setHexData(PlaceAskOrder.buildAskData(sudtAmount.div(10 ** this.sudtDecimal).toString(), receive, this.price, this.sudtDecimal))
 
     const outputs: Cell[] = [orderOutput]
 
     const tx = new Transaction(new RawTransaction(inputs, outputs), [Builder.WITNESS_ARGS.Secp256k1])
-  
+
     tx.raw.cellDeps.push(SUDT_DEP)
     const fee = Builder.calcFee(tx)
 
@@ -220,7 +198,7 @@ export default class PlaceAskOrder extends PlaceOrder {
     return tx
   }
 
-  static calcAskReceive(pay: string, price: string): string {
+  static calcAskReceive (pay: string, price: string): string {
     return new BigNumber(pay).times(price).toFixed(8, 1)
   }
 

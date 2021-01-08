@@ -1,16 +1,16 @@
-import { Cell, QueryOptions, Script, TransactionWithStatus } from '@ckb-lumos/base';
+import { Cell, QueryOptions, Script, TransactionWithStatus } from '@ckb-lumos/base'
 import { DexOrderData } from '../../component'
 
 export interface IndexerService {
-    
-    collectCells(queryOptions: QueryOptions): Promise<Array<Cell>>;
 
-    collectTransactions(queryOptions: QueryOptions): Promise<Array<TransactionWithStatus>>;
-    
-    getLastMatchOrders(
-        type: Script
-    ): Promise<Record<'ask_orders' | 'bid_orders', Array<DexOrderData> | null>>
+  collectCells: (queryOptions: QueryOptions) => Promise<Cell[]>
 
-    tip(): Promise<number>;
-   
+  collectTransactions: (queryOptions: QueryOptions) => Promise<TransactionWithStatus[]>
+
+  getLastMatchOrders: (
+    type: Script
+  ) => Promise<Record<'ask_orders' | 'bid_orders', DexOrderData[] | null>>
+
+  tip: () => Promise<number>
+
 }

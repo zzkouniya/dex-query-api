@@ -1,11 +1,11 @@
-import CellsSerive from "../cells/cells_service";
-import BigNumber from "bignumber.js";
-import { Address, Amount, AmountUnit, Builder, Cell, RawTransaction, Script, Transaction } from "@lay2/pw-core";
+import CellsSerive from '../cells/cells_service'
+import BigNumber from 'bignumber.js'
+import { Address, Amount, AmountUnit, Builder, Cell, RawTransaction, Script, Transaction } from '@lay2/pw-core'
 import { CKB_MIN_CAPACITY, MAX_TRANSACTION_FEE, ORDER_CELL_CAPACITY } from '../../constant/number'
-import { SUDT_DEP } from "../../constant/script";
-import { CkbUtils } from "../../component";
+import { SUDT_DEP } from '../../constant/script'
+import { CkbUtils } from '../../component'
 import PlaceOrder from './place_order'
-import { OutPoint as LumosOutPoint  } from '@ckb-lumos/base';
+import { OutPoint as LumosOutPoint } from '@ckb-lumos/base'
 
 export default class PlaceBidOrder extends PlaceOrder {
   protected cellService: CellsSerive
@@ -18,35 +18,13 @@ export default class PlaceBidOrder extends PlaceOrder {
   protected price: string
   protected actualPay: BigNumber
   protected sudtDecimal: number
-  protected spentCells?: Array<LumosOutPoint>
+  protected spentCells?: LumosOutPoint[]
 
-  constructor(
-    pay: string,
-    price: string,
-    sudtDecimal: number,
-    cellService: CellsSerive,
-    balance: string,
-    address: string,
-    sudtArgs: string,
-    spentCells?: Array<LumosOutPoint>
-  ) {
-    super(
-      pay,
-      price,
-      sudtDecimal,
-      cellService,
-      balance,
-      address,
-      sudtArgs,
-      spentCells
-    )
-  }
-
-  static calcBidReceive(pay: string, price: string, decimal: number): string {
+  static calcBidReceive (pay: string, price: string, decimal: number): string {
     return new BigNumber(pay).div(price).toFixed(decimal, 1)
   }
 
-  static buildBidData(orderAmount: string, price: string, decimal: number): string {
+  static buildBidData (orderAmount: string, price: string, decimal: number): string {
     const amountData = CkbUtils.formatBigUInt128LE(BigInt(0))
 
     const versionData = PlaceOrder.buildVersionData()
@@ -58,7 +36,7 @@ export default class PlaceBidOrder extends PlaceOrder {
     return `${amountData}${versionData}${orderAmountData}${priceData}00`
   }
 
-  async placeOrder(): Promise<Transaction> {
+  async placeOrder (): Promise<Transaction> {
     const minCapacity = new BigNumber(this.pay)
       .plus(ORDER_CELL_CAPACITY) // 181
       .plus(MAX_TRANSACTION_FEE) // 0.1
@@ -71,18 +49,18 @@ export default class PlaceBidOrder extends PlaceOrder {
       .times(10 ** AmountUnit.ckb)
 
     if (minKeepChangeCapacity.lte(this.balance)) {
-      return this.placeBidOrderWithChange(minKeepChangeCapacity)
+      return await this.placeBidOrderWithChange(minKeepChangeCapacity)
     }
 
     if (minCapacity.lte(this.balance)) {
-      return this.placeBidOrderWithoutChange(minCapacity)
+      return await this.placeBidOrderWithoutChange(minCapacity)
     }
 
     throw new Error('CKB balance is not enough.')
   }
 
-  async placeBidOrderWithoutChange(
-    neededCapacity: BigNumber,
+  async placeBidOrderWithoutChange (
+    neededCapacity: BigNumber
   ): Promise<Transaction> {
     let inputCapacity = new BigNumber(0)
     const inputs: Cell[] = []
@@ -90,7 +68,7 @@ export default class PlaceBidOrder extends PlaceOrder {
     const cells = await this.collect(neededCapacity.toFixed(0, BigNumber.ROUND_DOWN))
 
     if (cells.length === 0) {
-      throw new Error(`You don't have enough live cells to complete this transaction, please wait for other transactions to be completed.`);
+      throw new Error('You don\'t have enough live cells to complete this transaction, please wait for other transactions to be completed.')
     }
 
     cells.forEach(cell => {
@@ -103,7 +81,7 @@ export default class PlaceBidOrder extends PlaceOrder {
     const orderOutput = new Cell(
       new Amount(inputCapacity.toString(), AmountUnit.shannon),
       this.orderLock,
-      this.sudtType,
+      this.sudtType
     )
 
     const receive = PlaceBidOrder.calcBidReceive(this.actualPay.toString(), this.price, this.sudtDecimal)
@@ -124,8 +102,8 @@ export default class PlaceBidOrder extends PlaceOrder {
     return tx
   }
 
-  async placeBidOrderWithChange(
-    neededCapacity: BigNumber,
+  async placeBidOrderWithChange (
+    neededCapacity: BigNumber
   ): Promise<Transaction> {
     let inputCapacity = new BigNumber(0)
     const inputs: Cell[] = []
@@ -133,7 +111,7 @@ export default class PlaceBidOrder extends PlaceOrder {
     const cells = await this.collect(neededCapacity.toFixed(0, BigNumber.ROUND_DOWN))
 
     if (cells.length === 0) {
-      throw new Error(`You don't have enough live cells to complete this transaction, please wait for other transactions to be completed.`);
+      throw new Error('You don\'t have enough live cells to complete this transaction, please wait for other transactions to be completed.')
     }
 
     cells.forEach(cell => {
@@ -146,7 +124,7 @@ export default class PlaceBidOrder extends PlaceOrder {
     const orderOutput = new Cell(
       new Amount(new BigNumber(ORDER_CELL_CAPACITY).plus(this.pay).toString(), AmountUnit.ckb),
       this.orderLock,
-      this.sudtType,
+      this.sudtType
     )
 
     const receive = PlaceBidOrder.calcBidReceive(this.actualPay.toString(), this.price, this.sudtDecimal)
@@ -157,9 +135,9 @@ export default class PlaceBidOrder extends PlaceOrder {
         inputCapacity.minus(
           new BigNumber(ORDER_CELL_CAPACITY).plus(this.pay).times(10 ** AmountUnit.ckb)
         ).toFixed(0, BigNumber.ROUND_DOWN),
-        AmountUnit.shannon,
+        AmountUnit.shannon
       ),
-      this.inputLock,
+      this.inputLock
     )
 
     const outputs: Cell[] = [orderOutput, changeOutput]
@@ -173,7 +151,7 @@ export default class PlaceBidOrder extends PlaceOrder {
     changeOutput.capacity = changeOutput.capacity.sub(fee)
     tx.raw.outputs.pop()
     tx.raw.outputs.push(changeOutput)
-    
+
     return tx
   }
 }
