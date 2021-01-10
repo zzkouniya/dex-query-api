@@ -6,12 +6,16 @@ import { ckb_methons } from '../modules/ckb/ckb_service'
 import { DexRepository } from '../modules/repository/dex_repository'
 
 export class MockRepositoryFactory {
-  static getInstance (): MockRepository {
+  static getDexRepositoryInstance (): MockRepository {
     return new MockRepository()
   }
 }
 
 export class MockRepository implements DexRepository {
+  async getForceBridgeHistory (ckbAddress: string, ethAddress: string, pureCross: boolean): Promise<[]> {
+    return []
+  }
+
   async getInputOutPointFromTheTxPool (): Promise<Map<string, CkbTransactionWithStatusModelWrapper>> {
     return new Map()
   }
@@ -46,6 +50,11 @@ export class MockRepository implements DexRepository {
 
   async getBlockTimestampByHash (blockHash: string): Promise<string> {
     return '111'
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  mockGetForceBridgeHistory (): sinon.SinonStub<any[], any> | sinon.SinonStub<unknown[], unknown> {
+    return sinon.stub(this, 'getForceBridgeHistory')
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

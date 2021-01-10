@@ -1,6 +1,5 @@
 import { inject, injectable, LazyServiceIdentifer } from 'inversify'
 import BigNumber from 'bignumber.js'
-
 import { modules } from '../../ioc'
 import { contracts } from '../../config'
 import { CkbUtils, DexOrderCellFormat } from '../../component'

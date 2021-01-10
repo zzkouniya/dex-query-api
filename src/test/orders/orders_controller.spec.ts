@@ -24,7 +24,7 @@ describe('Orders controller', () => {
   let mock_repository: MockRepository
 
   beforeEach(() => {
-    mock_repository = MockRepositoryFactory.getInstance()
+    mock_repository = MockRepositoryFactory.getDexRepositoryInstance()
     const service = new OrdersService(mock_repository)
     const historyService = new OrdersHistoryService(mock_repository)
     controller = new OrderController(service, historyService)
@@ -144,25 +144,27 @@ describe('Orders controller', () => {
           it('returns order history', () => {
             res.status.should.have.been.calledWith(200)
             res.json.should.have.been.calledWith(
-              [
-                {
-                  block_hash: '0x50c20ecc2b3b56ed336e4d8b840cf99a29069ffa7b279433e1c7093a359657b9',
-                  paid_amount: '1',
-                  price: '1',
-                  traded_amount: '1',
-                  order_amount: '1',
-                  turnover_rate: '1',
-                  status: 'claimed',
-                  is_bid: true,
-                  timestamp: '1',
-                  is_cross_chain: false,
-                  last_order_cell_outpoint: {
-                    tx_hash: 'hash2',
-                    index: '0x0'
-                  },
-                  order_cells: [{ index: '0x0', tx_hash: 'hash1' }]
-                }
-              ]
+              {
+                normal_orders: [
+                  {
+                    block_hash: '0x50c20ecc2b3b56ed336e4d8b840cf99a29069ffa7b279433e1c7093a359657b9',
+                    paid_amount: '1',
+                    price: '1',
+                    traded_amount: '1',
+                    order_amount: '1',
+                    turnover_rate: '1',
+                    status: 'claimed',
+                    is_bid: true,
+                    timestamp: '1',
+                    last_order_cell_outpoint: {
+                      tx_hash: 'hash2',
+                      index: '0x0'
+                    },
+                    order_cells: [{ index: '0x0', tx_hash: 'hash1' }]
+                  }
+                ],
+                cross_chain_orders: []
+              }
             )
           })
         })
@@ -206,25 +208,28 @@ describe('Orders controller', () => {
             it('returns order history', () => {
               res.status.should.have.been.calledWith(200)
               res.json.should.have.been.calledWith(
-                [
-                  {
-                    block_hash: '0x50c20ecc2b3b56ed336e4d8b840cf99a29069ffa7b279433e1c7093a359657b9',
-                    paid_amount: '1',
-                    traded_amount: '1',
-                    order_amount: '1',
-                    turnover_rate: '1',
-                    price: '1',
-                    status: 'claimed',
-                    is_bid: true,
-                    timestamp: '1',
-                    is_cross_chain: false,
-                    last_order_cell_outpoint: {
-                      tx_hash: 'hash3',
-                      index: '0x0'
-                    },
-                    order_cells: [{ index: '0x0', tx_hash: 'hash1' }, { index: '0x0', tx_hash: 'hash2' }]
-                  }
-                ]
+                {
+                  normal_orders: [
+                    {
+                      block_hash: '0x50c20ecc2b3b56ed336e4d8b840cf99a29069ffa7b279433e1c7093a359657b9',
+                      paid_amount: '1',
+                      traded_amount: '1',
+                      order_amount: '1',
+                      turnover_rate: '1',
+                      price: '1',
+                      status: 'claimed',
+                      is_bid: true,
+                      timestamp: '1',
+                      last_order_cell_outpoint: {
+                        tx_hash: 'hash3',
+                        index: '0x0'
+                      },
+                      order_cells: [{ index: '0x0', tx_hash: 'hash1' }, { index: '0x0', tx_hash: 'hash2' }]
+                    }
+                  ],
+                  cross_chain_orders: []
+                }
+
               )
             })
           })
@@ -361,42 +366,44 @@ describe('Orders controller', () => {
             it('returns order history', () => {
               res.status.should.have.been.calledWith(200)
               res.json.should.have.been.calledWith(
-                [
-                  {
-                    block_hash: '0x50c20ecc2b3b56ed336e4d8b840cf99a29069ffa7b279433e1c7093a359657b9',
-                    paid_amount: '3',
-                    traded_amount: '1',
-                    order_amount: '1',
-                    turnover_rate: '1',
-                    price: '1',
-                    status: 'claimed',
-                    is_bid: true,
-                    timestamp: '1',
-                    is_cross_chain: false,
-                    last_order_cell_outpoint: {
-                      tx_hash: 'hash2',
-                      index: '0x0'
+                {
+                  normal_orders: [
+                    {
+                      block_hash: '0x50c20ecc2b3b56ed336e4d8b840cf99a29069ffa7b279433e1c7093a359657b9',
+                      paid_amount: '3',
+                      traded_amount: '1',
+                      order_amount: '1',
+                      turnover_rate: '1',
+                      price: '1',
+                      status: 'claimed',
+                      is_bid: true,
+                      timestamp: '1',
+                      last_order_cell_outpoint: {
+                        tx_hash: 'hash2',
+                        index: '0x0'
+                      },
+                      order_cells: [{ index: '0x0', tx_hash: 'hash1' }]
                     },
-                    order_cells: [{ index: '0x0', tx_hash: 'hash1' }]
-                  },
-                  {
-                    block_hash: '0x50c20ecc2b3b56ed336e4d8b840cf99a29069ffa7b279433e1c7093a359657b9',
-                    paid_amount: '3',
-                    traded_amount: '10',
-                    order_amount: '10',
-                    turnover_rate: '1',
-                    price: '1',
-                    status: 'claimed',
-                    is_bid: true,
-                    timestamp: '1',
-                    is_cross_chain: false,
-                    last_order_cell_outpoint: {
-                      tx_hash: 'hash2',
-                      index: '0x1'
-                    },
-                    order_cells: [{ index: '0x1', tx_hash: 'hash1' }]
-                  }
-                ]
+                    {
+                      block_hash: '0x50c20ecc2b3b56ed336e4d8b840cf99a29069ffa7b279433e1c7093a359657b9',
+                      paid_amount: '3',
+                      traded_amount: '10',
+                      order_amount: '10',
+                      turnover_rate: '1',
+                      price: '1',
+                      status: 'claimed',
+                      is_bid: true,
+                      timestamp: '1',
+                      last_order_cell_outpoint: {
+                        tx_hash: 'hash2',
+                        index: '0x1'
+                      },
+                      order_cells: [{ index: '0x1', tx_hash: 'hash1' }]
+                    }
+                  ],
+                  cross_chain_orders: []
+                }
+
               )
             })
           })
@@ -525,42 +532,43 @@ describe('Orders controller', () => {
           it('returns order history', () => {
             res.status.should.have.been.calledWith(200)
             res.json.should.have.been.calledWith(
-              [
-                {
-                  block_hash: '0x50c20ecc2b3b56ed336e4d8b840cf99a29069ffa7b279433e1c7093a359657b9',
-                  paid_amount: '2',
-                  traded_amount: '1',
-                  order_amount: '1',
-                  turnover_rate: '1',
-                  price: '1',
-                  status: 'claimed',
-                  is_bid: true,
-                  timestamp: '1',
-                  is_cross_chain: false,
-                  last_order_cell_outpoint: {
-                    tx_hash: 'hash3',
-                    index: '0x2'
+              {
+                normal_orders: [
+                  {
+                    block_hash: '0x50c20ecc2b3b56ed336e4d8b840cf99a29069ffa7b279433e1c7093a359657b9',
+                    paid_amount: '2',
+                    traded_amount: '1',
+                    order_amount: '1',
+                    turnover_rate: '1',
+                    price: '1',
+                    status: 'claimed',
+                    is_bid: true,
+                    timestamp: '1',
+                    last_order_cell_outpoint: {
+                      tx_hash: 'hash3',
+                      index: '0x2'
+                    },
+                    order_cells: [{ index: '0x0', tx_hash: 'hash1' }]
                   },
-                  order_cells: [{ index: '0x0', tx_hash: 'hash1' }]
-                },
-                {
-                  block_hash: '0x50c20ecc2b3b56ed336e4d8b840cf99a29069ffa7b279433e1c7093a359657b9',
-                  paid_amount: '3',
-                  traded_amount: '10',
-                  order_amount: '10',
-                  turnover_rate: '1',
-                  price: '1',
-                  status: 'claimed',
-                  is_bid: true,
-                  timestamp: '1',
-                  is_cross_chain: false,
-                  last_order_cell_outpoint: {
-                    tx_hash: 'hash3',
-                    index: '0x1'
-                  },
-                  order_cells: [{ index: '0x0', tx_hash: 'hash2' }]
-                }
-              ]
+                  {
+                    block_hash: '0x50c20ecc2b3b56ed336e4d8b840cf99a29069ffa7b279433e1c7093a359657b9',
+                    paid_amount: '3',
+                    traded_amount: '10',
+                    order_amount: '10',
+                    turnover_rate: '1',
+                    price: '1',
+                    status: 'claimed',
+                    is_bid: true,
+                    timestamp: '1',
+                    last_order_cell_outpoint: {
+                      tx_hash: 'hash3',
+                      index: '0x1'
+                    },
+                    order_cells: [{ index: '0x0', tx_hash: 'hash2' }]
+                  }
+                ],
+                cross_chain_orders: []
+              }
             )
           })
         })
@@ -636,25 +644,29 @@ describe('Orders controller', () => {
       })
       it('returns order history', () => {
         res.status.should.have.been.calledWith(200)
-        res.json.should.have.been.calledWith([
+        res.json.should.have.been.calledWith(
           {
-            block_hash: '0x50c20ecc2b3b56ed336e4d8b840cf99a29069ffa7b279433e1c7093a359657b9',
-            paid_amount: '0',
-            traded_amount: '0',
-            order_amount: '1',
-            turnover_rate: '0',
-            price: '1',
-            status: 'aborted',
-            is_bid: true,
-            timestamp: '1',
-            is_cross_chain: false,
-            last_order_cell_outpoint: {
-              tx_hash: 'hash2',
-              index: '0x0'
-            },
-            order_cells: [{ index: '0x0', tx_hash: 'hash1' }]
+            normal_orders: [
+              {
+                block_hash: '0x50c20ecc2b3b56ed336e4d8b840cf99a29069ffa7b279433e1c7093a359657b9',
+                paid_amount: '0',
+                traded_amount: '0',
+                order_amount: '1',
+                turnover_rate: '0',
+                price: '1',
+                status: 'aborted',
+                is_bid: true,
+                timestamp: '1',
+                last_order_cell_outpoint: {
+                  tx_hash: 'hash2',
+                  index: '0x0'
+                },
+                order_cells: [{ index: '0x0', tx_hash: 'hash1' }]
+              }
+            ],
+            cross_chain_orders: []
           }
-        ])
+        )
       })
     })
     describe('incompleted order', () => {
@@ -701,25 +713,29 @@ describe('Orders controller', () => {
       })
       it('returns order history', () => {
         res.status.should.have.been.calledWith(200)
-        res.json.should.have.been.calledWith([
+        res.json.should.have.been.calledWith(
           {
-            block_hash: '0x50c20ecc2b3b56ed336e4d8b840cf99a29069ffa7b279433e1c7093a359657b9',
-            paid_amount: '0',
-            traded_amount: '0',
-            order_amount: '1',
-            turnover_rate: '0',
-            price: '1',
-            status: 'opening',
-            is_bid: true,
-            timestamp: '1',
-            is_cross_chain: false,
-            last_order_cell_outpoint: {
-              tx_hash: 'hash1',
-              index: '0x0'
-            },
-            order_cells: [{ index: '0x0', tx_hash: 'hash1' }]
+            normal_orders: [
+              {
+                block_hash: '0x50c20ecc2b3b56ed336e4d8b840cf99a29069ffa7b279433e1c7093a359657b9',
+                paid_amount: '0',
+                traded_amount: '0',
+                order_amount: '1',
+                turnover_rate: '0',
+                price: '1',
+                status: 'opening',
+                is_bid: true,
+                timestamp: '1',
+                last_order_cell_outpoint: {
+                  tx_hash: 'hash1',
+                  index: '0x0'
+                },
+                order_cells: [{ index: '0x0', tx_hash: 'hash1' }]
+              }
+            ],
+            cross_chain_orders: []
           }
-        ])
+        )
       })
     })
   })

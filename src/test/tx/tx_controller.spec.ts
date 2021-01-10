@@ -37,7 +37,7 @@ describe('Tx controller', () => {
   }
 
   beforeEach(() => {
-    mock_repository = MockRepositoryFactory.getInstance()
+    mock_repository = MockRepositoryFactory.getDexRepositoryInstance()
     const service = new TxService(mock_repository)
     controller = new TxController(service)
 
