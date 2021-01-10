@@ -171,6 +171,18 @@ export default class OrderController {
           type: 'string',
           required: true,
           description: ''
+        },
+        ckb_address: {
+          name: 'ckb_address',
+          type: 'string',
+          required: true,
+          description: ''
+        },
+        eth_address: {
+          name: 'eth_address',
+          type: 'string',
+          required: true,
+          description: ''
         }
       }
     },
@@ -191,7 +203,9 @@ export default class OrderController {
       type_code_hash,
       type_hash_type,
       type_args,
-      order_lock_args
+      order_lock_args,
+      ckb_address,
+      eth_address
     } = req.query
 
     try {
@@ -199,7 +213,9 @@ export default class OrderController {
         <string>type_code_hash,
         <string>type_hash_type,
         <string>type_args,
-        <string>order_lock_args
+        <string>order_lock_args,
+        <string>ckb_address,
+        <string>eth_address
       )
 
       res.status(200).json(result)
@@ -232,13 +248,22 @@ export default class OrderController {
     req: express.Request,
     res: express.Response
   ): Promise<void> {
+    // Array<{
+    //   type_code_hash: string
+    //   type_hash_type: string
+    //   type_args: string
+    // }>
     try {
-      const types = <Array<{
-        order_lock_args: string
+      const types = <{
         type_code_hash: string
         type_hash_type: string
-        type_args: string
-      }>>req.body
+        order_lock_args: string
+        ckb_address: string
+        eth_address: string
+        types: Array<{
+          type_args: string
+        }>
+      }>req.body
 
       const orders = await this.orderHistoryService.batch(types)
       res.status(200).json(orders)

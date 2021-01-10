@@ -1,13 +1,11 @@
 import { inject, injectable, LazyServiceIdentifer } from 'inversify'
-import { HashType, OutPoint, Script } from '@ckb-lumos/base'
-
+import { HashType, Script } from '@ckb-lumos/base'
 import { modules } from '../../ioc'
-import { contracts, crossLockScript } from '../../config'
+import { contracts } from '../../config'
 import { OrdersHistoryModel } from './orders_history_model'
 import { DexOrderChainFactory } from '../../model/orders/dex_order_chain_factory'
-import { DexOrderChain } from '../../model/orders/dex_order_chain'
-import { DexRepository } from '../repository/dex_repository'
 import CkbRepository from '../repository/ckb_repository'
+import { DexRepository } from '../repository/dex_repository'
 
 @injectable()
 export default class OrdersHistoryService {
@@ -16,22 +14,56 @@ export default class OrdersHistoryService {
     private readonly repository: DexRepository
   ) {}
 
-  async batch (types: Array<{
-    order_lock_args: string
-    type_code_hash: string
-    type_hash_type: string
-    type_args: string
-  }>): Promise<OrdersHistoryModel[]> {
-    const result = []
-    for (const type of types) {
-      const orders = await this.getOrderHistory(type.type_code_hash, type.type_hash_type, type.type_args, type.order_lock_args)
-      orders.forEach(x => result.push(x))
+  async batch (
+    queryOption: {
+      type_code_hash: string
+      type_hash_type: string
+      order_lock_args: string
+      ckb_address: string
+      eth_address: string
+      types: Array<{
+        type_args: string
+      }>
+    }
+  ): Promise<{
+      normal_orders: OrdersHistoryModel[]
+      cross_chain_orders: []
+    }> {
+    const normal_orders = []
+    for (const type of queryOption.types) {
+      const orders = await this.getNormalOrders(queryOption.type_code_hash, queryOption.type_hash_type, type.type_args, queryOption.order_lock_args)
+      orders.forEach(x => normal_orders.push(x))
     }
 
-    return result
+    const cross_chain_orders = await this.repository.getForceBridgeHistory(queryOption.ckb_address, queryOption.eth_address, true)
+
+    return {
+      normal_orders: normal_orders,
+      cross_chain_orders: cross_chain_orders
+    }
   }
 
   async getOrderHistory (
+    type_code_hash: string,
+    type_hash_type: string,
+    type_args: string,
+    order_lock_args: string,
+    ckb_address: string,
+    eth_address: string
+  ): Promise<{
+      normal_orders: OrdersHistoryModel[]
+      cross_chain_orders: []
+    }> {
+    const normal_orders = await this.getNormalOrders(type_code_hash, type_hash_type, type_args, order_lock_args)
+    const cross_chain_orders = await this.repository.getForceBridgeHistory(ckb_address, eth_address, true)
+
+    return {
+      normal_orders: normal_orders,
+      cross_chain_orders: cross_chain_orders
+    }
+  }
+
+  private async getNormalOrders (
     type_code_hash: string,
     type_hash_type: string,
     type_args: string,
@@ -57,11 +89,10 @@ export default class OrdersHistoryService {
     const factory: DexOrderChainFactory = new DexOrderChainFactory()
     const orders = factory.getOrderChains(orderLock, sudtType, txsWithStatus).filter(x => x.cell.lock.args === order_lock_args)
 
-    const result: OrdersHistoryModel[] = []
+    const normal_orders: OrdersHistoryModel[] = []
     for (const order of orders) {
       const orders = order.getOrders()
       const orderCells = order.getOrderStatus() !== 'opening' ? orders.splice(0, orders.length - 1) : orders
-      const isCross = await this.isCrossChain(order)
       const timestamp = await this.repository.getBlockTimestampByHash(order.tx.tx_status.block_hash)
 
       const orderHistory: OrdersHistoryModel = {
@@ -73,7 +104,6 @@ export default class OrdersHistoryService {
         paid_amount: order.getPaidAmount().toString(),
         price: order.getOrderData().price.toString(),
         status: order.getOrderStatus(),
-        is_cross_chain: isCross,
         timestamp: parseInt(timestamp, 16).toString(),
         last_order_cell_outpoint: {
           tx_hash: order.getLastOrder().tx.transaction.hash,
@@ -84,24 +114,9 @@ export default class OrdersHistoryService {
           index: `0x${orderCell.index.toString(16)}`
         }))
       }
-      result.push(orderHistory)
+      normal_orders.push(orderHistory)
     }
 
-    return result
-  }
-
-  async isCrossChain (order: DexOrderChain): Promise<boolean> {
-    const placeCell = order.getTopOrder()
-    const inputOutPoint: OutPoint = placeCell.tx.transaction.inputs[0].previous_output
-
-    const tx = await this.repository.getTransactionByHash(inputOutPoint.tx_hash)
-    const crossCell = tx.ckbTransactionWithStatus.transaction.outputs[0]
-    if (crossLockScript.code_hash === crossCell.lock.codeHash &&
-      crossLockScript.hash_type === crossCell.lock.hashType &&
-      crossLockScript.args === crossCell.lock.args) {
-      return true
-    }
-
-    return false
+    return normal_orders
   }
 }

@@ -87,7 +87,7 @@ describe('Balance controller', () => {
   const clone = (obj) => JSON.parse(JSON.stringify(obj))
 
   beforeEach(() => {
-    mock_repository = MockRepositoryFactory.getInstance()
+    mock_repository = MockRepositoryFactory.getDexRepositoryInstance()
     // mock_cells = sinon.stub(mock_repository, 'collectCells')
     const service = new BalanceService(mock_repository)
     controller = new BalanceController(service)
