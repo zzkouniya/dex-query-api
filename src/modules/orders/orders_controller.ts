@@ -1,7 +1,8 @@
-import { controller, httpGet } from 'inversify-express-utils'
+import { controller, httpGet, httpPost } from 'inversify-express-utils'
 import { inject, LazyServiceIdentifer } from 'inversify'
 import {
   ApiOperationGet,
+  ApiOperationPost,
   ApiPath,
   SwaggerDefinitionConstant
 } from 'swagger-express-ts'
@@ -176,8 +177,7 @@ export default class OrderController {
     responses: {
       200: {
         description: 'Success',
-        type: SwaggerDefinitionConstant.Response.Type.OBJECT
-        // model: "BalanceCkbModel",
+        type: SwaggerDefinitionConstant.Response.Type.ARRAY
       },
       400: { description: 'Parameters fail' }
     }
@@ -206,6 +206,45 @@ export default class OrderController {
     } catch (error) {
       console.error(error)
       res.status(500).send()
+    }
+  }
+
+  @ApiOperationPost({
+    path: 'order-history-batch',
+    description: 'Batch orders history',
+    summary: 'Batch orders history',
+    parameters: {
+      body: {
+        description: 'Batch orders history',
+        required: true
+      }
+    },
+    responses: {
+      200: {
+        description: 'Success',
+        type: SwaggerDefinitionConstant.Response.Type.ARRAY
+      },
+      400: { description: 'Parameters fail' }
+    }
+  })
+  @httpPost('order-history-batch')
+  async batch (
+    req: express.Request,
+    res: express.Response
+  ): Promise<void> {
+    try {
+      const types = <Array<{
+        order_lock_args: string
+        type_code_hash: string
+        type_hash_type: string
+        type_args: string
+      }>>req.body
+
+      const orders = await this.orderHistoryService.batch(types)
+      res.status(200).json(orders)
+    } catch (error) {
+      this.logger.error(error)
+      res.status(400).json({ error: 'Query failure' })
     }
   }
 }
