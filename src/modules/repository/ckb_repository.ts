@@ -17,6 +17,10 @@ export default class CkbRepository implements DexRepository {
     private readonly ckbService: CkbService
   ) {}
 
+  async getInputOutPointFromTheTxPool (): Promise<Map<string, CkbTransactionWithStatusModelWrapper>> {
+    return await this.ckbService.getInputOutPointFromTheTxPool()
+  }
+
   async tip (): Promise<number> {
     const block_number = await this.indexer.tip()
     return block_number

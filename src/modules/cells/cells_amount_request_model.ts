@@ -10,19 +10,19 @@ export default class CellsAmountRequestModel {
     description: 'type_code_hash',
     required: true
   })
-  type_code_hash?: string
+  type_code_hash: string
 
   @ApiModelProperty({
     description: 'type_hash_type',
     required: true
   })
-  type_hash_type?: string
+  type_hash_type: string
 
   @ApiModelProperty({
     description: 'type_args',
     required: true
   })
-  type_args?: string
+  type_args: string
 
   @ApiModelProperty({
     description: 'lock_code_hash',
@@ -54,9 +54,5 @@ export default class CellsAmountRequestModel {
   })
   sudt_amount?: string
 
-  @ApiModelProperty({
-    description: 'spent_cells',
-    required: true
-  })
   spent_cells?: OutPoint[]
 }

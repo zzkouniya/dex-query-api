@@ -1,5 +1,8 @@
+import { TransactionWithStatus } from '@ckb-lumos/base'
 import CKB from '@nervosnetwork/ckb-sdk-core'
 import { injectable } from 'inversify'
+import rp from 'request-promise'
+import { DexLogger } from '../../component'
 import { indexer_config } from '../../config'
 import CkbTransactionWithStatusModelWrapper from '../../model/ckb/ckb_transaction_with_status'
 
@@ -8,9 +11,11 @@ export type ckb_methons = 'getTipBlockNumber' | 'getTipHeader' | 'getCurrentEpoc
 @injectable()
 export default class CkbService {
   private readonly ckbNode: CKB
+  private readonly logger: DexLogger
 
   constructor () {
     this.ckbNode = new CKB(indexer_config.nodeUrl)
+    this.logger = new DexLogger(CkbService.name)
   }
 
   async getTransactions (ckbReqParams: Array<[method: ckb_methons, ...rest: []]>): Promise<CkbTransactionWithStatusModelWrapper[]> {
@@ -51,5 +56,80 @@ export default class CkbService {
       .exec()
 
     return block[0].header.timestamp
+  }
+
+  async getInputOutPointFromTheTxPool (): Promise<Map<string, CkbTransactionWithStatusModelWrapper>> {
+    const txs = await this.getPoolTxs()
+
+    const inputOutPointWithTransaction: Map<string, CkbTransactionWithStatusModelWrapper> = new Map()
+    for (const tx of txs) {
+      const inputs = tx.ckbTransactionWithStatus.transaction.inputs
+      for (const { previousOutput } of inputs) {
+        const key = `${previousOutput.txHash}:${previousOutput.index}`
+        inputOutPointWithTransaction.set(key, tx)
+      }
+    }
+
+    return inputOutPointWithTransaction
+  }
+
+  private async getPoolTxs (): Promise<CkbTransactionWithStatusModelWrapper[]> {
+    try {
+      const QueryOptions = {
+        url: indexer_config.nodeUrl,
+        method: 'POST',
+        json: true,
+        headers: {
+          'content-type': 'application/json'
+        },
+        body: {
+          id: 42,
+          jsonrpc: '2.0',
+          method: 'get_raw_tx_pool',
+          params: [true]
+        }
+      }
+      const result = await rp(QueryOptions)
+      const hashes = []
+      // const txs = []
+      for (const hash of Object.keys(result.result.pending)) {
+        // const tx = await this.getPoolTxByHash(hash)
+        // txs.push(tx)
+        hashes.push(['getTransaction', hash])
+      }
+
+      for (const hash of Object.keys(result.result.proposed)) {
+        // txs.push(this.getPoolTxByHash(hash))
+        hashes.push(['getTransaction', hash])
+      }
+
+      if (hashes.length === 0) {
+        return []
+      }
+      return await this.getTransactions(hashes)
+      // return txs
+    } catch (error) {
+      this.logger.error(error)
+      throw new Error('query tx pool error!')
+    }
+  }
+
+  private async getPoolTxByHash (hash: string): Promise<TransactionWithStatus> {
+    const QueryOptions = {
+      url: indexer_config.nodeUrl,
+      method: 'POST',
+      json: true,
+      headers: {
+        'content-type': 'application/json'
+      },
+      body: {
+        id: 42,
+        jsonrpc: '2.0',
+        method: 'get_transaction',
+        params: [hash]
+      }
+    }
+    const tx = await rp(QueryOptions)
+    return tx.result
   }
 }

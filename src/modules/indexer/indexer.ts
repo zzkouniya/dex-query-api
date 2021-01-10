@@ -1,7 +1,8 @@
 import { Cell, QueryOptions, TransactionWithStatus } from '@ckb-lumos/base'
+import TransactionManager from '@ckb-lumos/transaction-manager'
 import {
-  Indexer,
   CellCollector,
+  Indexer,
   TransactionCollector
 } from '@ckb-lumos/indexer'
 import { inject, injectable, LazyServiceIdentifer } from 'inversify'
@@ -13,13 +14,15 @@ import { modules } from '../../ioc'
 @injectable()
 export default class IndexerWrapper implements IndexerService {
   private readonly indexer: Indexer
+  private readonly txManager: TransactionManager
 
   constructor (
     @inject(new LazyServiceIdentifer(() => modules[CkbService.name]))
     private readonly ckbService: CkbService
   ) {
     this.indexer = new Indexer(indexer_config.nodeUrl, indexer_config.dataPath)
-    this.indexer.startForever()
+    // this.txManager = new TransactionManager(this.indexer)
+    this.indexer.start()
 
     // eslint-disable-next-line @typescript-eslint/no-misused-promises
     setInterval(async () => {
