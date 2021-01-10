@@ -326,6 +326,34 @@ describe('Cells controller', () => {
             res.json.should.have.been.calledWith([])
           })
         })
+
+        describe('with pending cells', () => {
+          const cells = [
+            generateCell(1, CkbUtils.formatBigUInt128LE(BigInt(30)), lock, type, '0xa', '0x0'),
+            generateCell(1, CkbUtils.formatBigUInt128LE(BigInt(10)), lock, type, '0xb', '0x2'),
+            generateCell(1, CkbUtils.formatBigUInt128LE(BigInt(20)), lock, type, '0xc', '0x2')
+          ]
+
+          beforeEach(async () => {
+            req.body.sudt_amount = '10'
+            const inpputOutPoint = new Map()
+            inpputOutPoint.set('0xa:0x0', '')
+            inpputOutPoint.set('0xb:0x2', '')
+            mock_repository.mockCollectCells().resolves(clone(cells))
+            mock_repository.mockGetInputOutPointFromTheTxPool().resolves(inpputOutPoint)
+
+            await controller.postLiveCellsForAmount({
+              ...req,
+              body: {
+                ...req.bodsy
+              }
+            }, res, next)
+          })
+          it('returns cells', () => {
+            res.status.should.have.been.calledWith(200)
+            res.json.should.have.been.calledWith([cells[2]])
+          })
+        })
       })
 
       describe('invalid requests', () => {

@@ -12,6 +12,10 @@ export class MockRepositoryFactory {
 }
 
 export class MockRepository implements DexRepository {
+  async getInputOutPointFromTheTxPool (): Promise<Map<string, CkbTransactionWithStatusModelWrapper>> {
+    return new Map()
+  }
+
   async tip (): Promise<number> {
     return null
   }
@@ -82,5 +86,10 @@ export class MockRepository implements DexRepository {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   mockGetBlockTimestampByHash (): sinon.SinonStub<any[], any> | sinon.SinonStub<unknown[], unknown> {
     return sinon.stub(this, 'getBlockTimestampByHash')
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  mockGetInputOutPointFromTheTxPool (): sinon.SinonStub<any[], any> | sinon.SinonStub<unknown[], unknown> {
+    return sinon.stub(this, 'getInputOutPointFromTheTxPool')
   }
 }

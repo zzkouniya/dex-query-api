@@ -5,12 +5,13 @@ import sinon from 'sinon'
 import sinonStubPromise from 'sinon-stub-promise'
 
 import { mockReq, mockRes } from 'sinon-express-mock'
-import { CkbUtils } from '../component/formatter'
+import { CkbUtils } from '../../component/formatter'
 import { utils, Cell, HashType, Script } from '@ckb-lumos/base'
-import BalanceService from '../modules/balance/balance_service'
-import BalanceController from '../modules/balance/balance_controller'
-import { contracts } from '../config'
-import { MockRepository, MockRepositoryFactory } from './mock_repository_factory'
+import BalanceService from '../../modules/balance/balance_service'
+import BalanceController from '../../modules/balance/balance_controller'
+import { contracts } from '../../config'
+import { MockRepository, MockRepositoryFactory } from '../mock_repository_factory'
+import { ckbCells, ckbOrderCells, ckbPendingCell, sudtCells, sudtOrderCells, sudtPendingCell } from './mock_data'
 
 chai.use(sinonChai)
 chai.should()
@@ -30,7 +31,7 @@ describe('Balance controller', () => {
         capacity: `0x${capacity.toString(16)}`,
         lock: lock || {
           code_hash: '0x04878826e4bf143a93eb33cb298a46f96e4014533d98865983e048712da65160',
-          hash_type: 'data',
+          hash_type: 'type',
           args: '0x2946e43211d00ab3791ab1d8b598c99643c39649'
         }
       },
@@ -52,7 +53,7 @@ describe('Balance controller', () => {
 
   const lock: Script = {
     code_hash: '0x04878826e4bf143a93eb33cb298a46f96e4014533d98865983e048712da65160',
-    hash_type: <HashType>'data',
+    hash_type: <HashType>'type',
     args: '0x2946e43211d00ab3791ab1d8b598c99643c39649'
   }
   const orderLock: Script = {
@@ -166,6 +167,23 @@ describe('Balance controller', () => {
           })
         })
       })
+      describe('with pending cells', () => {
+        beforeEach(async () => {
+          mock_repository.mockCollectCells()
+            .withArgs({ lock })
+            .resolves(ckbCells)
+            .withArgs({ lock: orderLock })
+            .resolves(ckbOrderCells)
+
+          mock_repository.mockGetInputOutPointFromTheTxPool().resolves(ckbPendingCell)
+
+          await controller.getCKBBalance(req, res, next)
+        })
+        it('returns balance', () => {
+          res.status.should.have.been.calledWith(200)
+          res.json.should.have.been.calledWith({ free: '5000000000', locked_order: '5000000000', occupied: '100000000' })
+        })
+      })
     })
     describe('invalid requests', () => {
       describe('with no lock script', () => {
@@ -180,6 +198,7 @@ describe('Balance controller', () => {
       })
     })
   })
+
   describe('#getSUDTBalance()', () => {
     describe('valid requests', () => {
       beforeEach(async () => {
@@ -191,22 +210,49 @@ describe('Balance controller', () => {
           type_hash_type: sudtType.hash_type,
           type_args: sudtType.args
         }
-        mock_repository.mockCollectCells()
-          .withArgs({
-            lock,
-            type: sudtType
-          })
-          .resolves(clone(cellsWithNormalLock))
-          .withArgs({
-            lock: orderLock,
-            type: sudtType
-          })
-          .resolves(clone(cellsWithOrderLock))
-        await controller.getSUDTBalance(req, res, next)
       })
-      it('returns balance', () => {
-        res.status.should.have.been.calledWith(200)
-        res.json.should.have.been.calledWith({ free: '80', locked_order: '20' })
+      describe('get sudt balance', () => {
+        beforeEach(async () => {
+          mock_repository.mockCollectCells()
+            .withArgs({
+              lock,
+              type: sudtType
+            })
+            .resolves(clone(cellsWithNormalLock))
+            .withArgs({
+              lock: orderLock,
+              type: sudtType
+            })
+            .resolves(clone(cellsWithOrderLock))
+          await controller.getSUDTBalance(req, res, next)
+        })
+        it('returns balance', () => {
+          res.status.should.have.been.calledWith(200)
+          res.json.should.have.been.calledWith({ free: '80', locked_order: '20' })
+        })
+      })
+      describe('with pending cells', () => {
+        beforeEach(async () => {
+          mock_repository.mockCollectCells()
+            .withArgs({
+              lock,
+              type: sudtType
+            })
+            .resolves(sudtCells)
+            .withArgs({
+              lock: orderLock,
+              type: sudtType
+            })
+            .resolves(sudtOrderCells)
+
+          mock_repository.mockGetInputOutPointFromTheTxPool().resolves(sudtPendingCell)
+
+          await controller.getSUDTBalance(req, res, next)
+        })
+        it('returns balance', () => {
+          res.status.should.have.been.calledWith(200)
+          res.json.should.have.been.calledWith({ free: '200', locked_order: '250' })
+        })
       })
     })
     describe('invalid requests', () => {
