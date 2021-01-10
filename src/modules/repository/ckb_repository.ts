@@ -1,11 +1,10 @@
 import { DexRepository } from './dex_repository'
-import { Cell, QueryOptions, TransactionWithStatus, Script } from '@ckb-lumos/base'
+import { Cell, QueryOptions, TransactionWithStatus } from '@ckb-lumos/base'
 import { inject, injectable, LazyServiceIdentifer } from 'inversify'
 import { modules } from '../../ioc'
 import IndexerWrapper from '../indexer/indexer'
 import { IndexerService } from '../indexer/indexer_service'
 import CkbService, { ckb_methons } from '../ckb/ckb_service'
-import { DexOrderData } from '../../component'
 
 import CkbTransactionWithStatusModelWrapper from '../../model/ckb/ckb_transaction_with_status'
 
@@ -29,10 +28,6 @@ export default class CkbRepository implements DexRepository {
 
   async collectTransactions (queryOptions: QueryOptions): Promise<TransactionWithStatus[]> {
     return await this.indexer.collectTransactions(queryOptions)
-  }
-
-  async getLastMatchOrders (type: Script): Promise<Record<'ask_orders' | 'bid_orders', DexOrderData[] | null>> {
-    return await this.indexer.getLastMatchOrders(type)
   }
 
   async getTransactions (ckbReqParams: Array<[method: ckb_methons, ...rest: []]>): Promise<CkbTransactionWithStatusModelWrapper[]> {

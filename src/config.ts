@@ -31,5 +31,15 @@ export const crossLockScript: lumos.Script = {
   args: process.env.CROSS_CHAIN_ARGS || '0xf264a2adf7d5c683855828b5be39c25cee0a13dfc4401d8d5f05b958e6f1b884560f649cddfd9615bb867b58869bdcd636c2c1d0256dd087630ac88619dda33537f887889ddaa233'
 }
 
+interface ExplorerConfig {
+  explorerTokensUrl: string
+  explorerCorsReferrer: string
+}
+
+export const explorerConfig: ExplorerConfig = {
+  explorerTokensUrl: process.env.EXPLORER_TOKENS_URL ? process.env.EXPLORER_TOKENS_URL : 'https://api.explorer.nervos.org/testnet/api/v1/udts',
+  explorerCorsReferrer: process.env.EXPLORER_CORS_REFERRER ? process.env.EXPLORER_CORS_REFERRER : 'https://explorer.nervos.org/'
+}
+
 export const env = process.env.NODE_ENV || 'development'
 export const port = process.env.PORT || 7001
