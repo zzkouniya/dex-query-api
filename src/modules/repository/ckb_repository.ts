@@ -19,7 +19,7 @@ export default class CkbRepository implements DexRepository {
     private readonly ckbService: CkbService
   ) {}
 
-  async getForceBridgeHistory (ckbAddress: string, ethAddress: string, pureCross = true): Promise<[]> {
+  async getForceBridgeHistory (ckbAddress: string, ethAddress: string): Promise<[]> {
     const orderLock = new pw.Script(
       contracts.orderLock.codeHash,
       new pw.Address(ckbAddress, pw.AddressType.ckb).toLockScript().toHash(),
@@ -30,7 +30,7 @@ export default class CkbRepository implements DexRepository {
       url: `${forceBridgeServerUrl}/get_crosschain_history`,
       method: 'POST',
       body: {
-        ckb_recipient_lockscript_addr: pureCross ? ckbAddress : orderLock.toAddress().toCKBAddress(),
+        ckb_recipient_lockscript_addr: orderLock.toAddress().toCKBAddress(),
         eth_recipient_addr: ethAddress
       },
       json: true
