@@ -159,11 +159,11 @@ export default class PlaceAskOrder extends PlaceOrder {
       throw new Error('You don\'t have enough live cells to complete this transaction, please wait for other transactions to be completed.')
     }
 
-    if (inputCapacity.lt(neededCapacity)) {
-      const extraCells = await this.collect(neededCapacity.minus(inputCapacity).toString())
+    if (inputCapacity.lt(this.balance)) {
+      const extraCells = await this.collect(this.balance.toString())
 
       extraCells.forEach(cell => {
-        if (inputCapacity.lte(neededCapacity)) {
+        if (inputCapacity.lte(this.balance)) {
           inputs.push(cell)
           inputCapacity = inputCapacity.plus(cell.capacity.toHexString())
         }
