@@ -19,7 +19,8 @@ export default class OrdersService {
   async getOrders (
     type_code_hash: string,
     type_hash_type: string,
-    type_args: string
+    type_args: string,
+    decimal: string
   ): Promise<{
       bid_orders: Array<{receive: string, price: string}>
       ask_orders: Array<{receive: string, price: string}>
@@ -53,7 +54,9 @@ export default class OrdersService {
 
     const factory: DexOrderChainFactory = new DexOrderChainFactory()
     const orders = factory.getOrderChains(lock, type, orderTxs)
-    const liveCells = orders.filter(x => x.getLiveCell() != null && Number(x.getTurnoverRate().toFixed(3, 1)) < 0.999 && this.isMakerCellValid(x))
+    const liveCells = orders.filter(x => x.getLiveCell() != null &&
+    //  Number(x.getTurnoverRate().toFixed(3, 1)) < 0.999 &&
+     this.isMakerCellValid(x))
       .map(x => {
         const c = x.getLiveCell()
         const cell: Cell = {
@@ -62,7 +65,11 @@ export default class OrdersService {
             type: c.cell.type,
             capacity: c.cell.capacity
           },
-          data: c.data
+          data: c.data,
+          out_point: {
+            tx_hash: c.tx.transaction.hash,
+            index: c.index.toString()
+          }
         }
         return cell
       })
@@ -70,7 +77,7 @@ export default class OrdersService {
     const orderCells = liveCells
 
     const dexOrdersBid = this.filterDexOrder(orderCells, true)
-    const groupbyPriceBid: Map<string, DexOrderCellFormat[]> = this.groupbyPrice(dexOrdersBid)
+    const groupbyPriceBid: Map<string, DexOrderCellFormat[]> = this.groupbyPrice(dexOrdersBid, decimal)
     const bidOrderPriceKeys = Array.from(groupbyPriceBid.keys())
     const bid_orders =
     bidOrderPriceKeys.sort((c1, c2) => new BigNumber(c1).minus(new BigNumber(c2)).toNumber())
@@ -87,7 +94,7 @@ export default class OrdersService {
       })
 
     const dexOrdersAsk = this.filterDexOrder(orderCells, false)
-    const groupbyPriceAsk: Map<string, DexOrderCellFormat[]> = this.groupbyPrice(dexOrdersAsk)
+    const groupbyPriceAsk: Map<string, DexOrderCellFormat[]> = this.groupbyPrice(dexOrdersAsk, decimal)
     const askOrderPriceKeys = Array.from(groupbyPriceAsk.keys())
     const ask_orders =
     askOrderPriceKeys.sort((c1, c2) => new BigNumber(c1).minus(new BigNumber(c2)).toNumber())
@@ -149,7 +156,7 @@ export default class OrdersService {
 
     const live = order.getLiveCell()
     try {
-      if (live.getTopOrder().data.length !== CkbUtils.getRequiredDataLength()) {
+      if (live.data.length !== CkbUtils.getRequiredDataLength()) {
         return false
       }
 
@@ -197,11 +204,12 @@ export default class OrdersService {
       .filter(x => x.orderAmount !== '0')
   }
 
-  private groupbyPrice (dexOrders: DexOrderCellFormat[]): Map<string, DexOrderCellFormat[]> {
+  private groupbyPrice (dexOrders: DexOrderCellFormat[], decimal: string): Map<string, DexOrderCellFormat[]> {
     const groupbyPrice: Map<string, DexOrderCellFormat[]> = new Map()
     for (let i = 0; i < dexOrders.length; i++) {
       const dexOrder = dexOrders[i]
-      const key = CkbUtils.roundHalfUp(dexOrder.price.toString())
+      const price = new BigNumber(dexOrder.price).times(new BigNumber(10).pow(parseInt(decimal) - 8))
+      const key = CkbUtils.roundHalfUp(price.toString())
       let priceArr = groupbyPrice.get(key)
       if (!priceArr) {
         priceArr = []
