@@ -159,7 +159,6 @@ export default class OrdersService {
       if (live.data.length !== CkbUtils.getRequiredDataLength()) {
         return false
       }
-
       const output = live.cell
       const { price, orderAmount, sUDTAmount, isBid } = CkbUtils.parseOrderData(live.data)
       const freeCapacity = BigInt(parseInt(output.capacity, 16)) - CkbUtils.getOrderCellCapacitySize()
@@ -168,7 +167,7 @@ export default class OrdersService {
         const costAmount = new BigNumber(orderAmount.toString()).multipliedBy(priceBigNumber)
         const fee = costAmount.multipliedBy(FEE.toString()).div((FEE + FEE_RATIO).toString())
 
-        if (costAmount.minus(fee).gt(freeCapacity.toString())) {
+        if (costAmount.plus(fee).gt(freeCapacity.toString())) {
           return false
         }
         if (costAmount.eq(0)) {
@@ -182,7 +181,7 @@ export default class OrdersService {
         const costAmount = new BigNumber(orderAmount.toString())
         const fee = costAmount.multipliedBy(FEE.toString()).div((FEE + FEE_RATIO).toString())
         const receive = new BigNumber(sUDTAmount.toString()).multipliedBy(priceBigNumber)
-        if (costAmount.minus(fee).gt(receive)) {
+        if (costAmount.plus(fee).gt(receive)) {
           return false
         }
         if (new BigNumber(orderAmount.toString()).div(priceBigNumber).eq(0)) {
