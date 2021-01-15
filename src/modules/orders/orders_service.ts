@@ -146,7 +146,7 @@ export default class OrdersService {
     return lastMakerOrders.reduce(
       (total, order) => total.plus(new BigNumber(CkbUtils.parseOrderData(order.data).price)),
       new BigNumber(0)
-    ).dividedBy(2).toExponential()
+    ).dividedBy(lastMakerOrders.length).toExponential()
   }
 
   isMakerCellValid (order: DexOrderChain): boolean {
