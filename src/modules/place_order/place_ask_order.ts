@@ -68,7 +68,7 @@ export default class PlaceAskOrder extends PlaceOrder {
     })
 
     if (sudtAmount.lt(this.pay)) {
-      throw new Error('You don\'t have enough live cells to complete this transaction, please wait for other transactions to be completed.')
+      throw new Error('You don\'t have enough CKB to complete this transaction.')
     }
 
     if (inputCapacity.lt(neededCapacity)) {
@@ -83,7 +83,7 @@ export default class PlaceAskOrder extends PlaceOrder {
     }
 
     if (inputCapacity.lt(neededCapacity)) {
-      throw new Error('You don\'t have enough live cells to complete this transaction, please wait for other transactions to be completed.')
+      throw new Error('You don\'t have enough CKB to complete this transaction.')
     }
 
     const receive = PlaceAskOrder.calcAskReceive(this.actualPay.toString(), this.price)
@@ -156,7 +156,7 @@ export default class PlaceAskOrder extends PlaceOrder {
     })
 
     if (sudtAmount.lt(this.pay)) {
-      throw new Error('You don\'t have enough live cells to complete this transaction, please wait for other transactions to be completed.')
+      throw new Error('You don\'t have enough CKB to complete this transaction.')
     }
 
     if (inputCapacity.lt(this.balance)) {
@@ -171,7 +171,7 @@ export default class PlaceAskOrder extends PlaceOrder {
     }
 
     if (inputCapacity.lt(neededCapacity)) {
-      throw new Error('You don\'t have enough live cells to complete this transaction, please wait for other transactions to be completed.')
+      throw new Error('You don\'t have enough CKB to complete this transaction.')
     }
 
     const receive = PlaceAskOrder.calcAskReceive(this.actualPay.toString(), this.price)
