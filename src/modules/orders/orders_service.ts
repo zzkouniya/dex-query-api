@@ -55,7 +55,7 @@ export default class OrdersService {
     const factory: DexOrderChainFactory = new DexOrderChainFactory()
     const orders = factory.getOrderChains(lock, type, orderTxs)
     const liveCells = orders.filter(x => x.getLiveCell() != null &&
-    //  Number(x.getTurnoverRate().toFixed(3, 1)) < 0.999 &&
+     Number(x.getTurnoverRate().toFixed(3, 1)) < 0.999 &&
      this.isMakerCellValid(x))
       .map(x => {
         const c = x.getLiveCell()
