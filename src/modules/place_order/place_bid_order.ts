@@ -68,7 +68,7 @@ export default class PlaceBidOrder extends PlaceOrder {
     const cells = await this.collect(neededCapacity.toFixed(0, BigNumber.ROUND_DOWN))
 
     if (cells.length === 0) {
-      throw new Error('You don\'t have enough CKB to complete this transaction.')
+      throw new Error('You don\'t have enough live cells to complete this transaction, please wait for other transactions to be completed.')
     }
 
     cells.forEach(cell => {
@@ -111,7 +111,7 @@ export default class PlaceBidOrder extends PlaceOrder {
     const cells = await this.collect(neededCapacity.toFixed(0, BigNumber.ROUND_DOWN))
 
     if (cells.length === 0) {
-      throw new Error('You don\'t have enough CKB to complete this transaction.')
+      throw new Error('You don\'t have enough live cells to complete this transaction, please wait for other transactions to be completed.')
     }
 
     cells.forEach(cell => {
