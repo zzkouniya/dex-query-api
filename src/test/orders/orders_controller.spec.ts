@@ -769,7 +769,7 @@ describe('Orders controller', () => {
           res.status.should.have.been.calledWith(200)
           res.json.should.have.been.calledWith({
             ask_orders: [{ price: '100000000000000', receive: '236944947979' }],
-            bid_orders: [{ price: '400000', receive: '2500000' }]
+            bid_orders: [{ price: '400000', receive: '25000000' }]
           })
         })
       })
