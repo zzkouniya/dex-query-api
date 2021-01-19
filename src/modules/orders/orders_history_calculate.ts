@@ -1,9 +1,7 @@
 import { Input, OutPoint, Output, Script, Transaction } from '@ckb-lumos/base'
 import BigNumber from 'bignumber.js'
 
-import {
-  CkbUtils
-} from '../../component'
+import { CkbUtils } from '../../component'
 import { IndexerService } from '../indexer/indexer_service'
 
 export default class OrdersHistoryCalculate {
@@ -15,11 +13,7 @@ export default class OrdersHistoryCalculate {
   private readonly usedInputOutPoints: Set<string>
   private readonly orderCellsInputOutPoints: Set<string>
 
-  constructor (
-    indexer: IndexerService,
-    orderLock: Script,
-    sudtType: Script
-  ) {
+  constructor (indexer: IndexerService, orderLock: Script, sudtType: Script) {
     this.orderLock = orderLock
     this.sudtType = sudtType
     this.indexer = indexer
@@ -111,7 +105,10 @@ export default class OrdersHistoryCalculate {
         firstOrderCellData.orderAmount - lastOrderCellData.orderAmount
       let turnoverRate
       try {
-        turnoverRate = new BigNumber(tradedAmount.toString()).multipliedBy(100).div(firstOrderCellData.orderAmount.toString()).div(100)
+        turnoverRate = new BigNumber(tradedAmount.toString())
+          .multipliedBy(100)
+          .div(firstOrderCellData.orderAmount.toString())
+          .div(100)
         if (Number(turnoverRate.toFixed(3, 1)) >= 0.999) {
           turnoverRate = 1
         } else {
@@ -164,7 +161,11 @@ export default class OrdersHistoryCalculate {
     return ordersHistory
   }
 
-  groupOrderCells (cells: OrderHistoryCalculateOutputs[], orderLock: Script, sudtType: Script): Array<[number, OrderHistoryCalculateOutputs]> {
+  groupOrderCells (
+    cells: OrderHistoryCalculateOutputs[],
+    orderLock: Script,
+    sudtType: Script
+  ): Array<[number, OrderHistoryCalculateOutputs]> {
     const groupedCells = []
     for (let i = 0; i < cells.length; i++) {
       const cell = cells[i]
@@ -206,7 +207,10 @@ export default class OrdersHistoryCalculate {
     return true
   }
 
-  determineGroupedOrderCellIndex (inputs: Input[], outpoint: string): number {
+  determineGroupedOrderCellIndex (
+    inputs: Input[],
+    outpoint: string
+  ): number {
     const inputOutpointList: string[] = []
     for (let i = 0; i < inputs.length; i++) {
       const input = inputs[i]
@@ -223,9 +227,15 @@ export default class OrdersHistoryCalculate {
     return inputOutpointList.indexOf(outpoint)
   }
 
-  getChainedOrderCells (currentOutput: OrderHistoryCalculateOutputs, prevOrderCells: OrderHistoryCalculateOutputs[] = []): OrderHistoryCalculateOutputs[] {
+  getChainedOrderCells (
+    currentOutput: OrderHistoryCalculateOutputs,
+    prevOrderCells: OrderHistoryCalculateOutputs[] = []
+  ): OrderHistoryCalculateOutputs[] {
     const { outpoint } = currentOutput
-    const inputOutPoint = this.formatInputOutPoint(outpoint.tx_hash, parseInt(outpoint.index))
+    const inputOutPoint = this.formatInputOutPoint(
+      outpoint.tx_hash,
+      parseInt(outpoint.index)
+    )
     const nextTransaction = this.txsByInputOutPoint.get(inputOutPoint)
 
     if (!this.usedInputOutPoints.has(inputOutPoint)) {
@@ -237,7 +247,10 @@ export default class OrdersHistoryCalculate {
     }
 
     // input 所在的位置
-    const nextGroupedOrderCellIndex = this.determineGroupedOrderCellIndex(nextTransaction.inputs, inputOutPoint)
+    const nextGroupedOrderCellIndex = this.determineGroupedOrderCellIndex(
+      nextTransaction.inputs,
+      inputOutPoint
+    )
 
     const nextGroupedOrderCells = this.groupOrderCells(
       nextTransaction.outputs,
@@ -266,10 +279,10 @@ export default class OrdersHistoryCalculate {
       index: nextOriginalIndex.toString()
     }
 
-    return this.getChainedOrderCells(
-      nextOutput,
-      [...prevOrderCells, currentOutput]
-    )
+    return this.getChainedOrderCells(nextOutput, [
+      ...prevOrderCells,
+      currentOutput
+    ])
   }
 
   formatInputOutPoint (txHash: string, index: number): string {

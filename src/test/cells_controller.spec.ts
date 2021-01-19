@@ -76,7 +76,7 @@ describe('Cells controller', () => {
   const clone = (obj: Cell[]) => JSON.parse(JSON.stringify(obj))
 
   beforeEach(() => {
-    mock_repository = MockRepositoryFactory.getInstance()
+    mock_repository = MockRepositoryFactory.getDexRepositoryInstance()
     const service = new CellsSerive(mock_repository)
     controller = new CellsController(service)
     req = mockReq()

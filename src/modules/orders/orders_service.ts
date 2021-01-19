@@ -1,11 +1,9 @@
 import { inject, injectable, LazyServiceIdentifer } from 'inversify'
 import BigNumber from 'bignumber.js'
-
 import { modules } from '../../ioc'
 import { contracts } from '../../config'
 import { CkbUtils, DexOrderCellFormat } from '../../component'
-import BestPriceModel from './best_price_model'
-import { Cell, HashType, Script } from '@ckb-lumos/base'
+import { Cell, HashType, QueryOptions, Script } from '@ckb-lumos/base'
 import { DexRepository } from '../repository/dex_repository'
 import CkbRepository from '../repository/ckb_repository'
 import { DexOrderChainFactory } from '../../model/orders/dex_order_chain_factory'
@@ -56,7 +54,8 @@ export default class OrdersService {
 
     const factory: DexOrderChainFactory = new DexOrderChainFactory()
     const orders = factory.getOrderChains(lock, type, orderTxs)
-    const liveCells = orders.filter(x => x.getLiveCell() != null && Number(x.getTurnoverRate().toFixed(3, 1)) < 0.999 && this.isMakerCellValid(x))
+    const liveCells = orders.filter(x => x.getLiveCell() != null &&
+     this.isMakerCellValid(x) && this.filterPlaceOrders(x, decimal))
       .map(x => {
         const c = x.getLiveCell()
         const cell: Cell = {
@@ -65,7 +64,11 @@ export default class OrdersService {
             type: c.cell.type,
             capacity: c.cell.capacity
           },
-          data: c.data
+          data: c.data,
+          out_point: {
+            tx_hash: c.tx.transaction.hash,
+            index: c.index.toString()
+          }
         }
         return cell
       })
@@ -85,7 +88,7 @@ export default class OrdersService {
 
         return {
           receive: order_amount.toString(),
-          price: group[0].price
+          price: group[0].price.toString()
         }
       })
 
@@ -101,7 +104,7 @@ export default class OrdersService {
 
         return {
           receive: order_amount.toString(),
-          price: group[0].price
+          price: group[0].price.toString()
         }
       }).reverse()
 
@@ -112,81 +115,63 @@ export default class OrdersService {
   }
 
   async getCurrentPrice (type: { code_hash: string, args: string, hash_type: HashType }): Promise<string> {
-    const orders = await this.repository.getLastMatchOrders(type)
-    if (!orders) {
-      return ''
+    const lock: Script = {
+      code_hash: contracts.orderLock.codeHash,
+      hash_type: contracts.orderLock.hashType,
+      args: '0x'
     }
-    const bid_price = new BigNumber(orders.bid_orders.sort((o1, o2) => Number(o1.price - o2.price))[0].price.toString())
-    const ask_price = new BigNumber(orders.ask_orders.sort((o1, o2) => Number(o2.price - o1.price))[0].price.toString())
-    return (bid_price.plus(ask_price)).dividedBy(2).toString(10)
-  }
-
-  async getBestPrice (
-    type_code_hash: string,
-    type_hash_type: string,
-    type_args: string,
-    is_bid: boolean
-  ): Promise<BestPriceModel> {
-    const orderCells = await this.repository.collectCells({
-      type: {
-        code_hash: type_code_hash,
-        hash_type: <HashType>type_hash_type,
-        args: type_args
-      },
+    const queryOption: QueryOptions = {
+      type,
       lock: {
-        code_hash: contracts.orderLock.codeHash,
-        hash_type: contracts.orderLock.hashType,
-        args: '0x'
+        script: lock,
+        argsLen: 'any'
       },
-      argsLen: 'any'
+      order: 'desc'
+    }
+
+    const orderTxs = await this.repository.collectTransactions(queryOption)
+
+    if (orderTxs.length === 0) { return '' }
+    const factory: DexOrderChainFactory = new DexOrderChainFactory()
+    const orders = factory.getOrderChains(lock, type, orderTxs)
+
+    const makerOrders = orders.filter(x => {
+      const top = x.getTopOrder()
+      if (!top.isCancel() && top.nextOrderCell) {
+        return x
+      }
     })
 
-    if (!orderCells.length) {
-      throw new Error('cells is null')
-    }
-
-    const formattedOrderCells = CkbUtils.formatOrderCells(orderCells)
-
-    const sortedCells = formattedOrderCells
-      .filter((cell) => is_bid !== cell.isBid && cell.orderAmount !== '0')
-      .filter((cell) => !this.isInvalidOrderCell(cell))
-      .sort((a, b) => {
-        if (is_bid) {
-          return new BigNumber(a.price)
-            .minus(new BigNumber(b.price))
-            .toNumber()
-        }
-        return new BigNumber(b.price).minus(a.price).toNumber()
-      })
-
-    const result: BestPriceModel = {
-      price: sortedCells[0].price
-    }
-
-    return result
+    if (makerOrders.length === 0) { return '' }
+    const lastMakerOrders = makerOrders.filter(x => x.getLastOrder().tx.transaction.hash === makerOrders[0].getLastOrder().tx.transaction.hash)
+    return lastMakerOrders.reduce(
+      (total, order) => total.plus(new BigNumber(CkbUtils.parseOrderData(order.data).price)),
+      new BigNumber(0)
+    ).dividedBy(lastMakerOrders.length).toExponential()
   }
 
   isMakerCellValid (order: DexOrderChain): boolean {
     const FEE = BigInt(3)
     const FEE_RATIO = BigInt(1_000)
-    const PRICE_RATIO = BigInt(10 ** 20)
+    // const PRICE_RATIO = BigInt(10 ** 20);
 
     const live = order.getLiveCell()
     try {
       if (live.data.length !== CkbUtils.getRequiredDataLength()) {
         return false
       }
-
       const output = live.cell
       const { price, orderAmount, sUDTAmount, isBid } = CkbUtils.parseOrderData(live.data)
       const freeCapacity = BigInt(parseInt(output.capacity, 16)) - CkbUtils.getOrderCellCapacitySize()
-
+      const priceBigNumber = new BigNumber(price)
       if (isBid) {
-        const costAmount = orderAmount * price
-        if (costAmount + (costAmount * FEE) / (FEE + FEE_RATIO) > freeCapacity * PRICE_RATIO) {
+        const costAmount = new BigNumber(orderAmount.toString()).multipliedBy(priceBigNumber)
+        const fee = costAmount.multipliedBy(FEE.toString()).div((FEE + FEE_RATIO).toString())
+
+        if (costAmount.plus(fee).gt(freeCapacity.toString())) {
           return false
         }
-        if ((orderAmount * price) / PRICE_RATIO === BigInt(0)) {
+        if (costAmount.eq(0)) {
           return false
         }
 
@@ -194,11 +179,13 @@ export default class OrdersService {
       }
 
       if (!isBid) {
-        const costAmount = orderAmount * PRICE_RATIO
-        if (costAmount + (costAmount * FEE) / (FEE + FEE_RATIO) > sUDTAmount * price) {
+        const costAmount = new BigNumber(orderAmount.toString())
+        const fee = costAmount.multipliedBy(FEE.toString()).div((FEE + FEE_RATIO).toString())
+        const receive = new BigNumber(sUDTAmount.toString()).multipliedBy(priceBigNumber)
+        if (costAmount.plus(fee).gt(receive)) {
           return false
         }
-        if ((orderAmount * PRICE_RATIO) / price === BigInt(0)) {
+        if (new BigNumber(orderAmount.toString()).div(priceBigNumber).eq(0)) {
           return false
         }
         return true
@@ -209,42 +196,7 @@ export default class OrdersService {
     }
   }
 
-  isInvalidOrderCell (cell: DexOrderCellFormat): boolean {
-    const orderCellMinCapacity = new BigNumber(CkbUtils.getOrderCellCapacitySize().toString())
-    const capacityBN = new BigNumber(cell.rawData.cell_output.capacity)
-    const sudtAmountBN = new BigNumber(cell.sUDTAmount)
-    const orderAmountBN = new BigNumber(cell.orderAmount)
-    const priceBN = new BigNumber(cell.price).dividedBy(
-      new BigNumber(10 ** 10)
-    )
-    const feeRatioBN = new BigNumber(0.003)
-    try {
-      if (cell.rawData.cell_output.lock.args.length !== 66) {
-        return true
-      }
-      if (capacityBN.lt(orderCellMinCapacity)) {
-        return true
-      }
-      if (cell.isBid) {
-        const exchangeCapacity = orderAmountBN.multipliedBy(priceBN)
-        const minimumCapacity = exchangeCapacity
-          .plus(exchangeCapacity.multipliedBy(feeRatioBN))
-          .plus(orderCellMinCapacity)
-        const invalid = capacityBN.lt(minimumCapacity)
-        return invalid
-      }
-
-      const exchangeSudtAmountBN = orderAmountBN.dividedBy(priceBN)
-      const minimumSudtAmountBN = exchangeSudtAmountBN.multipliedBy(1.003)
-      const invalid = sudtAmountBN.lt(minimumSudtAmountBN)
-      return invalid
-    } catch (error) {
-      console.error(error)
-      return true
-    }
-  }
-
-  private filterDexOrder (dexOrders: Cell[], isBid: boolean): DexOrderCellFormat[] {
+  filterDexOrder (dexOrders: Cell[], isBid: boolean): DexOrderCellFormat[] {
     const REQUIRED_DATA_LENGTH = CkbUtils.getRequiredDataLength()
     return CkbUtils.formatOrderCells(dexOrders
       .filter(o => o.data.length === REQUIRED_DATA_LENGTH))
@@ -252,11 +204,73 @@ export default class OrdersService {
       .filter(x => x.orderAmount !== '0')
   }
 
+  filterPlaceOrders (order: DexOrderChain, decimal: string): boolean {
+    const placeOrder = order.getTopOrder()
+    const data = CkbUtils.parseOrderData(placeOrder.data)
+    const price = new BigNumber(data.price).times(new BigNumber(10).pow(parseInt(decimal) - 8)).toString()
+    const precision = price.lastIndexOf('.') !== -1 ? price.slice(price.lastIndexOf('.') + 1, price.length).length : 0
+    if (order.isBid) {
+      if (new BigNumber(placeOrder.cell.capacity).lt(100000000)) {
+        return false
+      }
+      const receive = new BigNumber(data.orderAmount.toString()).times(new BigNumber(10).pow(parseInt(decimal)))
+      // CKB => ETH
+      if (placeOrder.cell.type.args === '0x8462b20277bcbaa30d821790b852fb322d55c2b12e750ea91ad7059bc98dda4b') {
+        if (receive.lt(new BigNumber(0.0001))) {
+          return false
+        }
+
+        if (precision > 2) {
+          return false
+        }
+
+        // CKB => UDT
+      } else {
+        if (receive.lt(new BigNumber(0.001))) {
+          return false
+        }
+
+        if (precision > 4) {
+          return false
+        }
+      }
+    } else {
+      if (new BigNumber(data.orderAmount.toString()).lt(100000000)) {
+        return false
+      }
+
+      const pay = new BigNumber(data.sUDTAmount.toString()).times(new BigNumber(10).pow(parseInt(decimal)))
+      // ETH => CKB
+      if (placeOrder.cell.type.args === '0x8462b20277bcbaa30d821790b852fb322d55c2b12e750ea91ad7059bc98dda4b') {
+        if (pay.lt(new BigNumber(0.0001))) {
+          return false
+        }
+
+        if (precision > 2) {
+          return false
+        }
+
+        // UDT => CKB
+      } else {
+        if (pay.lt(new BigNumber(0.001))) {
+          return false
+        }
+      }
+
+      if (precision > 4) {
+        return false
+      }
+    }
+
+    return true
+  }
+
   private groupbyPrice (dexOrders: DexOrderCellFormat[], decimal: string): Map<string, DexOrderCellFormat[]> {
     const groupbyPrice: Map<string, DexOrderCellFormat[]> = new Map()
     for (let i = 0; i < dexOrders.length; i++) {
       const dexOrder = dexOrders[i]
-      const key = this.getRoundHalfUpPrice(dexOrder.price, decimal)
+      const price = new BigNumber(dexOrder.price).times(new BigNumber(10).pow(parseInt(decimal) - 8))
+      const key = CkbUtils.roundHalfUp(price.toString())
       let priceArr = groupbyPrice.get(key)
       if (!priceArr) {
         priceArr = []
@@ -267,11 +281,5 @@ export default class OrdersService {
     }
 
     return groupbyPrice
-  }
-
-  private getRoundHalfUpPrice (price: string, decimal: string) {
-    const key = CkbUtils.roundHalfUp(CkbUtils.priceUnitConversion(price, decimal))
-
-    return key
   }
 }

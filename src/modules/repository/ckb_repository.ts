@@ -1,13 +1,14 @@
 import { DexRepository } from './dex_repository'
-import { Cell, QueryOptions, TransactionWithStatus, Script } from '@ckb-lumos/base'
+import { Cell, QueryOptions, TransactionWithStatus } from '@ckb-lumos/base'
 import { inject, injectable, LazyServiceIdentifer } from 'inversify'
 import { modules } from '../../ioc'
 import IndexerWrapper from '../indexer/indexer'
 import { IndexerService } from '../indexer/indexer_service'
 import CkbService, { ckb_methons } from '../ckb/ckb_service'
-import { DexOrderData } from '../../component'
-
+import * as pw from '@lay2/pw-core'
+import rp from 'request-promise'
 import CkbTransactionWithStatusModelWrapper from '../../model/ckb/ckb_transaction_with_status'
+import { contracts, forceBridgeServerUrl } from '../../config'
 
 @injectable()
 export default class CkbRepository implements DexRepository {
@@ -17,6 +18,26 @@ export default class CkbRepository implements DexRepository {
     @inject(new LazyServiceIdentifer(() => modules[CkbService.name]))
     private readonly ckbService: CkbService
   ) {}
+
+  async getForceBridgeHistory (ckbAddress: string, ethAddress: string): Promise<[]> {
+    const orderLock = new pw.Script(
+      contracts.orderLock.codeHash,
+      new pw.Address(ckbAddress, pw.AddressType.ckb).toLockScript().toHash(),
+      <pw.HashType>contracts.orderLock.hashType
+    )
+
+    const QueryOptions = {
+      url: `${forceBridgeServerUrl}/get_crosschain_history`,
+      method: 'POST',
+      body: {
+        ckb_recipient_lockscript_addr: orderLock.toAddress().toCKBAddress(),
+        eth_recipient_addr: ethAddress
+      },
+      json: true
+    }
+    const result = await rp(QueryOptions)
+    return result
+  }
 
   async getInputOutPointFromTheTxPool (): Promise<Map<string, CkbTransactionWithStatusModelWrapper>> {
     return await this.ckbService.getInputOutPointFromTheTxPool()
@@ -33,10 +54,6 @@ export default class CkbRepository implements DexRepository {
 
   async collectTransactions (queryOptions: QueryOptions): Promise<TransactionWithStatus[]> {
     return await this.indexer.collectTransactions(queryOptions)
-  }
-
-  async getLastMatchOrders (type: Script): Promise<Record<'ask_orders' | 'bid_orders', DexOrderData[] | null>> {
-    return await this.indexer.getLastMatchOrders(type)
   }
 
   async getTransactions (ckbReqParams: Array<[method: ckb_methons, ...rest: []]>): Promise<CkbTransactionWithStatusModelWrapper[]> {

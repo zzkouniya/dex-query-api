@@ -1,7 +1,8 @@
-import { controller, httpGet } from 'inversify-express-utils'
+import { controller, httpGet, httpPost } from 'inversify-express-utils'
 import { inject, LazyServiceIdentifer } from 'inversify'
 import {
   ApiOperationGet,
+  ApiOperationPost,
   ApiPath,
   SwaggerDefinitionConstant
 } from 'swagger-express-ts'
@@ -144,69 +145,6 @@ export default class OrderController {
   }
 
   @ApiOperationGet({
-    path: 'best-price',
-    description: 'Get best price',
-    summary: 'Get best price',
-    parameters: {
-      query: {
-        type_code_hash: {
-          name: 'type_code_hash',
-          type: 'string',
-          required: true,
-          description: ''
-        },
-        type_hash_type: {
-          name: 'type_hash_type',
-          type: 'string',
-          required: true,
-          description: ''
-        },
-        type_args: {
-          name: 'type_args',
-          type: 'string',
-          required: true,
-          description: ''
-        },
-        is_bid: {
-          name: 'is_bid',
-          type: 'string',
-          required: true,
-          description: ''
-        }
-      }
-    },
-    responses: {
-      200: {
-        description: 'Success',
-        type: SwaggerDefinitionConstant.Response.Type.OBJECT
-        // model: "BestPriceModel",
-      },
-      400: { description: 'Parameters fail' }
-    }
-  })
-  @httpGet('best-price')
-  async getBestPrice (
-    req: express.Request,
-    res: express.Response
-  ): Promise<void> {
-    const { type_code_hash, type_hash_type, type_args, is_bid } = req.query
-
-    try {
-      const result = await this.orderService.getBestPrice(
-        <string>type_code_hash,
-        <string>type_hash_type,
-        <string>type_args,
-        <boolean>(<unknown>is_bid)
-      )
-
-      res.status(200).json(result)
-    } catch (err) {
-      console.error(err)
-      res.status(500).send(err)
-    }
-  }
-
-  @ApiOperationGet({
     path: 'order-history',
     description: 'Get orders history',
     summary: 'Get orders history',
@@ -235,14 +173,25 @@ export default class OrderController {
           type: 'string',
           required: true,
           description: ''
+        },
+        ckb_address: {
+          name: 'ckb_address',
+          type: 'string',
+          required: true,
+          description: ''
+        },
+        eth_address: {
+          name: 'eth_address',
+          type: 'string',
+          required: true,
+          description: ''
         }
       }
     },
     responses: {
       200: {
         description: 'Success',
-        type: SwaggerDefinitionConstant.Response.Type.OBJECT
-        // model: "BalanceCkbModel",
+        type: SwaggerDefinitionConstant.Response.Type.ARRAY
       },
       400: { description: 'Parameters fail' }
     }
@@ -256,7 +205,9 @@ export default class OrderController {
       type_code_hash,
       type_hash_type,
       type_args,
-      order_lock_args
+      order_lock_args,
+      ckb_address,
+      eth_address
     } = req.query
 
     try {
@@ -264,13 +215,58 @@ export default class OrderController {
         <string>type_code_hash,
         <string>type_hash_type,
         <string>type_args,
-        <string>order_lock_args
+        <string>order_lock_args,
+        <string>ckb_address,
+        <string>eth_address
       )
 
       res.status(200).json(result)
     } catch (error) {
       console.error(error)
       res.status(500).send()
+    }
+  }
+
+  @ApiOperationPost({
+    path: 'order-history-batch',
+    description: 'Batch orders history',
+    summary: 'Batch orders history',
+    parameters: {
+      body: {
+        description: 'Batch orders history',
+        required: true
+      }
+    },
+    responses: {
+      200: {
+        description: 'Success',
+        type: SwaggerDefinitionConstant.Response.Type.ARRAY
+      },
+      400: { description: 'Parameters fail' }
+    }
+  })
+  @httpPost('order-history-batch')
+  async batch (
+    req: express.Request,
+    res: express.Response
+  ): Promise<void> {
+    try {
+      const types = <{
+        type_code_hash: string
+        type_hash_type: string
+        order_lock_args: string
+        ckb_address: string
+        eth_address: string
+        types: Array<{
+          type_args: string
+        }>
+      }>req.body
+
+      const orders = await this.orderHistoryService.batch(types)
+      res.status(200).json(orders)
+    } catch (error) {
+      this.logger.error(error)
+      res.status(400).json({ error: 'Query failure' })
     }
   }
 }

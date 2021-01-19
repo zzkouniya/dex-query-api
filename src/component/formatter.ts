@@ -4,43 +4,86 @@ import { contracts } from '../config'
 
 export interface DexOrderData {
   sUDTAmount: bigint
+  version: string
   orderAmount: bigint
-  price: bigint
+  effect: bigint
+  exponent: number
   isBid: boolean
+  price: number
 }
 
 export interface DexOrderCellFormat {
   sUDTAmount: string
+  version: string
   orderAmount: string
-  price: string
+  effect: string
+  exponent: string
   isBid: boolean
+  price: number
   rawData: Cell
 }
 
 export class CkbUtils {
   static parseOrderData (hex: HexString): DexOrderData {
-    const sUDTAmount = this.parseAmountFromLeHex(hex.slice(0, 34))
-    const orderAmount = this.parseAmountFromLeHex(hex.slice(34, 66))
+    const sUDTAmount = CkbUtils.parseAmountFromLeHex(hex.slice(0, 34))
+    const version = CkbUtils.readVersion(hex)
+    const orderAmount = CkbUtils.parseAmountFromLeHex(hex.slice(36, 68))
+    const effect = CkbUtils.readEffect(hex)
 
-    let price: bigint
-    try {
-      price = this.parseAmountFromLeHex(hex.slice(66, 98))
-      // const priceBuf: Buffer = Buffer.from(hex.slice(66, 98), "hex");
-      // price = priceBuf.readBigInt64LE();
-    } catch (error) {
-      price = null
-    }
+    const exponent = CkbUtils.readExponent(hex)
 
-    const isBid = hex.slice(98, this.getRequiredDataLength()) === '00'
+    const isBid = hex.slice(86, 88) === '00'
 
-    const orderData: DexOrderData = {
+    const price = CkbUtils.getPrice(effect, exponent)
+
+    const orderData = {
       sUDTAmount,
+      version: version.toString(),
       orderAmount,
-      price,
-      isBid
+      effect,
+      exponent,
+      isBid,
+      price
     }
 
     return orderData
+  }
+
+  private static readExponent (hex: string) {
+    const exponentHex = hex.slice(84, 86)
+    if (!exponentHex) {
+      return 0
+    }
+    const exponentBuf: Buffer = Buffer.from(exponentHex, 'hex')
+    const exponent = exponentBuf.readInt8()
+    return exponent
+  }
+
+  private static readEffect (hex: string): bigint {
+    const effectHex = hex.slice(68, 84)
+    if (!effectHex) {
+      return BigInt(0)
+    }
+    const effectBuf: Buffer = Buffer.from(effectHex, 'hex')
+    const effect = effectBuf.readBigUInt64LE()
+    return effect
+  }
+
+  private static readVersion (hex: string): number {
+    const versionHex = hex.slice(34, 36)
+    if (!versionHex) {
+      return 0
+    }
+    const versionBuf: Buffer = Buffer.from(versionHex, 'hex')
+    const version = versionBuf.readUInt8()
+    return version
+  }
+
+  static getPrice (effect: bigint, exponent: number): number {
+    if (effect === BigInt(0)) {
+      return 0
+    }
+    return Number(`${effect}e${exponent}`)
   }
 
   static parseAmountFromLeHex (leHex: HexString): bigint {
@@ -66,11 +109,15 @@ export class CkbUtils {
     const formattedOrderCells = orderCells.map((orderCell) => {
       const parsedOrderData = this.parseOrderData(orderCell.data)
 
+      const price = this.getPrice(parsedOrderData.effect, parsedOrderData.exponent)
       const result: DexOrderCellFormat = {
         sUDTAmount: parsedOrderData.sUDTAmount.toString(),
+        version: parsedOrderData.version.toString(),
         orderAmount: parsedOrderData.orderAmount.toString(),
-        price: parsedOrderData.price.toString(),
+        effect: parsedOrderData.effect.toString(),
+        exponent: parsedOrderData.exponent.toString(),
         isBid: parsedOrderData.isBid,
+        price: price,
         rawData: orderCell
       }
 
@@ -96,26 +143,34 @@ export class CkbUtils {
     return `0x${buf.toString('hex')}`
   }
 
-  static formatOrderData (currentAmount: bigint, orderAmount: bigint, price: bigint, isBid: boolean): string {
+  static formatOrderData (currentAmount: bigint, version: number, orderAmount: bigint, effect: bigint, exponent: number, isBid: boolean): string {
     const udtAmountHex = this.formatBigUInt128LE(currentAmount)
     if (isBid === undefined) {
       return udtAmountHex
     }
+
+    const versionBuf = Buffer.alloc(1)
+    versionBuf.writeUInt8(version)
+    const versionHex = `${versionBuf.toString('hex')}`
 
     const orderAmountHex = this.formatBigUInt128LE(orderAmount).replace(
       '0x',
       ''
     )
 
-    const priceBuf = Buffer.alloc(16)
-    priceBuf.writeBigUInt64LE(price)
-    const priceHex = `${priceBuf.toString('hex')}`
+    const effectBuf = Buffer.alloc(8)
+    effectBuf.writeBigUInt64LE(effect)
+    const effectHex = `${effectBuf.toString('hex')}`
+
+    const exponentBuf = Buffer.alloc(1)
+    exponentBuf.writeInt8(exponent)
+    const exponentHex = `${exponentBuf.toString('hex')}`
 
     const bidOrAskBuf = Buffer.alloc(1)
     bidOrAskBuf.writeInt8(isBid ? 0 : 1)
     const isBidHex = `${bidOrAskBuf.toString('hex')}`
 
-    const dataHex = udtAmountHex + orderAmountHex + priceHex + isBidHex
+    const dataHex = udtAmountHex + versionHex + orderAmountHex + effectHex + exponentHex + isBidHex
     return dataHex
   }
 
@@ -153,20 +208,14 @@ export class CkbUtils {
   }
 
   static getRequiredDataLength (): number {
-    return 100
+    return 88
   }
 
   static getOrderCellCapacitySize (): bigint {
-    return 18700000000n
+    return 18100000000n
   }
 
   static getOrdersLimit (): number {
     return 7
-  }
-
-  static priceUnitConversion (price: string, decimal: string): string {
-    return new BigNumber(price)
-      .div(10 ** 20) // 10 * 10 && 20
-      .times(new BigNumber(10).pow(parseInt(decimal) - 8)).toString()
   }
 }
