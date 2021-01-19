@@ -320,7 +320,7 @@ export const makerOrders = [
           capacity: '0x1b7f4efd00',
           lock: {
             args: '0x9eb946551d1eed6aad1b186af975af8ddb2d5043a30d28b6228e6b66d4f3521a',
-            code_hash: '0xccb2a529cf5d8d1f4713b2711e443f9cec62baed84da77019c776c65845bba48',
+            code_hash: contracts.orderLock.codeHash,
             hash_type: 'type'
           },
           type: {
@@ -377,7 +377,7 @@ export const makerOrders = [
           capacity: '0x436d81500',
           lock: {
             args: '0x9eb946551d1eed6aad1b186af975af8ddb2d5043a30d28b6228e6b66d4f3521a',
-            code_hash: '0xccb2a529cf5d8d1f4713b2711e443f9cec62baed84da77019c776c65845bba48',
+            code_hash: contracts.orderLock.codeHash,
             hash_type: 'type'
           },
           type: {
@@ -473,7 +473,7 @@ export const makerOrders = [
           capacity: '0x15bfab7c80',
           lock: {
             args: '0x9eb946551d1eed6aad1b186af975af8ddb2d5043a30d28b6228e6b66d4f3521a',
-            code_hash: '0xccb2a529cf5d8d1f4713b2711e443f9cec62baed84da77019c776c65845bba48',
+            code_hash: contracts.orderLock.codeHash,
             hash_type: 'type'
           },
           type: {
