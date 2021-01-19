@@ -1,55 +1,74 @@
-import { DexRepository } from './dex_repository';
-import { Cell, QueryOptions, TransactionWithStatus, Script } from "@ckb-lumos/base";
-import { inject, injectable, LazyServiceIdentifer } from "inversify";
-import { modules } from '../../ioc';
-import IndexerWrapper from '../indexer/indexer';
-import { IndexerService } from '../indexer/indexer_service';
-import CkbService from '../ckb/ckb_service';
-import { DexOrderData } from '../../component';
-import { ckb_methons } from '../ckb/ckb_service';
-import CkbTransactionWithStatusModelWrapper from '../../model/ckb/ckb_transaction_with_status';
+import { DexRepository } from './dex_repository'
+import { Cell, QueryOptions, TransactionWithStatus } from '@ckb-lumos/base'
+import { inject, injectable, LazyServiceIdentifer } from 'inversify'
+import { modules } from '../../ioc'
+import IndexerWrapper from '../indexer/indexer'
+import { IndexerService } from '../indexer/indexer_service'
+import CkbService, { ckb_methons } from '../ckb/ckb_service'
+import * as pw from '@lay2/pw-core'
+import rp from 'request-promise'
+import CkbTransactionWithStatusModelWrapper from '../../model/ckb/ckb_transaction_with_status'
+import { contracts, forceBridgeServerUrl } from '../../config'
 
 @injectable()
 export default class CkbRepository implements DexRepository {
-
-  constructor(
+  constructor (
     @inject(new LazyServiceIdentifer(() => modules[IndexerWrapper.name]))
-    private indexer: IndexerService,
+    private readonly indexer: IndexerService,
     @inject(new LazyServiceIdentifer(() => modules[CkbService.name]))
-    private ckbService: CkbService
+    private readonly ckbService: CkbService
   ) {}
 
-  async tip(): Promise<number> {
-    const block_number = await this.indexer.tip();
-    return block_number;
+  async getForceBridgeHistory (ckbAddress: string, ethAddress: string): Promise<[]> {
+    const orderLock = new pw.Script(
+      contracts.orderLock.codeHash,
+      new pw.Address(ckbAddress, pw.AddressType.ckb).toLockScript().toHash(),
+      <pw.HashType>contracts.orderLock.hashType
+    )
+
+    const QueryOptions = {
+      url: `${forceBridgeServerUrl}/get_crosschain_history`,
+      method: 'POST',
+      body: {
+        ckb_recipient_lockscript_addr: orderLock.toAddress().toCKBAddress(),
+        eth_recipient_addr: ethAddress
+      },
+      json: true
+    }
+    const result = await rp(QueryOptions)
+    return result
   }
 
-  async collectCells(queryOptions: QueryOptions): Promise<Array<Cell>> {
-    return await this.indexer.collectCells(queryOptions);
+  async getInputOutPointFromTheTxPool (): Promise<Map<string, CkbTransactionWithStatusModelWrapper>> {
+    return await this.ckbService.getInputOutPointFromTheTxPool()
   }
 
-  async collectTransactions(queryOptions: QueryOptions): Promise<Array<TransactionWithStatus>> {
-    return await this.indexer.collectTransactions(queryOptions);
+  async tip (): Promise<number> {
+    const block_number = await this.indexer.tip()
+    return block_number
   }
 
-
-  async getLastMatchOrders(type: Script): Promise<Record<'ask_orders' | 'bid_orders', Array<DexOrderData> | null>> {
-    return await this.indexer.getLastMatchOrders(type);
+  async collectCells (queryOptions: QueryOptions): Promise<Cell[]> {
+    return await this.indexer.collectCells(queryOptions)
   }
 
-  async getTransactions(ckbReqParams: [method: ckb_methons, ...rest: []][]): Promise<Array<CkbTransactionWithStatusModelWrapper>> {
-    return await this.ckbService.getTransactions(ckbReqParams);
+  async collectTransactions (queryOptions: QueryOptions): Promise<TransactionWithStatus[]> {
+    return await this.indexer.collectTransactions(queryOptions)
   }
 
-  async getTransactionByHash(txHash: string): Promise<CkbTransactionWithStatusModelWrapper> {
-    return await this.ckbService.getTransactionByHash(txHash);
+  async getTransactions (ckbReqParams: Array<[method: ckb_methons, ...rest: []]>): Promise<CkbTransactionWithStatusModelWrapper[]> {
+    return await this.ckbService.getTransactions(ckbReqParams)
   }
 
-  async getblockNumberByBlockHash(blockHash: string): Promise<number> {
-    return await this.ckbService.getblockNumberByBlockHash(blockHash);
+  async getTransactionByHash (txHash: string): Promise<CkbTransactionWithStatusModelWrapper> {
+    return await this.ckbService.getTransactionByHash(txHash)
   }
 
-  async getBlockTimestampByHash(blockHash: string): Promise<string> {
-    return await this.ckbService.getBlockTimestampByHash(blockHash);
+  async getblockNumberByBlockHash (blockHash: string): Promise<number> {
+    return await this.ckbService.getblockNumberByBlockHash(blockHash)
+  }
+
+  async getBlockTimestampByHash (blockHash: string): Promise<string> {
+    return await this.ckbService.getBlockTimestampByHash(blockHash)
   }
 }

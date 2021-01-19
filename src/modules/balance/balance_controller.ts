@@ -1,68 +1,68 @@
-import { controller, httpGet } from "inversify-express-utils";
-import { modules } from "../../ioc";
-import { inject, LazyServiceIdentifer } from "inversify";
+import { controller, httpGet } from 'inversify-express-utils'
+import { modules } from '../../ioc'
+import { inject, LazyServiceIdentifer } from 'inversify'
 import {
   ApiOperationGet,
   ApiPath,
-  SwaggerDefinitionConstant,
-} from "swagger-express-ts";
-import * as express from "express";
-import BalanceService from "./balance_service";
-import { DexLogger } from "../../component";
-import CkbRequestModel from '../../model/req/ckb_request_model';
+  SwaggerDefinitionConstant
+} from 'swagger-express-ts'
+import * as express from 'express'
+import BalanceService from './balance_service'
+import { DexLogger } from '../../component'
+import CkbRequestModel from '../../model/req/ckb_request_model'
 
 @ApiPath({
-  path: "/",
-  name: "Balance",
-  security: { basicAuth: [] },
+  path: '/',
+  name: 'Balance',
+  security: { basicAuth: [] }
 })
-@controller("/")
+@controller('/')
 export default class BalanceController {
-  private logger: DexLogger;
-  constructor(
+  private readonly logger: DexLogger
+  constructor (
     @inject(new LazyServiceIdentifer(() => modules[BalanceService.name]))
-    private banlanceService: BalanceService
+    private readonly banlanceService: BalanceService
   ) {
-    this.logger = new DexLogger(BalanceController.name);
+    this.logger = new DexLogger(BalanceController.name)
   }
 
   @ApiOperationGet({
-    path: "ckb-balance",
-    description: "Get ckb balance",
-    summary: "Get ckb balance",
+    path: 'ckb-balance',
+    description: 'Get ckb balance',
+    summary: 'Get ckb balance',
     parameters: {
       query: {
         lock_code_hash: {
-          name: "lock_code_hash",
-          type: "string",
+          name: 'lock_code_hash',
+          type: 'string',
           required: true,
-          description: "",
+          description: ''
         },
         lock_hash_type: {
-          name: "lock_hash_type",
-          type: "string",
+          name: 'lock_hash_type',
+          type: 'string',
           required: true,
-          description: "",
+          description: ''
         },
         lock_args: {
-          name: "lock_args",
-          type: "string",
+          name: 'lock_args',
+          type: 'string',
           required: true,
-          description: "",
-        },
-      },
+          description: ''
+        }
+      }
     },
     responses: {
       200: {
-        description: "Success",
+        description: 'Success',
         type: SwaggerDefinitionConstant.Response.Type.OBJECT,
-        model: "BalanceCkbModel",
+        model: 'BalanceCkbModel'
       },
-      400: { description: "Parameters fail" },
-    },
+      400: { description: 'Parameters fail' }
+    }
   })
-  @httpGet("ckb-balance")
-  async getCKBBalance(
+  @httpGet('ckb-balance')
+  async getCKBBalance (
     req: express.Request,
     res: express.Response
   ): Promise<express.Response<void>> {
@@ -72,111 +72,110 @@ export default class BalanceController {
       null,
       <string>req.query.lock_code_hash,
       <string>req.query.lock_hash_type,
-      <string>req.query.lock_args,
-    );
-    
+      <string>req.query.lock_args
+    )
+
     if (!reqParms.isValidLockScript()) {
       return res
         .status(400)
-        .json({ error: "requires lock script to be specified as parameters" });
+        .json({ error: 'requires lock script to be specified as parameters' })
     }
 
     try {
-      const result = await this.banlanceService.getCKBBalance(reqParms);
+      const result = await this.banlanceService.getCKBBalance(reqParms)
 
-      res.status(200).json(result);
+      res.status(200).json(result)
     } catch (err) {
-      this.logger.error(err);
-      res.status(500).send();
+      this.logger.error(err)
+      res.status(500).send()
     }
   }
 
   @ApiOperationGet({
-    path: "sudt-balance",
-    description: "Get sudt balance",
-    summary: "Get sudt balance",
+    path: 'sudt-balance',
+    description: 'Get sudt balance',
+    summary: 'Get sudt balance',
     parameters: {
       query: {
         lock_code_hash: {
-          name: "lock_code_hash",
-          type: "string",
+          name: 'lock_code_hash',
+          type: 'string',
           required: true,
-          description: "",
+          description: ''
         },
         lock_hash_type: {
-          name: "lock_hash_type",
-          type: "string",
+          name: 'lock_hash_type',
+          type: 'string',
           required: true,
-          description: "",
+          description: ''
         },
         lock_args: {
-          name: "lock_args",
-          type: "string",
+          name: 'lock_args',
+          type: 'string',
           required: true,
-          description: "",
+          description: ''
         },
         type_code_hash: {
-          name: "type_code_hash",
-          type: "string",
+          name: 'type_code_hash',
+          type: 'string',
           required: true,
-          description: "",
+          description: ''
         },
         type_hash_type: {
-          name: "type_hash_type",
-          type: "string",
+          name: 'type_hash_type',
+          type: 'string',
           required: true,
-          description: "",
+          description: ''
         },
         type_args: {
-          name: "type_args",
-          type: "string",
+          name: 'type_args',
+          type: 'string',
           required: true,
-          description: "",
-        },
-      },
+          description: ''
+        }
+      }
     },
     responses: {
       200: {
-        description: "Success",
+        description: 'Success',
         type: SwaggerDefinitionConstant.Response.Type.OBJECT,
-        model: "BalanceSudtModel",
+        model: 'BalanceSudtModel'
       },
-      400: { description: "Parameters fail" },
-    },
+      400: { description: 'Parameters fail' }
+    }
   })
-  @httpGet("sudt-balance")
-  async getSUDTBalance(
+  @httpGet('sudt-balance')
+  async getSUDTBalance (
     req: express.Request,
     res: express.Response
   ): Promise<express.Response<void>> {
-
     const reqParms = CkbRequestModel.buildReqParam(
       <string>req.query.type_code_hash,
       <string>req.query.type_hash_type,
       <string>req.query.type_args,
       <string>req.query.lock_code_hash,
       <string>req.query.lock_hash_type,
-      <string>req.query.lock_args,
-    );
+      <string>req.query.lock_args
+    )
 
     if (
       !reqParms.isValidLockScript() || !reqParms.isValidTypeScript()) {
       return res.status(400).json({
         error:
-          "requires both lock and type scripts to be specified as parameters",
-      });
+          'requires both lock and type scripts to be specified as parameters'
+      })
     }
 
     try {
-      const result = await this.banlanceService.getSUDTBalance(reqParms);
-      res.status(200).json(result);
+      const result = await this.banlanceService.getSUDTBalance(reqParms)
+      res.status(200).json(result)
     } catch (err) {
-      console.error(err);
-      res.status(500).send();
+      console.error(err)
+      res.status(500).send()
     }
   }
 
-  private isValidScript(codeHash: string, hashType: string, args: string) {
-    return codeHash && hashType && args;
+  private isValidScript (codeHash: string, hashType: string, args: string) {
+    return codeHash && hashType && args
   }
 }

@@ -1,53 +1,49 @@
-import { ApiModel, ApiModelProperty } from "swagger-express-ts";
+import { ApiModel, ApiModelProperty } from 'swagger-express-ts'
 
 @ApiModel({
-  description: "Transaction details",
-  name: "TransactionDetailsModel",
+  description: 'Transaction details',
+  name: 'TransactionDetailsModel'
 })
 export default class TransactionDetailsModel {
+  @ApiModelProperty({
+    description: 'transaction status',
+    required: true
+  })
+  status: string
 
   @ApiModelProperty({
-    description: "transaction status",
-    required: true,
+    description: 'transaction amount',
+    required: true
   })
-  status: string;
+  transaction_fee: string
 
   @ApiModelProperty({
-    description: "transaction amount",
-    required: true,
+    description: 'transaction fee',
+    required: true
   })
-  transaction_fee: string;
+  amount: string
 
   @ApiModelProperty({
-    description: "transaction fee",
-    required: true,
+    description: 'to address',
+    required: true
   })
-  amount: string;
+  to: string
 
   @ApiModelProperty({
-    description: "to address",
-    required: true,
+    description: 'from address',
+    required: true
   })
-  to: string;
+  from: string
 
   @ApiModelProperty({
-    description: "from address",
-    required: true,
+    description: 'transaction hash',
+    required: true
   })
-  from: string;
+  hash: string
 
   @ApiModelProperty({
-    description: "transaction hash",
-    required: true,
+    description: 'block no',
+    required: true
   })
-  hash: string;
-
-  @ApiModelProperty({
-    description: "block no",
-    required: true,
-  })
-  block_no: number;
-
-
+  block_no: number
 }
-
