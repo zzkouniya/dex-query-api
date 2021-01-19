@@ -282,4 +282,10 @@ export default class OrdersService {
 
     return groupbyPrice
   }
+
+  private getRoundHalfUpPrice(price: string, decimal: string) {
+    const key = CkbUtils.roundHalfUp(CkbUtils.priceUnitConversion(price, decimal));
+    
+    return key;
+  }
 }
