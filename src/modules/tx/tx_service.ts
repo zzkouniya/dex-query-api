@@ -40,6 +40,10 @@ export default class TxService {
         queryOptions
       );
 
+      if(txsWithStatus.length === 0) {
+        return []
+      }
+
       const requests = [];
       for (const tx of txsWithStatus) {
         const { inputs } = tx.transaction;

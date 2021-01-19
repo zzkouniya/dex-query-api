@@ -241,6 +241,7 @@ export default class OrdersHistoryCalculate {
       return [...prevOrderCells, currentOutput];
     }
 
+    // input 所在的位置
     const nextGroupedOrderCellIndex = this.determineGroupedOrderCellIndex(nextTransaction.inputs, inputOutPoint);
 
     const nextGroupedOrderCells = this.groupOrderCells(

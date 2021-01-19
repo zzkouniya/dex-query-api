@@ -75,6 +75,7 @@ export default class IndexerWrapper implements IndexerService {
       },
     );
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     for await (const { tx_status, transaction } of transactionCollector.collect() as any) {
 
       if (tx_status.status === 'committed') {

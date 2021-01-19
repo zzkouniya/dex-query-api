@@ -62,10 +62,6 @@ export class CkbUtils {
     return (buf.readBigUInt64LE(8) << BigInt(64)) + buf.readBigUInt64LE(0);
   }
 
-  static getRequiredDataLength(): number {
-    return 100;
-  } 
-
   static formatOrderCells(orderCells: Cell[]): Array<DexOrderCellFormat> {
     const formattedOrderCells = orderCells.map((orderCell) => {
       const parsedOrderData = this.parseOrderData(orderCell.data);
@@ -132,9 +128,45 @@ export class CkbUtils {
       && output.type.args === type.args
   }
 
-  static roundHalfUp(price: string): string  {
-    
-    return new BigNumber(price).toFormat(BigNumber.ROUND_HALF_UP);
-    
+  static roundHalfUp(price: string): string {
+    const amount = new BigNumber(price);
+    const intVal = amount.integerValue().toString();
+
+    if (intVal.length > 2) {
+      return amount.toFixed(2, BigNumber.ROUND_HALF_UP)
+    }  
+
+    if (intVal.length === 0) {
+      const decimal = amount.decimalPlaces()
+      if (decimal <= 4) {
+        return amount.toFixed(4, BigNumber.ROUND_HALF_UP)
+      }
+  
+      if (decimal >= 8) {
+        return amount.toFixed(8, BigNumber.ROUND_HALF_UP)
+      }
+  
+      return amount.toFixed(decimal)
+    }
+  
+    return amount.toFixed(4, BigNumber.ROUND_HALF_UP)
+  }
+
+  static getRequiredDataLength(): number {
+    return 100;
+  } 
+
+  static getOrderCellCapacitySize(): bigint {
+    return 18700000000n
+  }
+
+  static getOrdersLimit(): number {
+    return 7;
+  }
+
+  static priceUnitConversion(price: string, decimal: string): string {
+    return new BigNumber(price)
+      .div(10 ** 20) // 10 * 10 && 20
+      .times(new BigNumber(10).pow(parseInt(decimal) - 8)).toString()
   }
 }

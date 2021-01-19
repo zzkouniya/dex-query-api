@@ -47,7 +47,7 @@ describe('Tx controller', () => {
   });
 
 
-  describe('#getSudtTransactions()', () => {
+  describe('#getTransactions()', () => {
     describe('valid requests', () => {
       describe('get sudt transaction list', () => {
         beforeEach(async () => {
@@ -64,7 +64,7 @@ describe('Tx controller', () => {
             .withArgs("block1")
             .resolves(1);
   
-          mock_repository.mockGetCollectTransactions()
+          mock_repository.mockCollectTransactions()
             .resolves([sudtTxList]);
           mock_repository.mockGetTransactions()
             .resolves([new CkbTransactionWithStatusModelWrapper(preSudtTx)]);
@@ -74,6 +74,28 @@ describe('Tx controller', () => {
         it('returns transaction', () => {
           res.status.should.have.been.calledWith(200);
           res.json.should.have.been.calledWith([{ hash: "hash1", income: "-4000000000", timestamp: "111" }]);
+        });
+      });
+
+      describe('lumos query when the transaction is empty', () => {
+        beforeEach(async () => {
+          req.query = {
+            lock_code_hash: lock.code_hash,
+            lock_hash_type: lock.hash_type,
+            lock_args: lock.args,
+            type_code_hash: sudtType.code_hash,
+            type_hash_type: sudtType.hash_type,
+            type_args: sudtType.args,
+          };
+
+          mock_repository.mockCollectTransactions()
+            .resolves([]);
+  
+          await controller.getSudtTransactions(req, res, next);
+        });
+        it('returns transaction', () => {
+          res.status.should.have.been.calledWith(200);
+          res.json.should.have.been.calledWith([]);
         });
       });
     });
