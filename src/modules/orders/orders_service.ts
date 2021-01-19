@@ -55,7 +55,7 @@ export default class OrdersService {
     const factory: DexOrderChainFactory = new DexOrderChainFactory()
     const orders = factory.getOrderChains(lock, type, orderTxs)
     const liveCells = orders.filter(x => x.getLiveCell() != null &&
-     this.isMakerCellValid(x))
+     this.isMakerCellValid(x) && this.filterPlaceOrders(x, decimal))
       .map(x => {
         const c = x.getLiveCell()
         const cell: Cell = {
@@ -130,9 +130,12 @@ export default class OrdersService {
     }
 
     const orderTxs = await this.repository.collectTransactions(queryOption)
+
     if (orderTxs.length === 0) { return '' }
     const factory: DexOrderChainFactory = new DexOrderChainFactory()
     const orders = factory.getOrderChains(lock, type, orderTxs)
+    console.log(orders)
+
     const makerOrders = orders.filter(x => {
       const top = x.getTopOrder()
       if (!top.isCancel() && top.nextOrderCell) {
@@ -200,6 +203,67 @@ export default class OrdersService {
       .filter(o => o.data.length === REQUIRED_DATA_LENGTH))
       .filter(x => x.isBid === isBid)
       .filter(x => x.orderAmount !== '0')
+  }
+
+  filterPlaceOrders (order: DexOrderChain, decimal: string): boolean {
+    const placeOrder = order.getTopOrder()
+    const data = CkbUtils.parseOrderData(placeOrder.data)
+    const price = new BigNumber(data.price).times(new BigNumber(10).pow(parseInt(decimal) - 8)).toString()
+    const precision = price.lastIndexOf('.') !== -1 ? price.slice(price.lastIndexOf('.') + 1, price.length).length : 0
+    if (order.isBid) {
+      if (parseInt(placeOrder.cell.capacity, 16) < 100000000) {
+        return false
+      }
+      const receive = new BigNumber(data.orderAmount.toString()).times(new BigNumber(10).pow(parseInt(decimal)))
+      // CKB => ETH
+      if (placeOrder.cell.type.args === '0x8462b20277bcbaa30d821790b852fb322d55c2b12e750ea91ad7059bc98dda4b') {
+        if (receive.lt(new BigNumber(0.0001))) {
+          return false
+        }
+
+        if (precision > 2) {
+          return false
+        }
+
+        // CKB => UDT
+      } else {
+        if (receive.lt(new BigNumber(0.001))) {
+          return false
+        }
+
+        if (precision > 4) {
+          return false
+        }
+      }
+    } else {
+      if (data.orderAmount < 100000000) {
+        return false
+      }
+
+      const pay = new BigNumber(data.sUDTAmount.toString()).times(new BigNumber(10).pow(parseInt(decimal)))
+      // ETH => CKB
+      if (placeOrder.cell.type.args === '0x8462b20277bcbaa30d821790b852fb322d55c2b12e750ea91ad7059bc98dda4b') {
+        if (pay.lt(new BigNumber(0.0001))) {
+          return false
+        }
+
+        if (precision > 2) {
+          return false
+        }
+
+        // UDT => CKB
+      } else {
+        if (pay.lt(new BigNumber(0.001))) {
+          return false
+        }
+      }
+
+      if (precision > 4) {
+        return false
+      }
+    }
+
+    return true
   }
 
   private groupbyPrice (dexOrders: DexOrderCellFormat[], decimal: string): Map<string, DexOrderCellFormat[]> {
