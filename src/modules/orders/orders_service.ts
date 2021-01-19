@@ -211,7 +211,7 @@ export default class OrdersService {
     const price = new BigNumber(data.price).times(new BigNumber(10).pow(parseInt(decimal) - 8)).toString()
     const precision = price.lastIndexOf('.') !== -1 ? price.slice(price.lastIndexOf('.') + 1, price.length).length : 0
     if (order.isBid) {
-      if (parseInt(placeOrder.cell.capacity, 16) < 100000000) {
+      if (new BigNumber(data.orderAmount.toString()).lt(100000000)) {
         return false
       }
       const receive = new BigNumber(data.orderAmount.toString()).times(new BigNumber(10).pow(parseInt(decimal)))
@@ -236,7 +236,7 @@ export default class OrdersService {
         }
       }
     } else {
-      if (data.orderAmount < 100000000) {
+      if (new BigNumber(data.orderAmount.toString()).lt(100000000)) {
         return false
       }
 
