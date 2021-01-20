@@ -22,7 +22,7 @@ export default class IndexerWrapper implements IndexerService {
   ) {
     this.indexer = new Indexer(indexer_config.nodeUrl, indexer_config.dataPath)
     // this.txManager = new TransactionManager(this.indexer)
-    this.indexer.start()
+    this.indexer.startForever()
 
     // eslint-disable-next-line @typescript-eslint/no-misused-promises
     setInterval(async () => {
