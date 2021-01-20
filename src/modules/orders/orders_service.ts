@@ -209,11 +209,11 @@ export default class OrdersService {
     const data = CkbUtils.parseOrderData(placeOrder.data)
     const price = new BigNumber(data.price).times(new BigNumber(10).pow(parseInt(decimal) - 8)).toString()
     const precision = price.lastIndexOf('.') !== -1 ? price.slice(price.lastIndexOf('.') + 1, price.length).length : 0
-    if (order.isBid) {
+    if (order.isBid()) {
       if (new BigNumber(placeOrder.cell.capacity).lt(100000000)) {
         return false
       }
-      const receive = new BigNumber(data.orderAmount.toString()).times(new BigNumber(10).pow(parseInt(decimal)))
+      const receive = new BigNumber(data.orderAmount.toString()).div(new BigNumber(10).pow(parseInt(decimal) - 8))
       // CKB => ETH
       if (placeOrder.cell.type.args === '0x8462b20277bcbaa30d821790b852fb322d55c2b12e750ea91ad7059bc98dda4b') {
         if (receive.lt(new BigNumber(0.0001))) {
@@ -239,7 +239,7 @@ export default class OrdersService {
         return false
       }
 
-      const pay = new BigNumber(data.sUDTAmount.toString()).times(new BigNumber(10).pow(parseInt(decimal)))
+      const pay = new BigNumber(data.sUDTAmount.toString()).div(new BigNumber(10).pow(parseInt(decimal)))
       // ETH => CKB
       if (placeOrder.cell.type.args === '0x8462b20277bcbaa30d821790b852fb322d55c2b12e750ea91ad7059bc98dda4b') {
         if (pay.lt(new BigNumber(0.0001))) {
