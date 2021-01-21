@@ -39,8 +39,6 @@ export default class CkbService {
   }
 
   async getblockNumberByBlockHash (blockHash: string): Promise<number> {
-    console.log(blockHash)
-
     const req = []
     req.push(['getBlock', blockHash])
     const block = await this.ckbNode.rpc.createBatchRequest(req).exec()
