@@ -196,11 +196,9 @@ export class CkbUtils {
       if (decimal <= 4) {
         return amount.toFixed(4, BigNumber.ROUND_HALF_UP)
       }
-
       if (decimal >= 8) {
         return amount.toFixed(8, BigNumber.ROUND_HALF_UP)
       }
-
       return amount.toFixed(decimal)
     }
 
@@ -217,5 +215,11 @@ export class CkbUtils {
 
   static getOrdersLimit (): number {
     return 7
+  }
+
+  static priceUnitConversion (price: string, decimal: string): string {
+    return new BigNumber(price)
+      .div(10 ** 20) // 10 * 10 && 20
+      .times(new BigNumber(10).pow(parseInt(decimal) - 8)).toString()
   }
 }
