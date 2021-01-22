@@ -85,8 +85,29 @@ export default class OrdersService {
     }
     askOrders = askOrders.sort((c1, c2) => parseInt(c1.block_number, 16) - parseInt(c2.block_number, 16))
 
-    const newBidOrderPriceKeys = askOrders[0].block_number < bidOrders[0].block_number ? bidOrderPriceKeys.slice(1, bidOrderPriceKeys.length) : bidOrderPriceKeys
-    const newAskOrderPriceKeys = askOrders[0].block_number < bidOrders[0].block_number ? askOrderPriceKeys : askOrderPriceKeys.slice(1, askOrderPriceKeys.length)
+    let newBidOrderPriceKeys: string[]
+    let newAskOrderPriceKeys: string[]
+    if (askOrders[0].block_number === bidOrders[0].block_number) {
+      const txs = await this.repository.getTxsByBlockHash(askOrders[0].block_number)
+      let bidTxIndex = 0
+      let askTxIndex = 0
+      for (let i = 0; i < txs.length; i++) {
+        const tx = txs[i]
+        if (tx.ckbTransactionWithStatus.transaction.hash === bidOrders[0].out_point.tx_hash) {
+          bidTxIndex = i
+        }
+
+        if (tx.ckbTransactionWithStatus.transaction.hash === askOrders[0].out_point.tx_hash) {
+          askTxIndex = i
+        }
+
+        newBidOrderPriceKeys = askTxIndex < bidTxIndex ? bidOrderPriceKeys.slice(1, bidOrderPriceKeys.length) : bidOrderPriceKeys
+        newAskOrderPriceKeys = askTxIndex < bidTxIndex ? askOrderPriceKeys : askOrderPriceKeys.slice(1, askOrderPriceKeys.length)
+      }
+    } else {
+      newBidOrderPriceKeys = askOrders[0].block_number < bidOrders[0].block_number ? bidOrderPriceKeys.slice(1, bidOrderPriceKeys.length) : bidOrderPriceKeys
+      newAskOrderPriceKeys = askOrders[0].block_number < bidOrders[0].block_number ? askOrderPriceKeys : askOrderPriceKeys.slice(1, askOrderPriceKeys.length)
+    }
 
     return this.comparePrice(groupbyPriceBid, newBidOrderPriceKeys, groupbyPriceAsk, newAskOrderPriceKeys)
   }
