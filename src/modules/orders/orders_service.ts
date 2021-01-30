@@ -3,17 +3,22 @@ import BigNumber from 'bignumber.js'
 import { modules } from '../../ioc'
 import { contracts } from '../../config'
 import { CkbUtils } from '../../component'
-import { Cell, HashType, QueryOptions, Script } from '@ckb-lumos/base'
+import { Cell, HashType, QueryOptions, Script, TransactionWithStatus } from '@ckb-lumos/base'
 import { DexRepository } from '../repository/dex_repository'
 import CkbRepository from '../repository/ckb_repository'
 import { DexOrderChainFactory } from '../../model/orders/dex_order_chain_factory'
 import { DexOrderChain } from '../../model/orders/dex_order_chain'
+import { DexCache } from '../cache/dex_cache'
+import RedisCache from '../cache/redis_cache'
+import * as ckbUtils from '@nervosnetwork/ckb-sdk-utils'
 
 @injectable()
 export default class OrdersService {
   constructor (
     @inject(new LazyServiceIdentifer(() => modules[CkbRepository.name]))
-    private readonly repository: DexRepository
+    private readonly repository: DexRepository,
+    @inject(new LazyServiceIdentifer(() => modules[RedisCache.name]))
+    private readonly dexCache: DexCache
   ) {}
 
   async getOrders (
@@ -118,16 +123,8 @@ export default class OrdersService {
       hash_type: contracts.orderLock.hashType,
       args: '0x'
     }
-    const queryOption: QueryOptions = {
-      type,
-      lock: {
-        script: lock,
-        argsLen: 'any'
-      },
-      order: 'desc'
-    }
 
-    const orderTxs = await this.repository.collectTransactions(queryOption)
+    const orderTxs = await this.getCacheCurrentPrice(lock, type)
 
     if (orderTxs.length === 0) { return '' }
     const factory: DexOrderChainFactory = new DexOrderChainFactory()
@@ -146,6 +143,29 @@ export default class OrdersService {
       (total, order) => total.plus(new BigNumber(CkbUtils.parseOrderData(order.data).price)),
       new BigNumber(0)
     ).dividedBy(lastMakerOrders.length).toExponential()
+  }
+
+  private async getCacheCurrentPrice (lock: Script, type: Script): Promise<TransactionWithStatus[]> {
+    const cacheKey = this.getCacheKey(lock, type, 'price')
+    let txs = await this.dexCache.get(cacheKey)
+    if (!txs) {
+      const queryOption: QueryOptions = {
+        type,
+        lock: {
+          script: lock,
+          argsLen: 'any'
+        },
+        order: 'desc'
+      }
+      const orderTxs = await this.repository.collectTransactions(queryOption)
+
+      const value = JSON.stringify(orderTxs)
+      this.dexCache.setEx(cacheKey, value)
+
+      txs = value
+    }
+
+    return JSON.parse(txs)
   }
 
   private isMakerCellValid (order: DexOrderChain): boolean {
@@ -303,13 +323,7 @@ export default class OrdersService {
       args: type_args
     }
 
-    const orderTxs = await this.repository.collectTransactions({
-      type: type,
-      lock: {
-        script: lock,
-        argsLen: 'any'
-      }
-    })
+    const orderTxs = await this.getCacheOrders(lock, type)
 
     if (orderTxs.length === 0) {
       return []
@@ -326,6 +340,47 @@ export default class OrdersService {
       .filter(x => CkbUtils.parseOrderData(x.data).orderAmount.toString() !== '0')
 
     return orderCells
+  }
+
+  private async getCacheOrders (lock: Script, type: Script): Promise<TransactionWithStatus[]> {
+    const cacheKey = this.getCacheKey(lock, type, 'orders')
+    let txs = await this.dexCache.get(cacheKey)
+    if (!txs) {
+      const orderTxs = await this.repository.collectTransactions({
+        type: type,
+        lock: {
+          script: lock,
+          argsLen: 'any'
+        }
+      })
+
+      const value = JSON.stringify(orderTxs)
+      this.dexCache.setEx(cacheKey, value)
+
+      txs = value
+    }
+
+    const orderTxs = JSON.parse(txs)
+    return orderTxs
+  }
+
+  private getCacheKey (lock: Script, type: Script, service: string) {
+    const lockScript: CKBComponents.Script = {
+      args: lock.args,
+      codeHash: lock.code_hash,
+      hashType: lock.hash_type
+    }
+
+    const typeScript: CKBComponents.Script = {
+      args: type.args,
+      codeHash: type.code_hash,
+      hashType: type.hash_type
+    }
+
+    const lockHash = ckbUtils.scriptToHash(lockScript)
+    const typeHash = ckbUtils.scriptToHash(typeScript)
+
+    return `${lockHash}:${typeHash}:${service}`
   }
 
   private toCell (x: DexOrderChain): Cell {

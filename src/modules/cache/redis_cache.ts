@@ -14,8 +14,6 @@ export default class RedisCache implements DexCache {
   async get (key: string): Promise<string> {
     const value = await new Promise(resolve => {
       this.client.get(key, (err, res) => {
-        console.log(res)
-
         if (err) {
           return resolve(null)
         }
@@ -28,5 +26,9 @@ export default class RedisCache implements DexCache {
 
   set (key: string, value: string): void {
     this.client.set(key, value)
+  }
+
+  setEx (key: string, value: string): void {
+    this.client.setex(key, 30, value)
   }
 }

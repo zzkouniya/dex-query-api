@@ -25,7 +25,7 @@ describe('Orders controller', () => {
 
   beforeEach(() => {
     mock_repository = MockRepositoryFactory.getDexRepositoryInstance()
-    const service = new OrdersService(mock_repository)
+    const service = new OrdersService(mock_repository, null)
     const historyService = new OrdersHistoryService(mock_repository)
     controller = new OrderController(service, historyService)
 
