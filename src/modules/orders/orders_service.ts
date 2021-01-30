@@ -147,22 +147,29 @@ export default class OrdersService {
 
   private async getCacheCurrentPrice (lock: Script, type: Script): Promise<TransactionWithStatus[]> {
     const cacheKey = this.getCacheKey(lock, type, 'price')
+    const lockPrice = this.getCacheKey(lock, type, 'lockPrice')
     let txs = await this.dexCache.get(cacheKey)
     if (!txs) {
-      const queryOption: QueryOptions = {
-        type,
-        lock: {
-          script: lock,
-          argsLen: 'any'
-        },
-        order: 'desc'
+      const redisLock = await this.dexCache.getLock(lockPrice)
+      if (redisLock) {
+        txs = await this.dexCache.get(cacheKey)
+        console.log(txs)
+
+        if (!txs) {
+          const queryOption: QueryOptions = {
+            type,
+            lock: {
+              script: lock,
+              argsLen: 'any'
+            },
+            order: 'desc'
+          }
+          const orderTxs = await this.repository.collectTransactions(queryOption)
+          const value = JSON.stringify(orderTxs)
+          this.dexCache.setEx(cacheKey, value)
+          txs = value
+        }
       }
-      const orderTxs = await this.repository.collectTransactions(queryOption)
-
-      const value = JSON.stringify(orderTxs)
-      this.dexCache.setEx(cacheKey, value)
-
-      txs = value
     }
 
     return JSON.parse(txs)
@@ -344,20 +351,26 @@ export default class OrdersService {
 
   private async getCacheOrders (lock: Script, type: Script): Promise<TransactionWithStatus[]> {
     const cacheKey = this.getCacheKey(lock, type, 'orders')
+    const lockPrice = this.getCacheKey(lock, type, 'lockPrice')
     let txs = await this.dexCache.get(cacheKey)
     if (!txs) {
-      const orderTxs = await this.repository.collectTransactions({
-        type: type,
-        lock: {
-          script: lock,
-          argsLen: 'any'
+      const redisLock = await this.dexCache.getLock(lockPrice)
+      if (redisLock) {
+        txs = await this.dexCache.get(cacheKey)
+        if (!txs) {
+          const orderTxs = await this.repository.collectTransactions({
+            type: type,
+            lock: {
+              script: lock,
+              argsLen: 'any'
+            }
+          })
+
+          const value = JSON.stringify(orderTxs)
+          this.dexCache.setEx(cacheKey, value)
+          txs = value
         }
-      })
-
-      const value = JSON.stringify(orderTxs)
-      this.dexCache.setEx(cacheKey, value)
-
-      txs = value
+      }
     }
 
     const orderTxs = JSON.parse(txs)
