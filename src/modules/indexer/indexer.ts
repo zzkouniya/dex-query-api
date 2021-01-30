@@ -46,6 +46,7 @@ export default class IndexerWrapper implements IndexerService {
   }
 
   async collectTransactions (queryOptions: QueryOptions): Promise<TransactionWithStatus[]> {
+    const start = new Date().getTime()
     const transactionCollector = new TransactionCollector(
       this.indexer,
       queryOptions
@@ -53,6 +54,9 @@ export default class IndexerWrapper implements IndexerService {
 
     const txs = []
     for await (const tx of transactionCollector.collect()) txs.push(tx)
+
+    const end = new Date().getTime()
+    console.info(`[query txs]-[queryOptions: ${JSON.stringify(queryOptions)}]-[size: ${txs.length}]-[time: ${end - start}]`)
 
     return txs
   }
