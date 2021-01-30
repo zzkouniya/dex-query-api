@@ -1,5 +1,8 @@
 FROM node:12
 
+
+ENV NODE_ENV production
+
 WORKDIR /app
 
 ADD package.json .
@@ -14,4 +17,4 @@ RUN tsc
 
 EXPOSE 8080
 
-CMD [ "node", "./build/app.js" ]
+CMD [ "node", "--max-old-space-size=8192 ./build/app.js" ]
