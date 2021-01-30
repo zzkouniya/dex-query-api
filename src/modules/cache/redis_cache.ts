@@ -28,7 +28,7 @@ export default class RedisCache implements DexCache {
     this.client.set(key, value)
   }
 
-  setEx (key: string, value: string): void {
+  setEx (key: string, value: string, seconds: number): void {
     this.client.setex(key, 30, value)
   }
 
@@ -38,7 +38,7 @@ export default class RedisCache implements DexCache {
       if (value) {
         await this.sleep(1000)
       } else {
-        this.setEx(key, key)
+        this.setEx(key, key, 30)
         return true
       }
     }
