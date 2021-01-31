@@ -12,6 +12,7 @@ import { DexCache } from '../cache/dex_cache'
 import RedisCache from '../cache/redis_cache'
 import * as ckbUtils from '@nervosnetwork/ckb-sdk-utils'
 
+
 @injectable()
 export default class OrdersService {
   constructor (
@@ -20,6 +21,60 @@ export default class OrdersService {
     @inject(new LazyServiceIdentifer(() => modules[RedisCache.name]))
     private readonly dexCache: DexCache
   ) {}
+
+  private ordersCache: Record<string, TransactionWithStatus[]> = Object.create(null)
+
+  private readonly currentPriceCahce: Record<string, TransactionWithStatus[]> = Object.create(null)
+
+  private getOrdersCahce (key: string) {
+    return this.ordersCache[key]
+  }
+
+  private getCurrentPriceCache (key: string) {
+    return this.currentPriceCahce[key]
+  }
+
+  private currentPriceCacheInterval = null
+
+  private async setCurrentPriceCache (key: string, queryOptions: QueryOptions) {
+    // first time
+    if (this.getCurrentPriceCache(key) == null) {
+      const res = await this.repository.collectTransactions(queryOptions)
+      this.currentPriceCahce[key] = res
+      if (this.currentPriceCacheInterval) {
+        clearInterval(this.currentPriceCacheInterval)
+      }
+      this.currentPriceCacheInterval = setInterval(() => {
+        this.repository.collectTransactions(queryOptions).then(res => {
+          this.currentPriceCahce[key] = res
+        })
+          .catch(e => (console.error(e)))
+      }, 20e3)
+    }
+
+    return this.currentPriceCahce[key]
+  }
+
+  private ordersCacheInterval = null
+
+  private async setOrdersCache (key: string, queryOptions: QueryOptions) {
+    // first time
+    if (this.getOrdersCahce(key) == null) {
+      const res = await this.repository.collectTransactions(queryOptions)
+      this.ordersCache[key] = res
+      if (this.ordersCacheInterval) {
+        clearInterval(this.ordersCacheInterval)
+      }
+      this.ordersCacheInterval = setInterval(() => {
+        this.repository.collectTransactions(queryOptions).then(res => {
+          this.ordersCache[key] = res
+        })
+          .catch(e => (console.error(e)))
+      }, 20e3)
+    }
+
+    return this.ordersCache[key]
+  }
 
   async getOrders (
     type_code_hash: string,
@@ -123,6 +178,7 @@ export default class OrdersService {
       hash_type: contracts.orderLock.hashType,
       args: '0x'
     }
+
 
     const orderTxs = await this.getCacheCurrentPrice(lock, type)
 
