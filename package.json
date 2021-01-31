@@ -11,7 +11,8 @@
     "dev:start": "nodemon node ./build/app.js",
     "lint": "eslint ./src",
     "lint:fix": "eslint --fix ./src",
-    "dev": "tsc && concurrently npm:dev:*"
+    "dev": "tsc && concurrently npm:dev:*",
+    "start": "NODE_ENV=production node --max-old-space-size=8192 ./build/app.js"
   },
   "mocha": {
     "colors": true,
