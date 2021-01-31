@@ -6,4 +6,5 @@ export interface DexCache {
   setEx: (key: string, value: string) => void
 
   get: (key: string) => Promise<string>
+
 }
