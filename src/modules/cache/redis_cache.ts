@@ -4,6 +4,8 @@ import { redisConfiguration } from '../../config'
 import { DexCache } from './dex_cache'
 
 @injectable()
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-expect-error
 export default class RedisCache implements DexCache {
   private readonly client: redis.RedisClient
   constructor () {
