@@ -3,28 +3,89 @@ import BigNumber from 'bignumber.js'
 import { modules } from '../../ioc'
 import { contracts } from '../../config'
 import { CkbUtils } from '../../component'
-import { Cell, HashType, QueryOptions, Script } from '@ckb-lumos/base'
+import { Cell, HashType, QueryOptions, Script, TransactionWithStatus } from '@ckb-lumos/base'
 import { DexRepository } from '../repository/dex_repository'
 import CkbRepository from '../repository/ckb_repository'
 import { DexOrderChainFactory } from '../../model/orders/dex_order_chain_factory'
 import { DexOrderChain } from '../../model/orders/dex_order_chain'
+import { DexCache } from '../cache/dex_cache'
+import RedisCache from '../cache/redis_cache'
+import * as ckbUtils from '@nervosnetwork/ckb-sdk-utils'
+
+interface OrdersResult {
+  bid_orders: Array<{receive: string, price: string}>
+  ask_orders: Array<{receive: string, price: string}>
+}
 
 @injectable()
 export default class OrdersService {
   constructor (
     @inject(new LazyServiceIdentifer(() => modules[CkbRepository.name]))
-    private readonly repository: DexRepository
+    private readonly repository: DexRepository,
+    @inject(new LazyServiceIdentifer(() => modules[RedisCache.name]))
+    private readonly dexCache: DexCache
   ) {}
+
+  private ordersCache: Record<string, TransactionWithStatus[]> = Object.create(null)
+
+  private readonly currentPriceCahce: Record<string, TransactionWithStatus[]> = Object.create(null)
+
+  private getOrdersCahce (key: string) {
+    return this.ordersCache[key]
+  }
+
+  private getCurrentPriceCache (key: string) {
+    return this.currentPriceCahce[key]
+  }
+
+  private currentPriceCacheInterval = null
+
+  private async setCurrentPriceCache (key: string, queryOptions: QueryOptions) {
+    // first time
+    if (this.getCurrentPriceCache(key) == null) {
+      const res = await this.repository.collectTransactions(queryOptions)
+      this.currentPriceCahce[key] = res
+      if (this.currentPriceCacheInterval) {
+        clearInterval(this.currentPriceCacheInterval)
+      }
+      this.currentPriceCacheInterval = setInterval(() => {
+        this.repository.collectTransactions(queryOptions).then(res => {
+          this.currentPriceCahce[key] = res
+        })
+          .catch(e => (console.error(e)))
+      }, 20e3)
+    }
+
+    return this.currentPriceCahce[key]
+  }
+
+  private ordersCacheInterval = null
+
+  private async setOrdersCache (key: string, queryOptions: QueryOptions) {
+    // first time
+    if (this.getOrdersCahce(key) == null) {
+      const res = await this.repository.collectTransactions(queryOptions)
+      this.ordersCache[key] = res
+      if (this.ordersCacheInterval) {
+        clearInterval(this.ordersCacheInterval)
+      }
+      this.ordersCacheInterval = setInterval(() => {
+        this.repository.collectTransactions(queryOptions).then(res => {
+          this.ordersCache[key] = res
+        })
+          .catch(e => (console.error(e)))
+      }, 20e3)
+    }
+
+    return this.ordersCache[key]
+  }
 
   async getOrders (
     type_code_hash: string,
     type_hash_type: string,
     type_args: string,
     decimal: string
-  ): Promise<{
-      bid_orders: Array<{receive: string, price: string}>
-      ask_orders: Array<{receive: string, price: string}>
-    }> {
+  ): Promise<OrdersResult> {
     const orderCells = await this.getOrderCells(type_code_hash, type_hash_type, type_args, decimal)
     if (orderCells.length === 0) {
       return {
@@ -118,6 +179,9 @@ export default class OrdersService {
       hash_type: contracts.orderLock.hashType,
       args: '0x'
     }
+
+    const cacheKey = this.getCacheKey(lock, type, 'price')
+
     const queryOption: QueryOptions = {
       type,
       lock: {
@@ -127,7 +191,7 @@ export default class OrdersService {
       order: 'desc'
     }
 
-    const orderTxs = await this.repository.collectTransactions(queryOption)
+    const orderTxs = await this.setCurrentPriceCache(cacheKey, queryOption)
 
     if (orderTxs.length === 0) { return '' }
     const factory: DexOrderChainFactory = new DexOrderChainFactory()
@@ -303,7 +367,9 @@ export default class OrdersService {
       args: type_args
     }
 
-    const orderTxs = await this.repository.collectTransactions({
+    const cacheKey = this.getCacheKey(lock, type, 'orders')
+
+    const orderTxs = await this.setOrdersCache(cacheKey, {
       type: type,
       lock: {
         script: lock,
@@ -326,6 +392,25 @@ export default class OrdersService {
       .filter(x => CkbUtils.parseOrderData(x.data).orderAmount.toString() !== '0')
 
     return orderCells
+  }
+
+  private getCacheKey (lock: Script, type: Script, service: string) {
+    const lockScript: CKBComponents.Script = {
+      args: lock.args,
+      codeHash: lock.code_hash,
+      hashType: lock.hash_type
+    }
+
+    const typeScript: CKBComponents.Script = {
+      args: type.args,
+      codeHash: type.code_hash,
+      hashType: type.hash_type
+    }
+
+    const lockHash = ckbUtils.scriptToHash(lockScript)
+    const typeHash = ckbUtils.scriptToHash(typeScript)
+
+    return `${lockHash}:${typeHash}:${service}`
   }
 
   private toCell (x: DexOrderChain): Cell {
