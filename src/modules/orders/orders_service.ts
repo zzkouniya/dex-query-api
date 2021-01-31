@@ -341,7 +341,7 @@ export default class OrdersService {
       hash_type: <HashType>type_hash_type,
       args: type_args
     }
-    
+
     const orderTxs = await this.getCacheOrders(lock, type)
 
     if (orderTxs.length === 0) {
