@@ -12,7 +12,6 @@ import { DexCache } from '../cache/dex_cache'
 import RedisCache from '../cache/redis_cache'
 import * as ckbUtils from '@nervosnetwork/ckb-sdk-utils'
 
-
 @injectable()
 export default class OrdersService {
   constructor (
@@ -178,7 +177,6 @@ export default class OrdersService {
       hash_type: contracts.orderLock.hashType,
       args: '0x'
     }
-
 
     const orderTxs = await this.getCacheCurrentPrice(lock, type)
 
